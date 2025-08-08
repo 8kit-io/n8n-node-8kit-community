@@ -1,0 +1,68 @@
+{
+  "name": "n8n-nodes-8kit",
+  "version": "1.0.4",
+  "description": "n8n nodes for 8kit Automation Tools",
+  "keywords": [
+    "n8n",
+    "n8n-node",
+    "n8n-community-node-package",
+    "8kit",
+    "automation",
+    "set-tracking",
+    "lookup-mapping",
+    "idempotent",
+    "workflow"
+  ],
+  "license": "MIT",
+  "homepage": "https://8kit.io",
+  "author": {
+    "name": "8kit",
+    "email": "hello@8kit.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/8kit-io/n8n-node-8kit-community.git"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "./start-n8n.sh",
+    "stop": "./stop-n8n.sh",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lintfix": "biome check --write .",
+    "prepublishOnly": "bun run build && bun run lint",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch",
+    "test:operations": "jest --testPathPattern=operations"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "nodes": [
+      "dist/nodes/EightKit/EightKit.node.js"
+    ],
+    "credentials": [
+      "dist/credentials/EightKitApi.credentials.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^24.0.14",
+    "@biomejs/biome": "^2.1.4",
+    "@vitest/coverage-v8": "^1.0.0",
+    "gulp": "^5.0.1",
+    "gulp-svgmin": "^4.0.3",
+    "jest": "^29.7.0",
+    "n8n-core": "^1.14.1",
+    "n8n-workflow": "^1.82.0",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^1.0.0"
+  }
+}

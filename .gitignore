@@ -1,0 +1,5 @@
+dist/
+node_modules/
+PUBLISHING.md
+
+.DS_Store
