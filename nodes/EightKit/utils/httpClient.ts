@@ -1,3 +1,4 @@
+import { setTimeout } from 'node:timers';
 import type { IExecuteFunctions } from 'n8n-workflow';
 
 export interface ApiResponse<T = any> {

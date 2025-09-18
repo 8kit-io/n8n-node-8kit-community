@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-8kit",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "n8n nodes for 8kit Automation Tools",
   "keywords": [
     "n8n",
@@ -31,7 +31,7 @@
     "format": "biome format --write .",
     "lint": "biome check .",
     "lintfix": "biome check --write .",
-    "prepublishOnly": "bun run build && bun run lint",
+    "prepublishOnly": "npm run build && npm run lint",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
