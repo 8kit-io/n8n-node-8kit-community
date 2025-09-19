@@ -1,4 +1,3 @@
-import { setTimeout } from 'node:timers';
 import type { IExecuteFunctions } from 'n8n-workflow';
 
 export interface ApiResponse<T = any> {
@@ -90,11 +89,26 @@ export class EightKitHttpClient {
 
         // Wait before retrying
         console.log(`🔍 [Stratagems HTTP] Waiting ${retryDelay}ms before retry...`);
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        await this.delay(retryDelay);
       }
     }
 
     throw this.formatError(lastError);
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      const start = Date.now();
+      const check = () => {
+        if (Date.now() - start >= ms) {
+          resolve();
+        } else {
+          // Use setImmediate for non-blocking delay
+          setImmediate(check);
+        }
+      };
+      check();
+    });
   }
 
   private formatError(error: any): Error {
