@@ -1,11 +1,11 @@
 import {
+  NodeConnectionType,
   type IExecuteFunctions,
   type ILoadOptionsFunctions,
   type INodeExecutionData,
   type INodeListSearchItems,
   type INodeType,
   type INodeTypeDescription,
-  NodeConnectionType,
 } from 'n8n-workflow';
 
 import {
@@ -348,7 +348,7 @@ export class EightKit implements INodeType {
         name: 'key',
         type: 'string',
         default: '',
-        placeholder: 'my_key',
+        placeholder: '',
         description:
           'Unique identifier for the lock or last updated record. Must contain only letters, numbers, hyphens, and underscores. Maximum 255 characters.',
         required: true,
@@ -364,7 +364,7 @@ export class EightKit implements INodeType {
         name: 'name',
         type: 'string',
         default: '',
-        placeholder: 'my_set_name',
+        placeholder: '',
         description:
           'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
         required: true,
@@ -383,7 +383,7 @@ export class EightKit implements INodeType {
         name: 'description',
         type: 'string',
         default: '',
-        placeholder: 'Optional description',
+        placeholder: '',
         description:
           'Optional human-readable description explaining the purpose of this record. Helpful for documentation and team collaboration.',
         displayOptions: {
@@ -399,7 +399,7 @@ export class EightKit implements INodeType {
         name: 'date',
         type: 'string',
         default: '',
-        placeholder: '2024-01-15T10:30:00.000Z',
+        placeholder: 'YYYY-MM-DDTHH:mm:ss.sssZ',
         description:
           'Optional custom date in ISO 8601 format. If not specified, current timestamp will be used.',
         displayOptions: {
@@ -415,7 +415,7 @@ export class EightKit implements INodeType {
         name: 'value',
         type: 'string',
         default: '',
-        placeholder: 'user@example.com',
+        placeholder: '',
         description:
           'The value to check, add, or remove from the set. Can be any string up to 255 characters (e.g., email, user ID, domain name).',
         required: true,
@@ -432,7 +432,7 @@ export class EightKit implements INodeType {
         name: 'leftValue',
         type: 'string',
         default: '',
-        placeholder: 'user123',
+        placeholder: '',
         description:
           'The left-side value in the lookup mapping. Typically represents an ID or key from one system (e.g., internal user ID, product SKU).',
         required: true,
@@ -469,7 +469,7 @@ export class EightKit implements INodeType {
         name: 'rightValue',
         type: 'string',
         default: '',
-        placeholder: 'ext_user_456',
+        placeholder: '',
         description:
           'The right-side value in the lookup mapping. Typically represents the corresponding ID or key from another system (e.g., external system ID, CRM ID).',
         required: true,
@@ -535,7 +535,7 @@ export class EightKit implements INodeType {
         name: 'lookupName',
         type: 'string',
         default: '',
-        placeholder: 'user-id-mapping',
+        placeholder: '',
         description:
           'Name of the lookup table for ID mapping. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
         required: true,
@@ -569,7 +569,7 @@ export class EightKit implements INodeType {
         name: 'rightValue',
         type: 'string',
         default: '',
-        placeholder: 'external_user_456',
+        placeholder: '',
         description:
           'The right-side value in the lookup mapping. Typically represents the corresponding ID or key from another system (e.g., external system ID, CRM ID).',
         required: true,
@@ -603,7 +603,7 @@ export class EightKit implements INodeType {
         name: 'value',
         type: 'string',
         default: '',
-        placeholder: 'user@example.com',
+        placeholder: '',
         description:
           'The value to add to the set for tracking. Can be any string up to 255 characters (e.g., email, user ID, domain name).',
         required: true,
@@ -946,7 +946,7 @@ export class EightKit implements INodeType {
             name: 'metadata',
             type: 'json',
             default: '{}',
-            placeholder: '{"source": "import", "category": "premium"}',
+            placeholder: '{}',
             description:
               'Optional JSON metadata to associate with this value. Useful for tracking additional information about the value.',
           },
@@ -972,7 +972,7 @@ export class EightKit implements INodeType {
             name: 'metadata',
             type: 'json',
             default: '{}',
-            placeholder: '{"source": "import", "category": "premium"}',
+            placeholder: '{}',
             description:
               'Optional JSON metadata to associate with the set value. Useful for tracking additional information about the value.',
           },
