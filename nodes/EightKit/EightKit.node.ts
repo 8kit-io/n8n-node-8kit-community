@@ -1,11 +1,11 @@
 import {
-  NodeConnectionType,
   type IExecuteFunctions,
   type ILoadOptionsFunctions,
   type INodeExecutionData,
   type INodeListSearchItems,
   type INodeType,
   type INodeTypeDescription,
+  NodeConnectionType,
 } from 'n8n-workflow';
 
 import {
@@ -58,21 +58,7 @@ export class EightKit implements INodeType {
         type: 'options',
         noDataExpression: true,
         options: [
-          {
-            name: 'App',
-            value: 'app',
-            description: 'Manage app information and health status',
-          },
-          {
-            name: 'Lock',
-            value: 'lock',
-            description: 'Manage distributed locks for resource coordination',
-          },
-          {
-            name: 'Last Updated',
-            value: 'lastUpdated',
-            description: 'Track when operations or data sources were last updated',
-          },
+          // 1) Sets
           {
             name: 'Set',
             value: 'set',
@@ -83,6 +69,7 @@ export class EightKit implements INodeType {
             value: 'setValues',
             description: 'Manage values within sets (add, remove, check, get values)',
           },
+          // 2) Lookups
           {
             name: 'Lookup',
             value: 'lookup',
@@ -93,6 +80,25 @@ export class EightKit implements INodeType {
             value: 'lookupValues',
             description: 'Manage mappings within lookups (add, remove, get values)',
           },
+          // 3) Locks
+          {
+            name: 'Lock',
+            value: 'lock',
+            description: 'Manage distributed locks for resource coordination',
+          },
+          // 4) Last Updated
+          {
+            name: 'Last Updated',
+            value: 'lastUpdated',
+            description: 'Track when operations or data sources were last updated',
+          },
+          // 5) App
+          {
+            name: 'App',
+            value: 'app',
+            description: 'Manage app information and health status',
+          },
+          // 6) Advanced
           {
             name: 'Advanced',
             value: 'advanced',
@@ -101,104 +107,18 @@ export class EightKit implements INodeType {
         ],
         default: 'set',
       },
-      // App Operations (manage app information and health)
+
+      /* =========================
+       * 1) SETS
+       * ========================= */
+
+      // Set Operations (Create → List → Get Info)
       {
         displayName: 'Operation',
         name: 'operation',
         type: 'options',
         noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ['app'],
-          },
-        },
-        options: [
-          {
-            name: 'Get App Info',
-            value: 'getAppInfo',
-            description: 'Retrieve information about the authenticated app',
-            action: 'Get app information',
-          },
-          {
-            name: 'Health Check',
-            value: 'getAppHealth',
-            description: 'Check the health status of the authenticated app',
-            action: 'Check app health',
-          },
-        ],
-        default: 'getAppInfo',
-      },
-      // Lock Operations (manage distributed locks)
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ['lock'],
-          },
-        },
-        options: [
-          {
-            name: 'Check Lock',
-            value: 'checkLock',
-            description: 'Check if a specific lock exists and get its details',
-            action: 'Check if a lock exists',
-          },
-          {
-            name: 'Acquire Lock',
-            value: 'acquireLock',
-            description: 'Attempt to acquire a lock for resource coordination',
-            action: 'Acquire a lock',
-          },
-          {
-            name: 'Release Lock',
-            value: 'releaseLock',
-            description: 'Release a specific lock by key',
-            action: 'Release a lock',
-          },
-        ],
-        default: 'checkLock',
-      },
-      // Last Updated Operations (track last updated timestamps)
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ['lastUpdated'],
-          },
-        },
-        options: [
-          {
-            name: 'Get Last Updated',
-            value: 'getLastUpdated',
-            description: 'Retrieve a last updated record by key',
-            action: 'Get last updated record',
-          },
-          {
-            name: 'Add New Last Updated',
-            value: 'createLastUpdated',
-            description: 'Create a new last updated record with current timestamp',
-            action: 'Create last updated record',
-          },
-        ],
-        default: 'getLastUpdated',
-      },
-      // Set Operations (manage sets themselves)
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ['set'],
-          },
-        },
+        displayOptions: { show: { resource: ['set'] } },
         options: [
           {
             name: 'Create',
@@ -219,26 +139,104 @@ export class EightKit implements INodeType {
             action: 'Get set information',
           },
         ],
-        default: 'listSets',
+        default: 'createSet',
       },
-      // Set Values Operations (manage values within sets)
+
+      // Name (for set operations)
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+        required: true,
+        displayOptions: {
+          show: { resource: ['set'] },
+          hide: { operation: ['listSets'] },
+        },
+      },
+
+      // Description (for create set)
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'Optional human-readable description explaining the purpose of this record. Helpful for documentation and team collaboration.',
+        displayOptions: {
+          show: { resource: ['set'], operation: ['createSet'] },
+        },
+      },
+
+      // Advanced Settings for Set (listSets)
+      {
+        displayName: 'Advanced Settings',
+        name: 'advancedSettings',
+        type: 'collection',
+        placeholder: 'Add Advanced Settings',
+        default: {},
+        description: 'Configure advanced options like pagination, filtering, and sorting',
+        displayOptions: { show: { resource: ['set'], operation: ['listSets'] } },
+        options: [
+          {
+            displayName: 'Pagination',
+            name: 'pagination',
+            type: 'fixedCollection',
+            placeholder: 'Add Pagination',
+            default: { pagination: {} },
+            description: 'Configure pagination for large result sets',
+            options: [
+              {
+                displayName: 'Pagination Settings',
+                name: 'pagination',
+                default: { pagination: {} },
+                values: [
+                  {
+                    displayName: 'Page',
+                    name: 'page',
+                    type: 'number',
+                    typeOptions: { minValue: 1, required: false },
+                    default: null,
+                    placeholder: '1',
+                    description: 'Page number to retrieve (starts from 1).',
+                  },
+                  {
+                    displayName: 'Items Per Page',
+                    name: 'limit',
+                    type: 'number',
+                    typeOptions: { minValue: 1, maxValue: 100, required: false },
+                    default: null,
+                    placeholder: '10',
+                    description: 'Maximum number of sets to return per page (1-100).',
+                  },
+                  {
+                    displayName: 'Offset (Advanced)',
+                    name: 'offset',
+                    type: 'number',
+                    typeOptions: { minValue: 0, required: false },
+                    default: null,
+                    placeholder: '0',
+                    description: 'Number of items to skip from the beginning.',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+
+      // Set Values Operations (Add → Check → Get → Remove)
       {
         displayName: 'Operation',
         name: 'operation',
         type: 'options',
         noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ['setValues'],
-          },
-        },
+        displayOptions: { show: { resource: ['setValues'] } },
         options: [
-          {
-            name: 'Check Values',
-            value: 'checkSetValues',
-            description: 'Check if a value exists in a set - great for deduplication and filtering',
-            action: 'Check if values exist in a set',
-          },
           {
             name: 'Add Value',
             value: 'addToSet',
@@ -246,10 +244,10 @@ export class EightKit implements INodeType {
             action: 'Add values to a set',
           },
           {
-            name: 'Remove Value',
-            value: 'removeFromSet',
-            description: 'Remove a specific value from a set',
-            action: 'Remove values from a set',
+            name: 'Check Values',
+            value: 'checkSetValues',
+            description: 'Check if a value exists in a set - great for deduplication and filtering',
+            action: 'Check if values exist in a set',
           },
           {
             name: 'Get Values',
@@ -257,20 +255,144 @@ export class EightKit implements INodeType {
             description: 'Retrieve all values stored in a set',
             action: 'Get all set values',
           },
+          {
+            name: 'Remove Value',
+            value: 'removeFromSet',
+            description: 'Remove a specific value from a set',
+            action: 'Remove values from a set',
+          },
         ],
-        default: 'checkSetValues',
+        default: 'addToSet',
       },
-      // Lookup Operations (manage lookups themselves)
+
+      // Name (for setValues)
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+        required: true,
+        displayOptions: { show: { resource: ['setValues'] } },
+      },
+
+      // Value (for add/check/remove in setValues)
+      {
+        displayName: 'Value',
+        name: 'value',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'The value to check, add, or remove from the set. Can be any string up to 255 characters (e.g., email, user ID, domain name).',
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['setValues'],
+            operation: ['checkSetValues', 'addToSet', 'removeFromSet'],
+          },
+        },
+      },
+
+      // Include Set Value Data (for check)
+      {
+        displayName: 'Include Set Value Data',
+        name: 'getSetValueData',
+        type: 'boolean',
+        default: false,
+        description: 'Whether to include additional metadata about the set value in the output.',
+        displayOptions: {
+          show: { resource: ['setValues'], operation: ['checkSetValues'] },
+        },
+      },
+
+      // Set Value Data Field Name (conditional)
+      {
+        displayName: 'Set Value Data Field Name',
+        name: 'setValueDataFieldName',
+        type: 'string',
+        default: '__checkData',
+        placeholder: '__checkData',
+        description: 'The field name where set value metadata will be stored in the output JSON.',
+        displayOptions: {
+          show: {
+            resource: ['setValues'],
+            operation: ['checkSetValues'],
+            getSetValueData: [true],
+          },
+        },
+      },
+
+      // Advanced Settings for Set Values (getSetValues)
+      {
+        displayName: 'Advanced Settings',
+        name: 'advancedSettings',
+        type: 'collection',
+        placeholder: 'Add Advanced Settings',
+        default: {},
+        description: 'Configure advanced options like pagination, filtering, and sorting',
+        displayOptions: { show: { resource: ['setValues'], operation: ['getSetValues'] } },
+        options: [
+          {
+            displayName: 'Pagination',
+            name: 'pagination',
+            type: 'fixedCollection',
+            placeholder: 'Add Pagination',
+            default: { pagination: {} },
+            description: 'Configure pagination for large result sets',
+            options: [
+              {
+                displayName: 'Pagination Settings',
+                name: 'pagination',
+                default: { pagination: {} },
+                values: [
+                  {
+                    displayName: 'Page',
+                    name: 'page',
+                    type: 'number',
+                    typeOptions: { minValue: 1, required: false },
+                    default: null,
+                    placeholder: '1',
+                    description: 'Page number to retrieve (starts from 1).',
+                  },
+                  {
+                    displayName: 'Items Per Page',
+                    name: 'limit',
+                    type: 'number',
+                    typeOptions: { minValue: 1, maxValue: 100, required: false },
+                    default: null,
+                    placeholder: '10',
+                    description: 'Maximum number of set values to return per page (1-100).',
+                  },
+                  {
+                    displayName: 'Offset (Advanced)',
+                    name: 'offset',
+                    type: 'number',
+                    typeOptions: { minValue: 0, required: false },
+                    default: null,
+                    placeholder: '0',
+                    description: 'Number of items to skip from the beginning.',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+
+      /* =========================
+       * 2) LOOKUPS
+       * ========================= */
+
+      // Lookup Operations (Create → List)
       {
         displayName: 'Operation',
         name: 'operation',
         type: 'options',
         noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ['lookup'],
-          },
-        },
+        displayOptions: { show: { resource: ['lookup'] } },
         options: [
           {
             name: 'Create',
@@ -285,19 +407,97 @@ export class EightKit implements INodeType {
             action: 'List all lookups',
           },
         ],
-        default: 'listLookups',
+        default: 'createLookup',
       },
-      // Lookup Values Operations (manage mappings within lookups)
+
+      // Name (for lookup)
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+        required: true,
+        displayOptions: { show: { resource: ['lookup'] }, hide: { operation: ['listLookups'] } },
+      },
+
+      // Description (for create lookup)
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description: 'Optional human-readable description explaining the purpose of this record.',
+        displayOptions: { show: { resource: ['lookup'], operation: ['createLookup'] } },
+      },
+
+      // Advanced Settings for Lookup (listLookups)
+      {
+        displayName: 'Advanced Settings',
+        name: 'advancedSettings',
+        type: 'collection',
+        placeholder: 'Add Advanced Settings',
+        default: {},
+        description: 'Configure advanced options like pagination, filtering, and sorting',
+        displayOptions: { show: { resource: ['lookup'], operation: ['listLookups'] } },
+        options: [
+          {
+            displayName: 'Pagination',
+            name: 'pagination',
+            type: 'fixedCollection',
+            placeholder: 'Add Pagination',
+            default: { pagination: {} },
+            description: 'Configure pagination for large result sets',
+            options: [
+              {
+                displayName: 'Pagination Settings',
+                name: 'pagination',
+                default: { pagination: {} },
+                values: [
+                  {
+                    displayName: 'Page',
+                    name: 'page',
+                    type: 'number',
+                    typeOptions: { minValue: 1, required: false },
+                    default: null,
+                    placeholder: '1',
+                    description: 'Page number to retrieve (starts from 1).',
+                  },
+                  {
+                    displayName: 'Items Per Page',
+                    name: 'limit',
+                    type: 'number',
+                    typeOptions: { minValue: 1, maxValue: 100, required: false },
+                    default: null,
+                    placeholder: '10',
+                    description: 'Maximum number of lookups to return per page (1-100).',
+                  },
+                  {
+                    displayName: 'Offset (Advanced)',
+                    name: 'offset',
+                    type: 'number',
+                    typeOptions: { minValue: 0, required: false },
+                    default: null,
+                    placeholder: '0',
+                    description: 'Number of items to skip from the beginning.',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+
+      // Lookup Values Operations (Add → Get → Remove)
       {
         displayName: 'Operation',
         name: 'operation',
         type: 'options',
         noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ['lookupValues'],
-          },
-        },
+        displayOptions: { show: { resource: ['lookupValues'] } },
         options: [
           {
             name: 'Add Mapping',
@@ -320,17 +520,284 @@ export class EightKit implements INodeType {
         ],
         default: 'addToLookup',
       },
-      // Advanced Operations (composite operations)
+
+      // Name (for lookupValues)
+      {
+        displayName: 'Name',
+        name: 'name',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+        required: true,
+        displayOptions: { show: { resource: ['lookupValues'] } },
+      },
+
+      // Left/Right Values (for addToLookup)
+      {
+        displayName: 'Left Value',
+        name: 'leftValue',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description: 'The left-side value in the lookup mapping. Typically an ID from one system.',
+        required: true,
+        displayOptions: { show: { resource: ['lookupValues'], operation: ['addToLookup'] } },
+      },
+      {
+        displayName: 'Right Value',
+        name: 'rightValue',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'The right-side value in the lookup mapping. Typically the corresponding ID from another system.',
+        required: true,
+        displayOptions: { show: { resource: ['lookupValues'], operation: ['addToLookup'] } },
+      },
+
+      // Value (for removeFromLookup)
+      {
+        displayName: 'Value',
+        name: 'value',
+        type: 'string',
+        default: '',
+        placeholder: 'value_to_remove',
+        description:
+          'The specific value to remove from the lookup. This should match an existing entry exactly.',
+        required: true,
+        displayOptions: {
+          show: { resource: ['lookupValues'], operation: ['removeFromLookup'] },
+        },
+      },
+
+      // Advanced Settings for Lookup Values (getLookupValues)
+      {
+        displayName: 'Advanced Settings',
+        name: 'advancedSettings',
+        type: 'collection',
+        placeholder: 'Add Advanced Settings',
+        default: {},
+        description: 'Configure advanced options like pagination, filtering, and sorting',
+        displayOptions: {
+          show: { resource: ['lookupValues'], operation: ['getLookupValues'] },
+        },
+        options: [
+          {
+            displayName: 'Pagination',
+            name: 'pagination',
+            type: 'fixedCollection',
+            placeholder: 'Add Pagination',
+            default: { pagination: {} },
+            description: 'Configure pagination for large result sets',
+            options: [
+              {
+                displayName: 'Pagination Settings',
+                name: 'pagination',
+                default: { pagination: {} },
+                values: [
+                  {
+                    displayName: 'Page',
+                    name: 'page',
+                    type: 'number',
+                    typeOptions: { minValue: 1, required: false },
+                    default: null,
+                    placeholder: '1',
+                    description: 'Page number to retrieve (starts from 1).',
+                  },
+                  {
+                    displayName: 'Items Per Page',
+                    name: 'limit',
+                    type: 'number',
+                    typeOptions: { minValue: 1, maxValue: 100, required: false },
+                    default: null,
+                    placeholder: '10',
+                    description: 'Maximum number of lookup values to return per page (1-100).',
+                  },
+                  {
+                    displayName: 'Offset (Advanced)',
+                    name: 'offset',
+                    type: 'number',
+                    typeOptions: { minValue: 0, required: false },
+                    default: null,
+                    placeholder: '0',
+                    description: 'Number of items to skip from the beginning.',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+
+      /* =========================
+       * 3) LOCKS
+       * ========================= */
+
+      // Lock Operations (Acquire → Check → Release)
       {
         displayName: 'Operation',
         name: 'operation',
         type: 'options',
         noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ['advanced'],
+        displayOptions: { show: { resource: ['lock'] } },
+        options: [
+          {
+            name: 'Acquire Lock',
+            value: 'acquireLock',
+            description: 'Attempt to acquire a lock for resource coordination',
+            action: 'Acquire a lock',
           },
+          {
+            name: 'Check Lock',
+            value: 'checkLock',
+            description: 'Check if a specific lock exists and get its details',
+            action: 'Check if a lock exists',
+          },
+          {
+            name: 'Release Lock',
+            value: 'releaseLock',
+            description: 'Release a specific lock by key',
+            action: 'Release a lock',
+          },
+        ],
+        default: 'acquireLock',
+      },
+
+      // Key (for lock)
+      {
+        displayName: 'Key',
+        name: 'key',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'Unique identifier for the lock. Must contain only letters, numbers, hyphens, and underscores. Maximum 255 characters.',
+        required: true,
+        displayOptions: { show: { resource: ['lock'] } },
+      },
+
+      // Timeout (for acquire lock)
+      {
+        displayName: 'Timeout (Seconds)',
+        name: 'timeout',
+        type: 'number',
+        typeOptions: { minValue: 1, maxValue: 3600 },
+        default: null,
+        placeholder: '300',
+        description:
+          'Optional timeout in seconds. If not specified, the lock will not expire automatically.',
+        displayOptions: { show: { resource: ['lock'], operation: ['acquireLock'] } },
+      },
+
+      /* =========================
+       * 4) LAST UPDATED
+       * ========================= */
+
+      // Last Updated Operations (Create → Get)
+      {
+        displayName: 'Operation',
+        name: 'operation',
+        type: 'options',
+        noDataExpression: true,
+        displayOptions: { show: { resource: ['lastUpdated'] } },
+        options: [
+          {
+            name: 'Add New Last Updated',
+            value: 'createLastUpdated',
+            description: 'Create a new last updated record with current timestamp',
+            action: 'Create last updated record',
+          },
+          {
+            name: 'Get Last Updated',
+            value: 'getLastUpdated',
+            description: 'Retrieve a last updated record by key',
+            action: 'Get last updated record',
+          },
+        ],
+        default: 'createLastUpdated',
+      },
+
+      // Key (for lastUpdated)
+      {
+        displayName: 'Key',
+        name: 'key',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'Unique identifier for the last updated record. Must contain only letters, numbers, hyphens, and underscores. Maximum 255 characters.',
+        required: true,
+        displayOptions: { show: { resource: ['lastUpdated'] } },
+      },
+
+      // Description (for create lastUpdated)
+      {
+        displayName: 'Description',
+        name: 'description',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description: 'Optional human-readable description explaining the purpose of this record.',
+        displayOptions: {
+          show: { resource: ['lastUpdated'], operation: ['createLastUpdated'] },
         },
+      },
+
+      // Date (for create lastUpdated)
+      {
+        displayName: 'Date',
+        name: 'date',
+        type: 'string',
+        default: '',
+        placeholder: 'YYYY-MM-DDTHH:mm:ss.sssZ',
+        description:
+          'Optional custom date in ISO 8601 format. If not specified, current timestamp will be used.',
+        displayOptions: {
+          show: { resource: ['lastUpdated'], operation: ['createLastUpdated'] },
+        },
+      },
+
+      /* =========================
+       * 5) APP
+       * ========================= */
+
+      // App Operations (Get Info → Health)
+      {
+        displayName: 'Operation',
+        name: 'operation',
+        type: 'options',
+        noDataExpression: true,
+        displayOptions: { show: { resource: ['app'] } },
+        options: [
+          {
+            name: 'Get App Info',
+            value: 'getAppInfo',
+            description: 'Retrieve information about the authenticated app',
+            action: 'Get app information',
+          },
+          {
+            name: 'Health Check',
+            value: 'getAppHealth',
+            description: 'Check the health status of the authenticated app',
+            action: 'Check app health',
+          },
+        ],
+        default: 'getAppInfo',
+      },
+
+      /* =========================
+       * 6) ADVANCED
+       * ========================= */
+
+      // Advanced Operations (Complete Lookup-Set)
+      {
+        displayName: 'Operation',
+        name: 'operation',
+        type: 'options',
+        noDataExpression: true,
+        displayOptions: { show: { resource: ['advanced'] } },
         options: [
           {
             name: 'Complete Lookup-Set',
@@ -342,194 +809,8 @@ export class EightKit implements INodeType {
         ],
         default: 'completeLookupSet',
       },
-      // Key (for lock and last updated operations)
-      {
-        displayName: 'Key',
-        name: 'key',
-        type: 'string',
-        default: '',
-        placeholder: '',
-        description:
-          'Unique identifier for the lock or last updated record. Must contain only letters, numbers, hyphens, and underscores. Maximum 255 characters.',
-        required: true,
-        displayOptions: {
-          show: {
-            resource: ['lock', 'lastUpdated'],
-          },
-        },
-      },
-      // Name (for set and lookup operations)
-      {
-        displayName: 'Name',
-        name: 'name',
-        type: 'string',
-        default: '',
-        placeholder: '',
-        description:
-          'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
-        required: true,
-        displayOptions: {
-          show: {
-            resource: ['set', 'setValues', 'lookup', 'lookupValues'],
-          },
-          hide: {
-            operation: ['listSets', 'listLookups'],
-          },
-        },
-      },
-      // Description (for create operations)
-      {
-        displayName: 'Description',
-        name: 'description',
-        type: 'string',
-        default: '',
-        placeholder: '',
-        description:
-          'Optional human-readable description explaining the purpose of this record. Helpful for documentation and team collaboration.',
-        displayOptions: {
-          show: {
-            resource: ['set', 'lookup', 'lastUpdated'],
-            operation: ['createSet', 'createLookup', 'createLastUpdated'],
-          },
-        },
-      },
-      // Date (for create last updated operation)
-      {
-        displayName: 'Date',
-        name: 'date',
-        type: 'string',
-        default: '',
-        placeholder: 'YYYY-MM-DDTHH:mm:ss.sssZ',
-        description:
-          'Optional custom date in ISO 8601 format. If not specified, current timestamp will be used.',
-        displayOptions: {
-          show: {
-            resource: ['lastUpdated'],
-            operation: ['createLastUpdated'],
-          },
-        },
-      },
-      // Value (for set operations)
-      {
-        displayName: 'Value',
-        name: 'value',
-        type: 'string',
-        default: '',
-        placeholder: '',
-        description:
-          'The value to check, add, or remove from the set. Can be any string up to 255 characters (e.g., email, user ID, domain name).',
-        required: true,
-        displayOptions: {
-          show: {
-            resource: ['setValues'],
-            operation: ['checkSetValues', 'addToSet', 'removeFromSet'],
-          },
-        },
-      },
-      // Left Value (for lookup operations)
-      {
-        displayName: 'Left Value',
-        name: 'leftValue',
-        type: 'string',
-        default: '',
-        placeholder: '',
-        description:
-          'The left-side value in the lookup mapping. Typically represents an ID or key from one system (e.g., internal user ID, product SKU).',
-        required: true,
-        displayOptions: {
-          show: {
-            resource: ['lookupValues'],
-            operation: ['addToLookup'],
-          },
-        },
-      },
-      // Timeout (for acquire lock operation)
-      {
-        displayName: 'Timeout (Seconds)',
-        name: 'timeout',
-        type: 'number',
-        typeOptions: {
-          minValue: 1,
-          maxValue: 3600,
-        },
-        default: null,
-        placeholder: '300',
-        description:
-          'Optional timeout in seconds. If not specified, the lock will not expire automatically.',
-        displayOptions: {
-          show: {
-            resource: ['lock'],
-            operation: ['acquireLock'],
-          },
-        },
-      },
-      // Right Value (for lookup operations)
-      {
-        displayName: 'Right Value',
-        name: 'rightValue',
-        type: 'string',
-        default: '',
-        placeholder: '',
-        description:
-          'The right-side value in the lookup mapping. Typically represents the corresponding ID or key from another system (e.g., external system ID, CRM ID).',
-        required: true,
-        displayOptions: {
-          show: {
-            resource: ['lookupValues'],
-            operation: ['addToLookup'],
-          },
-        },
-      },
-      // Value (for remove operations)
-      {
-        displayName: 'Value',
-        name: 'value',
-        type: 'string',
-        default: '',
-        placeholder: 'value_to_remove',
-        description:
-          'The specific value to remove from the lookup or set. This should match an existing entry exactly.',
-        required: true,
-        displayOptions: {
-          show: {
-            resource: ['lookupValues'],
-            operation: ['removeFromLookup'],
-          },
-        },
-      },
-      // Get Set Value Data (for check set values)
-      {
-        displayName: 'Include Set Value Data',
-        name: 'getSetValueData',
-        type: 'boolean',
-        default: false,
-        description:
-          'Whether to include additional metadata about the set value in the output. Useful for debugging or when you need creation timestamps.',
-        displayOptions: {
-          show: {
-            resource: ['setValues'],
-            operation: ['checkSetValues'],
-          },
-        },
-      },
-      // Set Value Data Field Name (conditional field)
-      {
-        displayName: 'Set Value Data Field Name',
-        name: 'setValueDataFieldName',
-        type: 'string',
-        default: '__checkData',
-        placeholder: '__checkData',
-        description:
-          "The field name where set value metadata will be stored in the output JSON. Choose a name that won't conflict with your existing data fields.",
-        displayOptions: {
-          show: {
-            resource: ['setValues'],
-            operation: ['checkSetValues'],
-            getSetValueData: [true],
-          },
-        },
-      },
-      // Lookup Name (for advanced operations)
+
+      // Lookup Name / Left / Right / Set Name / Value (for advanced completeLookupSet)
       {
         displayName: 'Lookup Name',
         name: 'lookupName',
@@ -540,13 +821,9 @@ export class EightKit implements INodeType {
           'Name of the lookup table for ID mapping. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
         required: true,
         displayOptions: {
-          show: {
-            resource: ['advanced'],
-            operation: ['completeLookupSet'],
-          },
+          show: { resource: ['advanced'], operation: ['completeLookupSet'] },
         },
       },
-      // Left Value (for advanced operations)
       {
         displayName: 'Left Value',
         name: 'leftValue',
@@ -554,16 +831,12 @@ export class EightKit implements INodeType {
         default: '',
         placeholder: 'internal_user_123',
         description:
-          'The left-side value in the lookup mapping. Typically represents an ID or key from one system (e.g., internal user ID, product SKU).',
+          'The left-side value in the lookup mapping. Typically represents an ID or key from one system.',
         required: true,
         displayOptions: {
-          show: {
-            resource: ['advanced'],
-            operation: ['completeLookupSet'],
-          },
+          show: { resource: ['advanced'], operation: ['completeLookupSet'] },
         },
       },
-      // Right Value (for advanced operations)
       {
         displayName: 'Right Value',
         name: 'rightValue',
@@ -571,16 +844,12 @@ export class EightKit implements INodeType {
         default: '',
         placeholder: '',
         description:
-          'The right-side value in the lookup mapping. Typically represents the corresponding ID or key from another system (e.g., external system ID, CRM ID).',
+          'The right-side value in the lookup mapping. Typically represents the corresponding ID or key from another system.',
         required: true,
         displayOptions: {
-          show: {
-            resource: ['advanced'],
-            operation: ['completeLookupSet'],
-          },
+          show: { resource: ['advanced'], operation: ['completeLookupSet'] },
         },
       },
-      // Set Name (for advanced operations)
       {
         displayName: 'Set Name',
         name: 'setName',
@@ -591,13 +860,9 @@ export class EightKit implements INodeType {
           'Name of the set for tracking processed values. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
         required: true,
         displayOptions: {
-          show: {
-            resource: ['advanced'],
-            operation: ['completeLookupSet'],
-          },
+          show: { resource: ['advanced'], operation: ['completeLookupSet'] },
         },
       },
-      // Value (for advanced operations)
       {
         displayName: 'Value',
         name: 'value',
@@ -608,325 +873,11 @@ export class EightKit implements INodeType {
           'The value to add to the set for tracking. Can be any string up to 255 characters (e.g., email, user ID, domain name).',
         required: true,
         displayOptions: {
-          show: {
-            resource: ['advanced'],
-            operation: ['completeLookupSet'],
-          },
+          show: { resource: ['advanced'], operation: ['completeLookupSet'] },
         },
       },
-      // Advanced Settings Collection
-      {
-        displayName: 'Advanced Settings',
-        name: 'advancedSettings',
-        type: 'collection',
-        placeholder: 'Add Advanced Settings',
-        default: {},
-        description: 'Configure advanced options like pagination, filtering, and sorting',
-        displayOptions: {
-          show: {
-            resource: ['lookup'],
-            operation: ['listLookups'],
-          },
-        },
-        options: [
-          {
-            displayName: 'Pagination',
-            name: 'pagination',
-            type: 'fixedCollection',
-            placeholder: 'Add Pagination',
-            default: {
-              pagination: {},
-            },
-            description: 'Configure pagination for large result sets',
-            options: [
-              {
-                displayName: 'Pagination Settings',
-                name: 'pagination',
-                default: {
-                  pagination: {},
-                },
-                values: [
-                  {
-                    displayName: 'Page',
-                    name: 'page',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 1,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '1',
-                    description:
-                      'Page number to retrieve (starts from 1). Use this to navigate through multiple pages of results.',
-                  },
-                  {
-                    displayName: 'Items Per Page',
-                    name: 'limit',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 1,
-                      maxValue: 100,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '10',
-                    description:
-                      'Maximum number of lookups to return per page (1-100). Smaller values load faster but require more requests for large datasets.',
-                  },
-                  {
-                    displayName: 'Offset (Advanced)',
-                    name: 'offset',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 0,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '0',
-                    description:
-                      'Number of items to skip from the beginning. Alternative to page-based pagination. Leave at 0 to use page-based navigation.',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-      // Advanced Settings for Set Operations (listSets)
-      {
-        displayName: 'Advanced Settings',
-        name: 'advancedSettings',
-        type: 'collection',
-        placeholder: 'Add Advanced Settings',
-        default: {},
-        description: 'Configure advanced options like pagination, filtering, and sorting',
-        displayOptions: {
-          show: {
-            resource: ['set'],
-            operation: ['listSets'],
-          },
-        },
-        options: [
-          {
-            displayName: 'Pagination',
-            name: 'pagination',
-            type: 'fixedCollection',
-            placeholder: 'Add Pagination',
-            default: {
-              pagination: {},
-            },
-            description: 'Configure pagination for large result sets',
-            options: [
-              {
-                displayName: 'Pagination Settings',
-                name: 'pagination',
-                default: {
-                  pagination: {},
-                },
-                values: [
-                  {
-                    displayName: 'Page',
-                    name: 'page',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 1,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '1',
-                    description:
-                      'Page number to retrieve (starts from 1). Use this to navigate through multiple pages of results.',
-                  },
-                  {
-                    displayName: 'Items Per Page',
-                    name: 'limit',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 1,
-                      maxValue: 100,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '10',
-                    description:
-                      'Maximum number of sets to return per page (1-100). Smaller values load faster but require more requests for large datasets.',
-                  },
-                  {
-                    displayName: 'Offset (Advanced)',
-                    name: 'offset',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 0,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '0',
-                    description:
-                      'Number of items to skip from the beginning. Alternative to page-based pagination. Leave at 0 to use page-based navigation.',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-      // Advanced Settings for Set Values Operations (getSetValues)
-      {
-        displayName: 'Advanced Settings',
-        name: 'advancedSettings',
-        type: 'collection',
-        placeholder: 'Add Advanced Settings',
-        default: {},
-        description: 'Configure advanced options like pagination, filtering, and sorting',
-        displayOptions: {
-          show: {
-            resource: ['setValues'],
-            operation: ['getSetValues'],
-          },
-        },
-        options: [
-          {
-            displayName: 'Pagination',
-            name: 'pagination',
-            type: 'fixedCollection',
-            placeholder: 'Add Pagination',
-            default: {
-              pagination: {},
-            },
-            description: 'Configure pagination for large result sets',
-            options: [
-              {
-                displayName: 'Pagination Settings',
-                name: 'pagination',
-                default: {
-                  pagination: {},
-                },
-                values: [
-                  {
-                    displayName: 'Page',
-                    name: 'page',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 1,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '1',
-                    description:
-                      'Page number to retrieve (starts from 1). Use this to navigate through multiple pages of results.',
-                  },
-                  {
-                    displayName: 'Items Per Page',
-                    name: 'limit',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 1,
-                      maxValue: 100,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '10',
-                    description:
-                      'Maximum number of set values to return per page (1-100). Smaller values load faster but require more requests for large datasets.',
-                  },
-                  {
-                    displayName: 'Offset (Advanced)',
-                    name: 'offset',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 0,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '0',
-                    description:
-                      'Number of items to skip from the beginning. Alternative to page-based pagination. Leave at 0 to use page-based navigation.',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-      // Advanced Settings for Lookup Values Operations (getLookupValues)
-      {
-        displayName: 'Advanced Settings',
-        name: 'advancedSettings',
-        type: 'collection',
-        placeholder: 'Add Advanced Settings',
-        default: {},
-        description: 'Configure advanced options like pagination, filtering, and sorting',
-        displayOptions: {
-          show: {
-            resource: ['lookupValues'],
-            operation: ['getLookupValues'],
-          },
-        },
-        options: [
-          {
-            displayName: 'Pagination',
-            name: 'pagination',
-            type: 'fixedCollection',
-            placeholder: 'Add Pagination',
-            default: {
-              pagination: {},
-            },
-            description: 'Configure pagination for large result sets',
-            options: [
-              {
-                displayName: 'Pagination Settings',
-                name: 'pagination',
-                default: {
-                  pagination: {},
-                },
-                values: [
-                  {
-                    displayName: 'Page',
-                    name: 'page',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 1,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '1',
-                    description:
-                      'Page number to retrieve (starts from 1). Use this to navigate through multiple pages of results.',
-                  },
-                  {
-                    displayName: 'Items Per Page',
-                    name: 'limit',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 1,
-                      maxValue: 100,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '10',
-                    description:
-                      'Maximum number of lookup values to return per page (1-100). Smaller values load faster but require more requests for large datasets.',
-                  },
-                  {
-                    displayName: 'Offset (Advanced)',
-                    name: 'offset',
-                    type: 'number',
-                    typeOptions: {
-                      minValue: 0,
-                      required: false,
-                    },
-                    default: null,
-                    placeholder: '0',
-                    description:
-                      'Number of items to skip from the beginning. Alternative to page-based pagination. Leave at 0 to use page-based navigation.',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-      // Advanced Settings for Add To Set Operation
+
+      // Advanced Settings for Advanced (completeLookupSet)
       {
         displayName: 'Advanced Settings',
         name: 'advancedSettings',
@@ -935,36 +886,7 @@ export class EightKit implements INodeType {
         default: {},
         description: 'Configure optional metadata and advanced options for the set value',
         displayOptions: {
-          show: {
-            resource: ['setValues'],
-            operation: ['addToSet'],
-          },
-        },
-        options: [
-          {
-            displayName: 'Metadata',
-            name: 'metadata',
-            type: 'json',
-            default: '{}',
-            placeholder: '{}',
-            description:
-              'Optional JSON metadata to associate with this value. Useful for tracking additional information about the value.',
-          },
-        ],
-      },
-      // Advanced Settings for Complete Lookup-Set Operation
-      {
-        displayName: 'Advanced Settings',
-        name: 'advancedSettings',
-        type: 'collection',
-        placeholder: 'Add Advanced Settings',
-        default: {},
-        description: 'Configure optional metadata and advanced options for the set value',
-        displayOptions: {
-          show: {
-            resource: ['advanced'],
-            operation: ['completeLookupSet'],
-          },
+          show: { resource: ['advanced'], operation: ['completeLookupSet'] },
         },
         options: [
           {
@@ -975,6 +897,28 @@ export class EightKit implements INodeType {
             placeholder: '{}',
             description:
               'Optional JSON metadata to associate with the set value. Useful for tracking additional information about the value.',
+          },
+        ],
+      },
+
+      // Advanced Settings for Set Values (addToSet) — keep near end to avoid clutter
+      {
+        displayName: 'Advanced Settings',
+        name: 'advancedSettings',
+        type: 'collection',
+        placeholder: 'Add Advanced Settings',
+        default: {},
+        description: 'Configure optional metadata and advanced options for the set value',
+        displayOptions: { show: { resource: ['setValues'], operation: ['addToSet'] } },
+        options: [
+          {
+            displayName: 'Metadata',
+            name: 'metadata',
+            type: 'json',
+            default: '{}',
+            placeholder: '{}',
+            description:
+              'Optional JSON metadata to associate with this value. Useful for tracking additional information about the value.',
           },
         ],
       },
