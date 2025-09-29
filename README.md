@@ -19,7 +19,7 @@ Part of the 8kit⁠ n8n integration framework. See [8kit.io](https://8kit.io)⁠
 
 ## 🚀 What is the 8kit n8n Node?
 
-The 8kit n8n node brings 8kit capabilities directly into your n8n workflows. Easily access the powerful capabilities of the 8kit suite directly from within n8n (Set, Lookup, Lock, App).
+The 8kit n8n node brings 8kit capabilities directly into your n8n workflows. Easily access the powerful capabilities of the 8kit suite directly from within n8n (Uniq, Lookup, Lock, App).
 
 ### What is 8kit?
 
@@ -90,21 +90,21 @@ The credential is reused across every 8kit node in a workflow.
 
 ## Actions
 
-When using 8kit nodes, each operation returns structured items on distinct outputs (for example existing vs non-existing set values) so you can branch logic without manual parsing.
+When using 8kit nodes, each operation returns structured items on distinct outputs (for example existing vs non-existing Uniq values) so you can branch logic without manual parsing.
 
 <img src="docs/images/setvalues-check.png" alt="Operation" height="300">
 
 Available operations include:
 
-🔄 **Sets**
+🔄 **Uniq Collections & Uniq Values**
 
 - Track processed items, user preferences, or configuration data
-- Operations: Create Set, List Sets, Get Set Info, Get Set Values, Add to Set, Check Set Values, Remove from Set
+- Operations: Create Uniq Collection, List Uniq Collections, Get Uniq Collection Info, Get Uniq Values, Add to Uniq, Check Uniq Values, Remove from Uniq
 
-🔗 **Lookups**
+🔗 **Lookup Collections & Lookups**
 
 - Map identifiers across different platforms seamlessly
-- Operations: Create Lookup, List Lookups, Get Lookup Values, Add to Lookup, Complete Lookup Set, Remove from Lookup
+- Operations: Create Lookup Collection, List Lookup Collections, Get Lookup Values, Add to Lookup, Complete Lookup + Uniq, Remove from Lookup
 
 🔒 **Locks**
 

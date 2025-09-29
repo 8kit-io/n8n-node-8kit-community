@@ -2,7 +2,7 @@ import type { IExecuteFunctions } from 'n8n-workflow';
 import { buildSetEndpoint, EightKitHttpClient } from '../utils/httpClient';
 
 export async function executeGetSetInfo(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('🔍 [8kit] executeGetSetInfo called for itemIndex:', itemIndex);
+  console.log('🔍 [8kit] executeGetSetInfo (Uniq collection) called for itemIndex:', itemIndex);
 
   const name = this.getNodeParameter('name', itemIndex) as string;
 
@@ -24,13 +24,13 @@ export async function executeGetSetInfo(this: IExecuteFunctions, itemIndex: numb
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new Error(`Failed to get set info: ${response.error || 'Unknown error'}`);
+      throw new Error(`Failed to get Uniq collection info: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🔍 [8kit] Set info retrieved successfully:', response.data);
+    console.log('🔍 [8kit] Uniq collection info retrieved successfully:', response.data);
     return response.data;
   } catch (error) {
-    console.error('🔍 [8kit] Error getting set info:', error);
+    console.error('🔍 [8kit] Error getting Uniq collection info:', error);
     throw error;
   }
 }

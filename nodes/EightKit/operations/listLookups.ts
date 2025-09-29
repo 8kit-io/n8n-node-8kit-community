@@ -2,7 +2,7 @@ import type { IExecuteFunctions } from 'n8n-workflow';
 import { EightKitHttpClient } from '../utils/httpClient';
 
 export async function executeListLookups(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('🔍 [8kit] executeListLookups called for itemIndex:', itemIndex);
+  console.log('🔍 [8kit] executeListLookups (lookup collections) called for itemIndex:', itemIndex);
 
   // Get pagination parameters from advanced settings
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex, {}) as any;
@@ -37,13 +37,13 @@ export async function executeListLookups(this: IExecuteFunctions, itemIndex: num
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new Error(`Failed to list lookups: ${response.error || 'Unknown error'}`);
+      throw new Error(`Failed to list lookup collections: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🔍 [8kit] Lookups listed successfully:', response.data);
+    console.log('🔍 [8kit] Lookup collections listed successfully:', response.data);
     return response.data;
   } catch (error) {
-    console.error('🔍 [8kit] Error listing lookups:', error);
+    console.error('🔍 [8kit] Error listing lookup collections:', error);
     throw error;
   }
 }

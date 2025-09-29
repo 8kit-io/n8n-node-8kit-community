@@ -52,6 +52,8 @@ describe('executeAddToSet', () => {
       response: { status: 404, data: { error: 'Set not found', code: 'SET_NOT_FOUND' } },
     });
 
-    await expect(executeAddToSet.call(fx, 0)).rejects.toEqual('Set "missing" not found.');
+    await expect(executeAddToSet.call(fx, 0)).rejects.toEqual(
+      'Uniq collection "missing" not found.'
+    );
   });
 });

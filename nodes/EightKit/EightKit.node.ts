@@ -1,11 +1,10 @@
-import {
-  type IExecuteFunctions,
-  type ILoadOptionsFunctions,
-  type INodeExecutionData,
-  type INodeListSearchItems,
-  type INodeType,
-  type INodeTypeDescription,
-  NodeConnectionType,
+import type {
+  IExecuteFunctions,
+  ILoadOptionsFunctions,
+  INodeExecutionData,
+  INodeListSearchItems,
+  INodeType,
+  INodeTypeDescription,
 } from 'n8n-workflow';
 
 import {
@@ -29,6 +28,7 @@ import {
   executeReleaseLock,
   executeRemoveFromLookup,
   executeRemoveFromSet,
+  executeSearchLookupValues,
 } from './operations';
 import { EightKitHttpClient } from './utils/httpClient';
 
@@ -39,11 +39,11 @@ export class EightKit implements INodeType {
     icon: 'file:8kit.svg',
     group: ['transform'],
     version: 2,
-    description: 'Integrate with 8kit Automation Tools for set tracking and lookup mapping',
+    description: 'Integrate with 8kit Automation Tools for Uniq collections and lookup mapping',
     defaults: {
       name: '8kit',
     },
-    inputs: [NodeConnectionType.Main],
+    inputs: ['main'],
     outputs: `={{$parameter["resource"] === "setValues" && $parameter["operation"] === "checkSetValues" ? [{"type": "main", "displayName": "Yes"}, {"type": "main", "displayName": "No"}] : [{"type": "main"}]}}`,
     credentials: [
       {
@@ -58,28 +58,18 @@ export class EightKit implements INodeType {
         type: 'options',
         noDataExpression: true,
         options: [
-          // 1) Sets
+          // 1) Uniq
           {
-            name: 'Set',
-            value: 'set',
-            description: 'Manage sets themselves (create, list, get info)',
-          },
-          {
-            name: 'Set Values',
+            name: 'Uniq',
             value: 'setValues',
-            description: 'Manage values within sets (add, remove, check, get values)',
+            description: 'Manage values within a Uniq collection (add, remove, check, get values)',
           },
-          // 2) Lookups
           {
             name: 'Lookup',
-            value: 'lookup',
-            description: 'Manage lookups themselves (create, list, get info)',
-          },
-          {
-            name: 'Lookup Values',
             value: 'lookupValues',
-            description: 'Manage mappings within lookups (add, remove, get values)',
+            description: 'Manage mappings within a lookup (add, remove, get values)',
           },
+
           // 3) Locks
           {
             name: 'Lock',
@@ -91,6 +81,17 @@ export class EightKit implements INodeType {
             name: 'Last Updated',
             value: 'lastUpdated',
             description: 'Track when operations or data sources were last updated',
+          },
+          // 2) Collections
+          {
+            name: 'Uniq Collection',
+            value: 'set',
+            description: 'Manage Uniq collections themselves (create, list, get info)',
+          },
+          {
+            name: 'Lookup Collection',
+            value: 'lookup',
+            description: 'Manage lookup collections themselves (create, list, get info)',
           },
           // 5) App
           {
@@ -105,14 +106,14 @@ export class EightKit implements INodeType {
             description: 'Advanced composite operations combining multiple resources',
           },
         ],
-        default: 'set',
+        default: 'setValues',
       },
 
       /* =========================
-       * 1) SETS
+       * 1) UNIQ COLLECTIONS
        * ========================= */
 
-      // Set Operations (Create → List → Get Info)
+      // Uniq Collection Operations (Create → List → Get Info)
       {
         displayName: 'Operation',
         name: 'operation',
@@ -123,34 +124,36 @@ export class EightKit implements INodeType {
           {
             name: 'Create',
             value: 'createSet',
-            description: 'Create a new empty set for tracking unique values (emails, IDs, etc.)',
-            action: 'Create a new set',
+            description:
+              'Create a new empty Uniq collection for tracking unique values (emails, IDs, etc.)',
+            action: 'Create a new Uniq collection',
           },
           {
             name: 'List',
             value: 'listSets',
-            description: 'Retrieve all sets available for your application',
-            action: 'List all sets',
+            description: 'Retrieve all Uniq collections available for your application',
+            action: 'List all Uniq collections',
           },
           {
             name: 'Get Info',
             value: 'getSetInfo',
-            description: 'Get detailed information about a specific set (metadata, statistics)',
-            action: 'Get set information',
+            description:
+              'Get detailed information about a specific Uniq collection (metadata, statistics)',
+            action: 'Get Uniq collection information',
           },
         ],
         default: 'createSet',
       },
 
-      // Name (for set operations)
+      // Name (for Uniq collection operations)
       {
-        displayName: 'Name',
+        displayName: 'Collection Name',
         name: 'name',
         type: 'string',
         default: '',
         placeholder: '',
         description:
-          'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+          'Unique identifier for the Uniq or lookup collection. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
         required: true,
         displayOptions: {
           show: { resource: ['set'] },
@@ -158,7 +161,7 @@ export class EightKit implements INodeType {
         },
       },
 
-      // Description (for create set)
+      // Description (for create Uniq collection)
       {
         displayName: 'Description',
         name: 'description',
@@ -172,7 +175,7 @@ export class EightKit implements INodeType {
         },
       },
 
-      // Advanced Settings for Set (listSets)
+      // Advanced Settings for Uniq Collection (listSets)
       {
         displayName: 'Advanced Settings',
         name: 'advancedSettings',
@@ -180,7 +183,9 @@ export class EightKit implements INodeType {
         placeholder: 'Add Advanced Settings',
         default: {},
         description: 'Configure advanced options like pagination, filtering, and sorting',
-        displayOptions: { show: { resource: ['set'], operation: ['listSets'] } },
+        displayOptions: {
+          show: { resource: ['set'], operation: ['listSets'] },
+        },
         options: [
           {
             displayName: 'Pagination',
@@ -188,7 +193,7 @@ export class EightKit implements INodeType {
             type: 'fixedCollection',
             placeholder: 'Add Pagination',
             default: { pagination: {} },
-            description: 'Configure pagination for large result sets',
+            description: 'Configure pagination for large Uniq collection result sets',
             options: [
               {
                 displayName: 'Pagination Settings',
@@ -208,10 +213,14 @@ export class EightKit implements INodeType {
                     displayName: 'Items Per Page',
                     name: 'limit',
                     type: 'number',
-                    typeOptions: { minValue: 1, maxValue: 100, required: false },
+                    typeOptions: {
+                      minValue: 1,
+                      maxValue: 100,
+                      required: false,
+                    },
                     default: null,
                     placeholder: '10',
-                    description: 'Maximum number of sets to return per page (1-100).',
+                    description: 'Maximum number of Uniq collections to return per page (1-100).',
                   },
                   {
                     displayName: 'Offset (Advanced)',
@@ -229,7 +238,7 @@ export class EightKit implements INodeType {
         ],
       },
 
-      // Set Values Operations (Add → Check → Get → Remove)
+      // Uniq Operations (Add → Check → Get → Remove)
       {
         displayName: 'Operation',
         name: 'operation',
@@ -238,28 +247,29 @@ export class EightKit implements INodeType {
         displayOptions: { show: { resource: ['setValues'] } },
         options: [
           {
-            name: 'Add Value',
+            name: 'Add',
             value: 'addToSet',
-            description: 'Add a new value to a set - automatically handles duplicates',
-            action: 'Add values to a set',
+            description: 'Add a new value to a Uniq collection - automatically handles duplicates',
+            action: 'Add values to a Uniq collection',
           },
           {
-            name: 'Check Values',
+            name: 'Check Exists',
             value: 'checkSetValues',
-            description: 'Check if a value exists in a set - great for deduplication and filtering',
-            action: 'Check if values exist in a set',
+            description:
+              'Check if a value exists in a Uniq collection - great for deduplication and filtering',
+            action: 'Check if values exist in a Uniq collection',
           },
           {
-            name: 'Get Values',
+            name: 'Get',
             value: 'getSetValues',
-            description: 'Retrieve all values stored in a set',
-            action: 'Get all set values',
+            description: 'Retrieve all values stored in a Uniq collection',
+            action: 'Get all Uniq values',
           },
           {
-            name: 'Remove Value',
+            name: 'Remove',
             value: 'removeFromSet',
-            description: 'Remove a specific value from a set',
-            action: 'Remove values from a set',
+            description: 'Remove a specific value from a Uniq collection',
+            action: 'Remove values from a Uniq collection',
           },
         ],
         default: 'addToSet',
@@ -267,13 +277,13 @@ export class EightKit implements INodeType {
 
       // Name (for setValues)
       {
-        displayName: 'Name',
+        displayName: 'Collection Name',
         name: 'name',
         type: 'string',
         default: '',
         placeholder: '',
         description:
-          'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+          'Unique identifier for the Uniq or lookup collection. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
         required: true,
         displayOptions: { show: { resource: ['setValues'] } },
       },
@@ -286,7 +296,7 @@ export class EightKit implements INodeType {
         default: '',
         placeholder: '',
         description:
-          'The value to check, add, or remove from the set. Can be any string up to 255 characters (e.g., email, user ID, domain name).',
+          'The value to check, add, or remove from the Uniq collection. Can be any string up to 255 characters (e.g., email, user ID, domain name).',
         required: true,
         displayOptions: {
           show: {
@@ -296,26 +306,26 @@ export class EightKit implements INodeType {
         },
       },
 
-      // Include Set Value Data (for check)
+      // Include Uniq Data (for check)
       {
-        displayName: 'Include Set Value Data',
+        displayName: 'Include Uniq Data',
         name: 'getSetValueData',
         type: 'boolean',
         default: false,
-        description: 'Whether to include additional metadata about the set value in the output.',
+        description: 'Whether to include additional metadata about the Uniq value in the output.',
         displayOptions: {
           show: { resource: ['setValues'], operation: ['checkSetValues'] },
         },
       },
 
-      // Set Value Data Field Name (conditional)
+      // Uniq Data Field Name (conditional)
       {
-        displayName: 'Set Value Data Field Name',
+        displayName: 'Uniq Data Field Name',
         name: 'setValueDataFieldName',
         type: 'string',
-        default: '__checkData',
-        placeholder: '__checkData',
-        description: 'The field name where set value metadata will be stored in the output JSON.',
+        default: '8kit',
+        placeholder: '8kit',
+        description: 'The field name where Uniq metadata will be stored in the output JSON.',
         displayOptions: {
           show: {
             resource: ['setValues'],
@@ -333,7 +343,9 @@ export class EightKit implements INodeType {
         placeholder: 'Add Advanced Settings',
         default: {},
         description: 'Configure advanced options like pagination, filtering, and sorting',
-        displayOptions: { show: { resource: ['setValues'], operation: ['getSetValues'] } },
+        displayOptions: {
+          show: { resource: ['setValues'], operation: ['getSetValues'] },
+        },
         options: [
           {
             displayName: 'Pagination',
@@ -361,10 +373,14 @@ export class EightKit implements INodeType {
                     displayName: 'Items Per Page',
                     name: 'limit',
                     type: 'number',
-                    typeOptions: { minValue: 1, maxValue: 100, required: false },
+                    typeOptions: {
+                      minValue: 1,
+                      maxValue: 100,
+                      required: false,
+                    },
                     default: null,
                     placeholder: '10',
-                    description: 'Maximum number of set values to return per page (1-100).',
+                    description: 'Maximum number of Uniq values to return per page (1-100).',
                   },
                   {
                     displayName: 'Offset (Advanced)',
@@ -383,10 +399,10 @@ export class EightKit implements INodeType {
       },
 
       /* =========================
-       * 2) LOOKUPS
+       * 2) LOOKUP COLLECTIONS
        * ========================= */
 
-      // Lookup Operations (Create → List)
+      // Lookup Collection Operations (Create → List)
       {
         displayName: 'Operation',
         name: 'operation',
@@ -397,33 +413,36 @@ export class EightKit implements INodeType {
           {
             name: 'Create',
             value: 'createLookup',
-            description: 'Create a new lookup table for mapping between different ID systems',
-            action: 'Create a new lookup',
+            description: 'Create a new lookup collection for mapping between different ID systems',
+            action: 'Create a new lookup collection',
           },
           {
             name: 'List',
             value: 'listLookups',
-            description: 'Retrieve all lookup tables available for your application',
-            action: 'List all lookups',
+            description: 'Retrieve all lookup collections available for your application',
+            action: 'List all lookup collections',
           },
         ],
         default: 'createLookup',
       },
 
-      // Name (for lookup)
+      // Name (for lookup collection)
       {
-        displayName: 'Name',
+        displayName: 'Collection Name',
         name: 'name',
         type: 'string',
         default: '',
         placeholder: '',
         description:
-          'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+          'Unique identifier for the Uniq or lookup collection. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
         required: true,
-        displayOptions: { show: { resource: ['lookup'] }, hide: { operation: ['listLookups'] } },
+        displayOptions: {
+          show: { resource: ['lookup'] },
+          hide: { operation: ['listLookups'] },
+        },
       },
 
-      // Description (for create lookup)
+      // Description (for create lookup collection)
       {
         displayName: 'Description',
         name: 'description',
@@ -431,10 +450,12 @@ export class EightKit implements INodeType {
         default: '',
         placeholder: '',
         description: 'Optional human-readable description explaining the purpose of this record.',
-        displayOptions: { show: { resource: ['lookup'], operation: ['createLookup'] } },
+        displayOptions: {
+          show: { resource: ['lookup'], operation: ['createLookup'] },
+        },
       },
 
-      // Advanced Settings for Lookup (listLookups)
+      // Advanced Settings for Lookup Collection (listLookups)
       {
         displayName: 'Advanced Settings',
         name: 'advancedSettings',
@@ -442,7 +463,9 @@ export class EightKit implements INodeType {
         placeholder: 'Add Advanced Settings',
         default: {},
         description: 'Configure advanced options like pagination, filtering, and sorting',
-        displayOptions: { show: { resource: ['lookup'], operation: ['listLookups'] } },
+        displayOptions: {
+          show: { resource: ['lookup'], operation: ['listLookups'] },
+        },
         options: [
           {
             displayName: 'Pagination',
@@ -450,7 +473,7 @@ export class EightKit implements INodeType {
             type: 'fixedCollection',
             placeholder: 'Add Pagination',
             default: { pagination: {} },
-            description: 'Configure pagination for large result sets',
+            description: 'Configure pagination for large lookup collection result sets',
             options: [
               {
                 displayName: 'Pagination Settings',
@@ -470,10 +493,14 @@ export class EightKit implements INodeType {
                     displayName: 'Items Per Page',
                     name: 'limit',
                     type: 'number',
-                    typeOptions: { minValue: 1, maxValue: 100, required: false },
+                    typeOptions: {
+                      minValue: 1,
+                      maxValue: 100,
+                      required: false,
+                    },
                     default: null,
                     placeholder: '10',
-                    description: 'Maximum number of lookups to return per page (1-100).',
+                    description: 'Maximum number of lookup collections to return per page (1-100).',
                   },
                   {
                     displayName: 'Offset (Advanced)',
@@ -491,7 +518,7 @@ export class EightKit implements INodeType {
         ],
       },
 
-      // Lookup Values Operations (Add → Get → Remove)
+      // Lookup Operations (Add → Get → Remove)
       {
         displayName: 'Operation',
         name: 'operation',
@@ -500,21 +527,27 @@ export class EightKit implements INodeType {
         displayOptions: { show: { resource: ['lookupValues'] } },
         options: [
           {
-            name: 'Add Mapping',
+            name: 'Add',
             value: 'addToLookup',
             description: 'Create ID mappings between two systems (e.g., internal ID ↔ external ID)',
             action: 'Add ID mappings to a lookup',
           },
           {
-            name: 'Get Values',
+            name: 'Search',
+            value: 'searchLookupValues',
+            description: 'Search for lookup values by left value, right value, or general search',
+            action: 'Search lookup values',
+          },
+          {
+            name: 'Get All',
             value: 'getLookupValues',
-            description: 'Retrieve all ID mappings stored in a lookup table',
+            description: 'Retrieve all ID mappings stored in a lookup',
             action: 'Get all lookup values',
           },
           {
-            name: 'Remove Mapping',
+            name: 'Remove',
             value: 'removeFromLookup',
-            description: 'Remove a specific ID mapping from a lookup table',
+            description: 'Remove a specific ID mapping from a lookup',
             action: 'Remove values from a lookup',
           },
         ],
@@ -523,13 +556,13 @@ export class EightKit implements INodeType {
 
       // Name (for lookupValues)
       {
-        displayName: 'Name',
+        displayName: 'Collection Name',
         name: 'name',
         type: 'string',
         default: '',
         placeholder: '',
         description:
-          'Unique identifier for the set or lookup. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+          'Unique identifier for the Uniq or lookup collection. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
         required: true,
         displayOptions: { show: { resource: ['lookupValues'] } },
       },
@@ -543,7 +576,9 @@ export class EightKit implements INodeType {
         placeholder: '',
         description: 'The left-side value in the lookup mapping. Typically an ID from one system.',
         required: true,
-        displayOptions: { show: { resource: ['lookupValues'], operation: ['addToLookup'] } },
+        displayOptions: {
+          show: { resource: ['lookupValues'], operation: ['addToLookup'] },
+        },
       },
       {
         displayName: 'Right Value',
@@ -554,7 +589,61 @@ export class EightKit implements INodeType {
         description:
           'The right-side value in the lookup mapping. Typically the corresponding ID from another system.',
         required: true,
-        displayOptions: { show: { resource: ['lookupValues'], operation: ['addToLookup'] } },
+        displayOptions: {
+          show: { resource: ['lookupValues'], operation: ['addToLookup'] },
+        },
+      },
+
+      // Search Type (for searchLookupValues)
+      {
+        displayName: 'Search Type',
+        name: 'searchType',
+        type: 'options',
+        default: 'search',
+        options: [
+          {
+            name: 'General Search',
+            value: 'search',
+            description: 'Search both left and right values using partial matching (contains)',
+          },
+          {
+            name: 'Left Value (Exact)',
+            value: 'left',
+            description: 'Search by exact left value match',
+          },
+          {
+            name: 'Right Value (Exact)',
+            value: 'right',
+            description: 'Search by exact right value match',
+          },
+        ],
+        description:
+          'Type of search to perform. "General Search" uses partial matching, while "Left/Right Value" require exact matches.',
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['lookupValues'],
+            operation: ['searchLookupValues'],
+          },
+        },
+      },
+
+      // Search Value (for searchLookupValues)
+      {
+        displayName: 'Value',
+        name: 'searchValue',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'The value to search for. For "General Search" this will match partial text in both left and right values. For "Left/Right Value" this must match exactly.',
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['lookupValues'],
+            operation: ['searchLookupValues'],
+          },
+        },
       },
 
       // Value (for removeFromLookup)
@@ -610,7 +699,11 @@ export class EightKit implements INodeType {
                     displayName: 'Items Per Page',
                     name: 'limit',
                     type: 'number',
-                    typeOptions: { minValue: 1, maxValue: 100, required: false },
+                    typeOptions: {
+                      minValue: 1,
+                      maxValue: 100,
+                      required: false,
+                    },
                     default: null,
                     placeholder: '10',
                     description: 'Maximum number of lookup values to return per page (1-100).',
@@ -644,19 +737,19 @@ export class EightKit implements INodeType {
         displayOptions: { show: { resource: ['lock'] } },
         options: [
           {
-            name: 'Acquire Lock',
+            name: 'Acquire',
             value: 'acquireLock',
             description: 'Attempt to acquire a lock for resource coordination',
             action: 'Acquire a lock',
           },
           {
-            name: 'Check Lock',
+            name: 'Check',
             value: 'checkLock',
             description: 'Check if a specific lock exists and get its details',
             action: 'Check if a lock exists',
           },
           {
-            name: 'Release Lock',
+            name: 'Release',
             value: 'releaseLock',
             description: 'Release a specific lock by key',
             action: 'Release a lock',
@@ -688,7 +781,9 @@ export class EightKit implements INodeType {
         placeholder: '300',
         description:
           'Optional timeout in seconds. If not specified, the lock will not expire automatically.',
-        displayOptions: { show: { resource: ['lock'], operation: ['acquireLock'] } },
+        displayOptions: {
+          show: { resource: ['lock'], operation: ['acquireLock'] },
+        },
       },
 
       /* =========================
@@ -704,13 +799,13 @@ export class EightKit implements INodeType {
         displayOptions: { show: { resource: ['lastUpdated'] } },
         options: [
           {
-            name: 'Add New Last Updated',
+            name: 'Add',
             value: 'createLastUpdated',
             description: 'Create a new last updated record with current timestamp',
             action: 'Create last updated record',
           },
           {
-            name: 'Get Last Updated',
+            name: 'Get',
             value: 'getLastUpdated',
             description: 'Retrieve a last updated record by key',
             action: 'Get last updated record',
@@ -800,11 +895,11 @@ export class EightKit implements INodeType {
         displayOptions: { show: { resource: ['advanced'] } },
         options: [
           {
-            name: 'Complete Lookup-Set',
+            name: 'Complete Lookup-Uniq',
             value: 'completeLookupSet',
             description:
-              'Add mapping to lookup and value to set in one operation - perfect for ID tracking workflows',
-            action: 'Complete lookup and set operation',
+              'Add mapping to a lookup and value to a Uniq collection in one operation - perfect for ID tracking workflows',
+            action: 'Complete lookup and Uniq operation',
           },
         ],
         default: 'completeLookupSet',
@@ -812,7 +907,7 @@ export class EightKit implements INodeType {
 
       // Lookup Name / Left / Right / Set Name / Value (for advanced completeLookupSet)
       {
-        displayName: 'Lookup Name',
+        displayName: 'Lookup Collection Name',
         name: 'lookupName',
         type: 'string',
         default: '',
@@ -829,7 +924,7 @@ export class EightKit implements INodeType {
         name: 'leftValue',
         type: 'string',
         default: '',
-        placeholder: 'internal_user_123',
+        placeholder: '',
         description:
           'The left-side value in the lookup mapping. Typically represents an ID or key from one system.',
         required: true,
@@ -851,13 +946,13 @@ export class EightKit implements INodeType {
         },
       },
       {
-        displayName: 'Set Name',
+        displayName: 'Uniq Collection Name',
         name: 'setName',
         type: 'string',
         default: '',
-        placeholder: 'processed-users',
+        placeholder: '',
         description:
-          'Name of the set for tracking processed values. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+          'Name of the Uniq collection for tracking processed values. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
         required: true,
         displayOptions: {
           show: { resource: ['advanced'], operation: ['completeLookupSet'] },
@@ -870,7 +965,7 @@ export class EightKit implements INodeType {
         default: '',
         placeholder: '',
         description:
-          'The value to add to the set for tracking. Can be any string up to 255 characters (e.g., email, user ID, domain name).',
+          'The value to add to the Uniq collection for tracking. Can be any string up to 255 characters (e.g., email, user ID, domain name).',
         required: true,
         displayOptions: {
           show: { resource: ['advanced'], operation: ['completeLookupSet'] },
@@ -884,7 +979,7 @@ export class EightKit implements INodeType {
         type: 'collection',
         placeholder: 'Add Advanced Settings',
         default: {},
-        description: 'Configure optional metadata and advanced options for the set value',
+        description: 'Configure optional metadata and advanced options for the Uniq value',
         displayOptions: {
           show: { resource: ['advanced'], operation: ['completeLookupSet'] },
         },
@@ -896,20 +991,22 @@ export class EightKit implements INodeType {
             default: '{}',
             placeholder: '{}',
             description:
-              'Optional JSON metadata to associate with the set value. Useful for tracking additional information about the value.',
+              'Optional JSON metadata to associate with the Uniq value. Useful for tracking additional information about the value.',
           },
         ],
       },
 
-      // Advanced Settings for Set Values (addToSet) — keep near end to avoid clutter
+      // Advanced Settings for Uniq (addToSet) — keep near end to avoid clutter
       {
         displayName: 'Advanced Settings',
         name: 'advancedSettings',
         type: 'collection',
         placeholder: 'Add Advanced Settings',
         default: {},
-        description: 'Configure optional metadata and advanced options for the set value',
-        displayOptions: { show: { resource: ['setValues'], operation: ['addToSet'] } },
+        description: 'Configure optional metadata and advanced options for the Uniq value',
+        displayOptions: {
+          show: { resource: ['setValues'], operation: ['addToSet'] },
+        },
         options: [
           {
             displayName: 'Metadata',
@@ -918,7 +1015,7 @@ export class EightKit implements INodeType {
             default: '{}',
             placeholder: '{}',
             description:
-              'Optional JSON metadata to associate with this value. Useful for tracking additional information about the value.',
+              'Optional JSON metadata to associate with this Uniq value. Useful for tracking additional information about the value.',
           },
         ],
       },
@@ -942,9 +1039,15 @@ export class EightKit implements INodeType {
           continue;
         }
 
+        const inputItem = items[i];
         const newItem: INodeExecutionData = {
           json: result.result,
+          pairedItem: { item: i },
         };
+
+        if (inputItem.binary) {
+          newItem.binary = inputItem.binary;
+        }
 
         // Route to appropriate output based on existence
         if (result.outputIndex === 0) {
@@ -1012,6 +1115,9 @@ export class EightKit implements INodeType {
         case 'addToLookup':
           result = await executeAddToLookup.call(this, i);
           break;
+        case 'searchLookupValues':
+          result = await executeSearchLookupValues.call(this, i);
+          break;
         case 'getLookupValues':
           result = await executeGetLookupValues.call(this, i);
           break;
@@ -1060,7 +1166,7 @@ export class EightKit implements INodeType {
         }));
       }
     } catch (error) {
-      console.log('Error loading sets:', error);
+      console.log('Error loading Uniq collections:', error);
     }
 
     return [];
@@ -1081,7 +1187,7 @@ export class EightKit implements INodeType {
         }));
       }
     } catch (error) {
-      console.log('Error loading lookups:', error);
+      console.log('Error loading lookup collections:', error);
     }
 
     return [];

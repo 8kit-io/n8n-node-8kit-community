@@ -47,8 +47,11 @@ export async function executeCompleteLookupSet(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🔥 [8kit] executeCompleteLookupSet called for itemIndex:', itemIndex);
-  console.log('🔥 [8kit] Starting completeLookupSet operation...');
+  console.log(
+    '🔥 [8kit] executeCompleteLookupSet (Lookup + Uniq) called for itemIndex:',
+    itemIndex
+  );
+  console.log('🔥 [8kit] Starting combined lookup + Uniq operation...');
 
   const lookupName = this.getNodeParameter('lookupName', itemIndex) as string;
   const leftValue = this.getNodeParameter('leftValue', itemIndex) as string;
@@ -128,7 +131,7 @@ export async function executeCompleteLookupSet(
     ]);
 
     console.log('🔥 [8kit] Lookup exists:', lookupExists);
-    console.log('🔥 [8kit] Set exists:', setExists);
+    console.log('🔥 [8kit] Uniq collection exists:', setExists);
 
     // If lookup doesn't exist, throw error
     if (!lookupExists) {
@@ -137,7 +140,7 @@ export async function executeCompleteLookupSet(
 
     // If set doesn't exist, throw error
     if (!setExists) {
-      throw new Error(`Set "${setName}" not found.`);
+      throw new Error(`Uniq collection "${setName}" not found.`);
     }
 
     // Perform both operations
@@ -147,7 +150,7 @@ export async function executeCompleteLookupSet(
     ]);
 
     console.log('🔥 [8kit] Lookup operation result:', lookupResult);
-    console.log('🔥 [8kit] Set operation result:', setResult);
+    console.log('🔥 [8kit] Uniq operation result:', setResult);
 
     const result: CompleteLookupSetResult = {
       success: true,
@@ -158,7 +161,7 @@ export async function executeCompleteLookupSet(
     // Return the combined result
     return result;
   } catch (error: any) {
-    console.log('🔥 [8kit] Error in executeCompleteLookupSet:', error.message);
+    console.log('🔥 [8kit] Error in executeCompleteLookupSet (Lookup + Uniq):', error.message);
 
     // Return the input data with error information
     throw error.message;
@@ -204,7 +207,7 @@ async function addValueToSet(
   const endpoint = buildSetEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
 
-  console.log('🔥 [8kit] Adding value to set:', url);
+  console.log('🔥 [8kit] Adding value to Uniq collection:', url);
 
   const payload: { value: string; metadata?: any } = { value };
 
@@ -227,16 +230,16 @@ async function addValueToSet(
     }
   }
 
-  console.log('🔥 [8kit] Add set value payload:', payload);
+  console.log('🔥 [8kit] Add Uniq value payload:', payload);
 
   const response = await client.post<AddSetValueResult>(url, payload);
 
   if (!response.success) {
-    throw new Error(`Failed to add value to set: ${response.error || 'Unknown error'}`);
+    throw new Error(`Failed to add value to Uniq collection: ${response.error || 'Unknown error'}`);
   }
 
   if (!response.data) {
-    throw new Error('Add set value response missing data field');
+    throw new Error('Add Uniq value response missing data field');
   }
 
   return { success: true, data: response.data };

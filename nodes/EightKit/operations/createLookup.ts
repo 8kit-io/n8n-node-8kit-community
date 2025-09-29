@@ -10,7 +10,7 @@ export async function executeCreateLookup(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🔍 [8kit] executeCreateLookup called for itemIndex:', itemIndex);
+  console.log('🔍 [8kit] executeCreateLookup (lookup collection) called for itemIndex:', itemIndex);
 
   const name = this.getNodeParameter('name', itemIndex) as string;
   const description = this.getNodeParameter('description', itemIndex, '') as string;
@@ -38,13 +38,13 @@ export async function executeCreateLookup(
     const response = await client.post(`${formattedBaseUrl}${endpoint}`, data);
 
     if (!response.success) {
-      throw new Error(`Failed to create lookup: ${response.error || 'Unknown error'}`);
+      throw new Error(`Failed to create lookup collection: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🔍 [8kit] Lookup created successfully:', response.data);
+    console.log('🔍 [8kit] Lookup collection created successfully:', response.data);
     return response.data;
   } catch (error) {
-    console.error('🔍 [8kit] Error creating lookup:', error);
+    console.error('🔍 [8kit] Error creating lookup collection:', error);
     throw error;
   }
 }

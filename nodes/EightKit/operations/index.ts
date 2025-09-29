@@ -30,3 +30,4 @@ export type { ReleaseLockParams } from './releaseLock';
 export { executeReleaseLock } from './releaseLock';
 export { executeRemoveFromLookup } from './removeFromLookup';
 export { executeRemoveFromSet } from './removeFromSet';
+export { executeSearchLookupValues } from './searchLookupValues';

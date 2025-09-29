@@ -18,14 +18,15 @@ services:
       - WEBHOOK_URL=http://localhost:5678/
       - GENERIC_TIMEZONE=UTC
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+      - N8N_ENABLE_CUSTOM_NODES=true
     volumes:
-      - n8n_data:/home/node/.n8n
+      - n8n_10_data:/home/node/.n8n
       - ./dist:/home/node/.n8n/custom
     networks:
       - n8n_network
 
 volumes:
-  n8n_data:
+  n8n_10_data:
     driver: local
 
 networks:

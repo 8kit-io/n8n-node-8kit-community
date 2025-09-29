@@ -2,7 +2,7 @@ import type { IExecuteFunctions } from 'n8n-workflow';
 import { EightKitHttpClient } from '../utils/httpClient';
 
 export async function executeListSets(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('🔍 [8kit] executeListSets called for itemIndex:', itemIndex);
+  console.log('🔍 [8kit] executeListSets (Uniq collections) called for itemIndex:', itemIndex);
 
   // Get pagination parameters from advanced settings
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex, {}) as any;
@@ -37,13 +37,13 @@ export async function executeListSets(this: IExecuteFunctions, itemIndex: number
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new Error(`Failed to list sets: ${response.error || 'Unknown error'}`);
+      throw new Error(`Failed to list Uniq collections: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🔍 [8kit] Sets listed successfully:', response.data);
+    console.log('🔍 [8kit] Uniq collections listed successfully:', response.data);
     return response.data;
   } catch (error) {
-    console.error('🔍 [8kit] Error listing sets:', error);
+    console.error('🔍 [8kit] Error listing Uniq collections:', error);
     throw error;
   }
 }

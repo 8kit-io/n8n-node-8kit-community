@@ -5,7 +5,7 @@ export async function executeGetSetValues(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🔍 [8kit] executeGetSetValues called for itemIndex:', itemIndex);
+  console.log('🔍 [8kit] executeGetSetValues (Uniq) called for itemIndex:', itemIndex);
 
   const name = this.getNodeParameter('name', itemIndex) as string;
 
@@ -16,8 +16,8 @@ export async function executeGetSetValues(
   const limit = paginationSettings.limit || 10;
   const offset = paginationSettings.offset || 0;
 
-  console.log('🔍 [8kit] Parameters:', { name });
-  console.log('🔍 [8kit] Pagination parameters:', { page, limit, offset });
+  console.log('🔍 [8kit] Parameters (Uniq):', { name });
+  console.log('🔍 [8kit] Pagination parameters (Uniq):', { page, limit, offset });
 
   // Validate inputs
   validateSetName(name);
@@ -46,13 +46,13 @@ export async function executeGetSetValues(
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new Error(`Failed to get set values: ${response.error || 'Unknown error'}`);
+      throw new Error(`Failed to get Uniq values: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🔍 [8kit] Set values retrieved successfully:', response.data);
+    console.log('🔍 [8kit] Uniq values retrieved successfully:', response.data);
     return response.data;
   } catch (error) {
-    console.error('🔍 [8kit] Error getting set values:', error);
+    console.error('🔍 [8kit] Error getting Uniq values:', error);
     throw error;
   }
 }

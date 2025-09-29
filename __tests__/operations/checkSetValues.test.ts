@@ -5,7 +5,6 @@ import {
   createMockExecuteFunctions,
   createMockItem,
   expectSuccess,
-  mockHttpResponses,
   testData,
 } from '../setup';
 
@@ -17,286 +16,218 @@ describe('executeCheckSetValues', () => {
   });
 
   describe('successful operations', () => {
-    it('should check if value exists in set', async () => {
-      // Arrange
+    it('returns the original input when value exists', async () => {
       const itemIndex = 0;
-      const autoCreate = false;
 
       mockExecuteFunctions.getNodeParameter
-        .mockReturnValueOnce(testData.validSetName) // setName
-        .mockReturnValueOnce('single') // mode
-        .mockReturnValueOnce('value') // valueField
-        .mockReturnValueOnce('exists') // outputField
-        .mockReturnValueOnce('all'); // filterMode
+        .mockReturnValueOnce(testData.validSetName) // name
+        .mockReturnValueOnce(testData.validValue) // value
+        .mockReturnValueOnce(false); // getSetValueData
 
-      mockExecuteFunctions.getInputData.mockReturnValue([
-        createMockItem({ value: testData.validValue }),
-      ]);
+      const originalItem = createMockItem({ value: testData.validValue, tag: 'original' });
+      mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
+      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+        success: true,
+        data: { exists: true },
+      });
 
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockHttpResponses.setExists);
+      const result = await executeCheckSetValues.call(mockExecuteFunctions, itemIndex);
 
-      // Act
-      const result = await executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate);
-
-      // Assert
       expectSuccess(result);
-      expect(result.exists).toBe(true);
-      expect(result.checkedValue).toBe(testData.validValue);
-      expect(result.operation).toBe('checkSetValues');
-      expect(result.autoCreate).toBe(false);
+      expect(result.outputIndex).toBe(0);
+      expect(result.result).toEqual(originalItem.json);
     });
 
-    it('should handle value not found in set', async () => {
-      // Arrange
+    it('routes to the non-existing output when value is absent', async () => {
       const itemIndex = 0;
-      const autoCreate = false;
 
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validSetName)
-        .mockReturnValueOnce('single')
-        .mockReturnValueOnce('value')
-        .mockReturnValueOnce('exists')
-        .mockReturnValueOnce('all');
+        .mockReturnValueOnce(testData.validValue)
+        .mockReturnValueOnce(false);
 
-      mockExecuteFunctions.getInputData.mockReturnValue([
-        createMockItem({ value: testData.validValue }),
-      ]);
+      const originalItem = createMockItem({
+        value: testData.validValue,
+        note: 'should be missing',
+      });
+      mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
+      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+        success: true,
+        data: { exists: false },
+      });
 
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockHttpResponses.setNotExists);
+      const result = await executeCheckSetValues.call(mockExecuteFunctions, itemIndex);
 
-      // Act
-      const result = await executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate);
-
-      // Assert
       expectSuccess(result);
-      expect(result.exists).toBe(false);
-      expect(result.checkedValue).toBe(testData.validValue);
+      expect(result.outputIndex).toBe(1);
+      expect(result.result).toEqual(originalItem.json);
     });
 
-    it('should handle bulk mode', async () => {
-      // Arrange
+    it('includes set value data when requested', async () => {
       const itemIndex = 0;
-      const autoCreate = true;
 
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validSetName)
-        .mockReturnValueOnce('bulk')
-        .mockReturnValueOnce('values')
-        .mockReturnValueOnce('exists')
-        .mockReturnValueOnce('all');
+        .mockReturnValueOnce(testData.validValue)
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce('setInfo');
 
-      mockExecuteFunctions.getInputData.mockReturnValue([
-        createMockItem({
-          values: [testData.validValue, 'value-2', 'value-3'],
-        }),
-      ]);
+      const originalItem = createMockItem({ value: testData.validValue });
+      mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-
       mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
         success: true,
         data: {
-          results: [
-            { value: testData.validValue, exists: true },
-            { value: 'value-2', exists: false },
-            { value: 'value-3', exists: true },
-          ],
+          exists: true,
+          value: {
+            id: 'value-123',
+            metadata: { source: 'test' },
+          },
         },
       });
 
-      // Act
-      const result = await executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate);
+      const result = await executeCheckSetValues.call(mockExecuteFunctions, itemIndex);
 
-      // Assert
       expectSuccess(result);
-      expect(result.results).toHaveLength(3);
-      expect(result.results[0].exists).toBe(true);
-      expect(result.results[1].exists).toBe(false);
-      expect(result.autoCreate).toBe(true);
+      expect(result.outputIndex).toBe(0);
+      expect(result.result).toEqual({
+        value: testData.validValue,
+        setInfo: {
+          id: 'value-123',
+          metadata: { source: 'test' },
+        },
+      });
+    });
+
+    it('falls back to default data field name when blank', async () => {
+      const itemIndex = 0;
+
+      mockExecuteFunctions.getNodeParameter
+        .mockReturnValueOnce(testData.validSetName)
+        .mockReturnValueOnce(testData.validValue)
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce('   ');
+
+      const originalItem = createMockItem({ value: testData.validValue });
+      mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
+
+      mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
+      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+        success: true,
+        data: {
+          exists: true,
+          value: { id: 'value-456' },
+        },
+      });
+
+      const result = await executeCheckSetValues.call(mockExecuteFunctions, itemIndex);
+
+      expectSuccess(result);
+      expect(result.outputIndex).toBe(0);
+      expect(result.result).toEqual({
+        value: testData.validValue,
+        __checkData: { id: 'value-456' },
+      });
     });
   });
 
   describe('error handling', () => {
-    it('should handle API errors', async () => {
-      // Arrange
+    it('throws when the API request fails', async () => {
       const itemIndex = 0;
-      const autoCreate = false;
 
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validSetName)
-        .mockReturnValueOnce('single')
-        .mockReturnValueOnce('value')
-        .mockReturnValueOnce('exists')
-        .mockReturnValueOnce('all');
+        .mockReturnValueOnce(testData.validValue)
+        .mockReturnValueOnce(false);
 
       mockExecuteFunctions.getInputData.mockReturnValue([
         createMockItem({ value: testData.validValue }),
       ]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-
       mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(
         new Error('API Error: Set not found')
       );
 
-      // Act & Assert
-      await expect(
-        executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate)
-      ).rejects.toThrow('API Error: Set not found');
+      await expect(executeCheckSetValues.call(mockExecuteFunctions, itemIndex)).rejects.toThrow(
+        'API Error: Set not found'
+      );
     });
 
-    it('should handle missing required parameters', async () => {
-      // Arrange
+    it('validates presence of the set name', async () => {
       const itemIndex = 0;
-      const autoCreate = false;
 
       mockExecuteFunctions.getNodeParameter
-        .mockReturnValueOnce('') // Empty setName
-        .mockReturnValueOnce('single')
-        .mockReturnValueOnce('value')
-        .mockReturnValueOnce('exists')
-        .mockReturnValueOnce('all');
+        .mockReturnValueOnce('')
+        .mockReturnValueOnce(testData.validValue)
+        .mockReturnValueOnce(false);
 
       mockExecuteFunctions.getInputData.mockReturnValue([
         createMockItem({ value: testData.validValue }),
       ]);
 
-      // Act & Assert
-      await expect(
-        executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate)
-      ).rejects.toThrow('Set name is required');
+      await expect(executeCheckSetValues.call(mockExecuteFunctions, itemIndex)).rejects.toThrow(
+        'Uniq collection name is required and must be a string'
+      );
     });
 
-    it('should handle invalid set name format', async () => {
-      // Arrange
+    it('validates allowed characters in the set name', async () => {
       const itemIndex = 0;
-      const autoCreate = false;
 
       mockExecuteFunctions.getNodeParameter
-        .mockReturnValueOnce('invalid set name!') // Invalid characters
-        .mockReturnValueOnce('single')
-        .mockReturnValueOnce('value')
-        .mockReturnValueOnce('exists')
-        .mockReturnValueOnce('all');
+        .mockReturnValueOnce('invalid set name!')
+        .mockReturnValueOnce(testData.validValue)
+        .mockReturnValueOnce(false);
 
       mockExecuteFunctions.getInputData.mockReturnValue([
         createMockItem({ value: testData.validValue }),
       ]);
 
-      // Act & Assert
-      await expect(
-        executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate)
-      ).rejects.toThrow('Set name can only contain letters, numbers, hyphens, and underscores');
+      await expect(executeCheckSetValues.call(mockExecuteFunctions, itemIndex)).rejects.toThrow(
+        'Uniq collection name can only contain letters, numbers, hyphens, and underscores'
+      );
     });
   });
 
   describe('parameter validation', () => {
-    it('should validate set name length', async () => {
-      // Arrange
+    it('enforces the maximum set name length', async () => {
       const itemIndex = 0;
-      const autoCreate = false;
-      const longSetName = 'a'.repeat(101); // 101 characters
+      const longSetName = 'a'.repeat(101);
 
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(longSetName)
-        .mockReturnValueOnce('single')
-        .mockReturnValueOnce('value')
-        .mockReturnValueOnce('exists')
-        .mockReturnValueOnce('all');
+        .mockReturnValueOnce(testData.validValue)
+        .mockReturnValueOnce(false);
 
       mockExecuteFunctions.getInputData.mockReturnValue([
         createMockItem({ value: testData.validValue }),
       ]);
 
-      // Act & Assert
-      await expect(
-        executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate)
-      ).rejects.toThrow('Set name cannot exceed 100 characters');
+      await expect(executeCheckSetValues.call(mockExecuteFunctions, itemIndex)).rejects.toThrow(
+        'Uniq collection name cannot exceed 100 characters'
+      );
     });
 
-    it('should validate value length', async () => {
-      // Arrange
+    it('enforces the maximum value length', async () => {
       const itemIndex = 0;
-      const autoCreate = false;
-      const longValue = 'a'.repeat(256); // 256 characters
+      const longValue = 'a'.repeat(256);
 
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validSetName)
-        .mockReturnValueOnce('single')
-        .mockReturnValueOnce('value')
-        .mockReturnValueOnce('exists')
-        .mockReturnValueOnce('all');
+        .mockReturnValueOnce(longValue)
+        .mockReturnValueOnce(false);
 
       mockExecuteFunctions.getInputData.mockReturnValue([createMockItem({ value: longValue })]);
-
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-      // Act & Assert
-      await expect(
-        executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate)
-      ).rejects.toThrow('Value cannot exceed 255 characters');
-    });
-  });
-
-  describe('filter modes', () => {
-    it('should handle existing filter mode', async () => {
-      // Arrange
-      const itemIndex = 0;
-      const autoCreate = false;
-
-      mockExecuteFunctions.getNodeParameter
-        .mockReturnValueOnce(testData.validSetName)
-        .mockReturnValueOnce('single')
-        .mockReturnValueOnce('value')
-        .mockReturnValueOnce('exists')
-        .mockReturnValueOnce('existing');
-
-      mockExecuteFunctions.getInputData.mockReturnValue([
-        createMockItem({ value: testData.validValue }),
-      ]);
-
-      mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockHttpResponses.setExists);
-
-      // Act
-      const result = await executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate);
-
-      // Assert
-      expectSuccess(result);
-      expect(result.exists).toBe(true);
-    });
-
-    it('should handle non-existing filter mode', async () => {
-      // Arrange
-      const itemIndex = 0;
-      const autoCreate = false;
-
-      mockExecuteFunctions.getNodeParameter
-        .mockReturnValueOnce(testData.validSetName)
-        .mockReturnValueOnce('single')
-        .mockReturnValueOnce('value')
-        .mockReturnValueOnce('exists')
-        .mockReturnValueOnce('nonExisting');
-
-      mockExecuteFunctions.getInputData.mockReturnValue([
-        createMockItem({ value: testData.validValue }),
-      ]);
-
-      mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockHttpResponses.setNotExists);
-
-      // Act
-      const result = await executeCheckSetValues.call(mockExecuteFunctions, itemIndex, autoCreate);
-
-      // Assert
-      expectSuccess(result);
-      expect(result.exists).toBe(false);
+      await expect(executeCheckSetValues.call(mockExecuteFunctions, itemIndex)).rejects.toThrow(
+        'Value cannot exceed 255 characters'
+      );
     });
   });
 });

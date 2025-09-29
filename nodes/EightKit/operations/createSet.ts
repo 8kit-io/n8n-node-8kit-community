@@ -7,7 +7,7 @@ export interface CreateSetParams {
 }
 
 export async function executeCreateSet(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('🔍 [8kit] executeCreateSet called for itemIndex:', itemIndex);
+  console.log('🔍 [8kit] executeCreateSet (Uniq collection) called for itemIndex:', itemIndex);
 
   const name = this.getNodeParameter('name', itemIndex) as string;
   const description = this.getNodeParameter('description', itemIndex, '') as string;
@@ -35,13 +35,13 @@ export async function executeCreateSet(this: IExecuteFunctions, itemIndex: numbe
     const response = await client.post(`${formattedBaseUrl}${endpoint}`, data);
 
     if (!response.success) {
-      throw new Error(`Failed to create set: ${response.error || 'Unknown error'}`);
+      throw new Error(`Failed to create Uniq collection: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🔍 [8kit] Set created successfully:', response.data);
+    console.log('🔍 [8kit] Uniq collection created successfully:', response.data);
     return response.data;
   } catch (error) {
-    console.error('🔍 [8kit] Error creating set:', error);
+    console.error('🔍 [8kit] Error creating Uniq collection:', error);
     throw error;
   }
 }

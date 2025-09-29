@@ -11,10 +11,10 @@ export class EightKitApi implements ICredentialType {
   name = 'eightKitApi';
   displayName = '8kit API';
   documentationUrl = 'https://8kit.io/docs/intro/index.html';
-  iconUrl = 'file:8kit.svg';
-  icon?: Icon | undefined = {
-    light: 'file:8kit.svg',
-    dark: 'file:8kit.svg',
+  iconUrl = 'file:icons/8kit.svg';
+  icon: Icon = {
+    light: 'file:icons/8kit.svg',
+    dark: 'file:icons/8kit.svg',
   };
   properties: INodeProperties[] = [
     {
@@ -27,15 +27,16 @@ export class EightKitApi implements ICredentialType {
       required: true,
     },
     {
-      displayName: 'API Key',
+      displayName: 'Token Key',
       name: 'apiKey',
       type: 'string',
       typeOptions: {
         password: true,
       },
-      default: '',
-      placeholder: 'st_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-      description: 'Your application API key (starts with st_)',
+      default: 'st_XXXXXXXXXXXXXXXXXXXXX',
+      placeholder: 'st_XXXXXXXXXXXXXXXXXXXXX',
+      description:
+        'Your application Token Key (starts with st_), generated in the 8kit admin dashboard.',
       required: true,
     },
   ];

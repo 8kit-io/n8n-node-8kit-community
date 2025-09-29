@@ -10,12 +10,12 @@ export async function executeRemoveFromSet(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🔍 [8kit] executeRemoveFromSet called for itemIndex:', itemIndex);
+  console.log('🔍 [8kit] executeRemoveFromSet (Uniq) called for itemIndex:', itemIndex);
 
   const name = this.getNodeParameter('name', itemIndex) as string;
   const value = this.getNodeParameter('value', itemIndex) as string;
 
-  console.log('🔍 [8kit] Parameters:', { name, value });
+  console.log('🔍 [8kit] Parameters (Uniq):', { name, value });
 
   // Validate inputs
   validateSetName(name);
@@ -52,7 +52,7 @@ export async function executeRemoveFromSet(
       inputData
     );
   } catch (error) {
-    console.error('🔍 [8kit] Error removing from set:', error);
+    console.error('🔍 [8kit] Error removing from Uniq collection:', error);
     throw error;
   }
 }
@@ -76,10 +76,12 @@ async function executeSingleRemove(
   const response = await client.delete(`${baseUrl}${endpoint}`);
 
   if (!response.success) {
-    throw new Error(`Failed to remove value from set: ${response.error || 'Unknown error'}`);
+    throw new Error(
+      `Failed to remove value from Uniq collection: ${response.error || 'Unknown error'}`
+    );
   }
 
-  console.log('🔍 [8kit] Value removed successfully:', response.data);
+  console.log('🔍 [8kit] Value removed from Uniq collection successfully:', response.data);
   return {
     ...inputData,
     removed: true,

@@ -25,8 +25,8 @@ interface AddSetValueResult {
 }
 
 export async function executeAddToSet(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('➕ [8kit] executeAddToSet called for itemIndex:', itemIndex);
-  console.log('➕ [8kit] Starting addToSet operation...');
+  console.log('➕ [8kit] executeAddToSet (Uniq) called for itemIndex:', itemIndex);
+  console.log('➕ [8kit] Starting Uniq add operation...');
 
   const name = this.getNodeParameter('name', itemIndex) as string;
   const value = this.getNodeParameter('value', itemIndex) as string;
@@ -81,21 +81,21 @@ export async function executeAddToSet(this: IExecuteFunctions, itemIndex: number
   try {
     // First, check if the set exists
     const setExists = await checkSetExists(client, formattedBaseUrl, name);
-    console.log('➕ [8kit] Set exists:', setExists);
+    console.log('➕ [8kit] Uniq collection exists:', setExists);
 
     // If set doesn't exist, throw error
     if (!setExists) {
-      throw new Error(`Set "${name}" not found.`);
+      throw new Error(`Uniq collection "${name}" not found.`);
     }
 
-    // Add value to the set
+    // Add value to the Uniq collection
     const result = await addValueToSet(client, formattedBaseUrl, name, value, metadata);
-    console.log('➕ [8kit] Value added to set:', result);
+    console.log('➕ [8kit] Value added to Uniq collection:', result);
 
     // Return the enriched input data with operation result
     return result;
   } catch (error: any) {
-    console.log('➕ [8kit] Error in executeAddToSet:', error.message);
+    console.log('➕ [8kit] Error in executeAddToSet (Uniq):', error.message);
 
     // Return the input data with error information
     throw error.message;
@@ -112,7 +112,7 @@ async function addValueToSet(
   const endpoint = buildSetEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
 
-  console.log('➕ [8kit] Adding value to set:', url);
+  console.log('➕ [8kit] Adding value to Uniq collection:', url);
 
   const payload: { value: string; metadata?: any } = { value };
 
@@ -135,16 +135,18 @@ async function addValueToSet(
     }
   }
 
-  console.log('➕ [8kit] Add value payload:', payload);
+  console.log('➕ [8kit] Add Uniq value payload:', payload);
 
   const response = await client.post<AddSetValueResult>(url, payload);
 
   if (!response.success) {
-    throw new Error(`Failed to add value to set: ${response.error || 'Unknown error'}`);
+    throw new Error(
+      `Failed to add value to the Uniq collection: ${response.error || 'Unknown error'}`
+    );
   }
 
   if (!response.data) {
-    throw new Error('Add value response missing data field');
+    throw new Error('Add Uniq value response missing data field');
   }
 
   return { success: true, data: response.data };

@@ -31,24 +31,24 @@ async function createSet(
 ): Promise<CreateSetResult> {
   const url = `${baseUrl}/api/v1/sets`;
 
-  console.log('➕ [8kit] Creating set:', url);
+  console.log('➕ [8kit] Creating Uniq collection:', url);
 
   //ToDo: add more info about the app that created the set
   const payload = {
     name: setName,
-    description: `Auto-created set for ${setName} by n8n node`,
+    description: `Auto-created Uniq collection for ${setName} by n8n node`,
   };
 
-  console.log('➕ [8kit] Create set payload:', payload);
+  console.log('➕ [8kit] Create Uniq payload:', payload);
 
   const response = await client.post<CreateSetResult>(url, payload);
 
   if (!response.success) {
-    throw new Error(`Failed to create set: ${response.error || 'Unknown error'}`);
+    throw new Error(`Failed to create Uniq collection: ${response.error || 'Unknown error'}`);
   }
 
   if (!response.data) {
-    throw new Error('Create set response missing data field');
+    throw new Error('Create Uniq collection response missing data field');
   }
 
   return response.data;
@@ -63,14 +63,14 @@ async function checkSetExists(
     const endpoint = buildSetEndpoint(setName, '');
     const url = `${baseUrl}${endpoint}`;
 
-    console.log('➕ [8kit] Checking if set exists:', url);
+    console.log('➕ [8kit] Checking if Uniq collection exists:', url);
 
     const response = await client.get(url);
     return response.success && response.data;
   } catch (error: any) {
-    console.log('➕ [8kit] Set check error:', error.message);
+    console.log('➕ [8kit] Uniq collection check error:', error.message);
 
-    // If 404 or SET_NOT_FOUND, the set doesn't exist
+    // If 404 or SET_NOT_FOUND, the Uniq collection doesn't exist
     if (error.message.includes('404') || error.message.includes('SET_NOT_FOUND')) {
       return false;
     }
@@ -113,11 +113,11 @@ async function createLookup(
 ): Promise<CreateLookupResult> {
   const url = `${baseUrl}/api/v1/lookups`;
 
-  console.log('🔗 [8kit] Creating lookup:', url);
+  console.log('🔗 [8kit] Creating lookup collection:', url);
 
   const payload = {
     name: lookupName,
-    description: `Auto-created lookup for ${lookupName} by n8n node`,
+    description: `Auto-created lookup collection for ${lookupName} by n8n node`,
   };
 
   console.log('🔗 [8kit] Create lookup payload:', payload);
@@ -125,7 +125,7 @@ async function createLookup(
   const response = await client.post<CreateLookupResult>(url, payload);
 
   if (!response.success) {
-    throw new Error(`Failed to create lookup: ${response.error || 'Unknown error'}`);
+    throw new Error(`Failed to create lookup collection: ${response.error || 'Unknown error'}`);
   }
 
   if (!response.data) {
