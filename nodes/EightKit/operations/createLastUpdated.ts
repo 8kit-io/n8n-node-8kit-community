@@ -14,7 +14,8 @@ export async function executeCreateLastUpdated(
 ): Promise<any> {
   const key = this.getNodeParameter('key', itemIndex) as string;
   const description = this.getNodeParameter('description', itemIndex, '') as string;
-  const date = this.getNodeParameter('date', itemIndex, null) as string | null;
+  const date =
+    (this.getNodeParameter('date', itemIndex, null) as string | null) || new Date().toISOString();
 
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');

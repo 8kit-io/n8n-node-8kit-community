@@ -19,6 +19,7 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
 
   const payload: any = {
     key,
+    callingFn: 'n8n-node-acquireLock',
   };
 
   if (timeout !== null && timeout !== undefined) {
