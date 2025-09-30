@@ -1,4 +1,5 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { EightKitHttpClient } from '../utils/httpClient';
 
 export async function executeListLookups(this: IExecuteFunctions, itemIndex: number): Promise<any> {
@@ -42,8 +43,16 @@ export async function executeListLookups(this: IExecuteFunctions, itemIndex: num
 
     console.log('🔍 [8kit] Lookup collections listed successfully:', response.data);
     return response.data;
-  } catch (error) {
-    console.error('🔍 [8kit] Error listing lookup collections:', error);
-    throw error;
+  } catch (error: any) {
+    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
+    console.error('🔍 [8kit] Error listing lookup collections:', message);
+
+    if (!this.continueOnFail()) {
+      console.log('🔍 [8kit] Not continuing on fail, throwing error');
+      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+    }
+
+    console.log('🔍 [8kit] Continuing on fail, returning error as output');
+    return { error: message };
   }
 }

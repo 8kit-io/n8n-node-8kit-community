@@ -1,4 +1,5 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import {
   buildSetEndpoint,
   EightKitHttpClient,
@@ -51,9 +52,17 @@ export async function executeRemoveFromSet(
       },
       inputData
     );
-  } catch (error) {
-    console.error('🔍 [8kit] Error removing from Uniq collection:', error);
-    throw error;
+  } catch (error: any) {
+    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
+    console.error('🔍 [8kit] Error removing from Uniq collection:', message);
+
+    if (!this.continueOnFail()) {
+      console.log('🔍 [8kit] Not continuing on fail, throwing error');
+      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+    }
+
+    console.log('🔍 [8kit] Continuing on fail, returning error as output');
+    return { error: message };
   }
 }
 

@@ -15,6 +15,8 @@ export const createMockExecuteFunctions = (
     getNodeParameter: jest.fn(),
     getInputData: jest.fn(),
     getCredentials: jest.fn(),
+    continueOnFail: jest.fn(() => false),
+    getNode: jest.fn(() => ({ name: 'TestNode' })),
     helpers: {
       httpRequest: jest.fn(),
     },

@@ -1143,7 +1143,10 @@ export class EightKit implements INodeType {
 
       // Add valid results
       const newItem: INodeExecutionData = {
-        json: result,
+        json: {
+          ...result,
+        },
+        pairedItem: { item: i },
       };
       returnData.push(newItem);
     }

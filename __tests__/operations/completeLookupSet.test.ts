@@ -103,7 +103,7 @@ describe('executeCompleteLookupSet', () => {
       throw new Error(`Unexpected request: ${method} ${url}`);
     });
 
-    await expect(executeCompleteLookupSet.call(fx, 0)).rejects.toEqual(
+    await expect(executeCompleteLookupSet.call(fx, 0)).rejects.toThrow(
       'Uniq collection "missing-set" not found.'
     );
   });

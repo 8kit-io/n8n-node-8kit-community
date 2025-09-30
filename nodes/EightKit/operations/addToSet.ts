@@ -1,4 +1,5 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { checkSetExists } from '../utils/common';
 import {
   buildSetEndpoint,
@@ -95,10 +96,16 @@ export async function executeAddToSet(this: IExecuteFunctions, itemIndex: number
     // Return the enriched input data with operation result
     return result;
   } catch (error: any) {
-    console.log('➕ [8kit] Error in executeAddToSet (Uniq):', error.message);
-
-    // Return the input data with error information
-    throw error.message;
+    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
+    console.log('➕ [8kit] Error in executeAddToSet (Uniq):', message);
+    if (!this.continueOnFail()) {
+      console.log('➕ [8kit] Not continuing on fail, throwing error');
+      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+    }
+    console.log('➕ [8kit] Continuing on fail, returning error as output');
+    return {
+      error: message,
+    };
   }
 }
 

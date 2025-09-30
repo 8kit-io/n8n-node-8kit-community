@@ -1,4 +1,5 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { buildSetEndpoint, EightKitHttpClient, validateSetName } from '../utils/httpClient';
 
 export async function executeGetSetValues(
@@ -17,7 +18,11 @@ export async function executeGetSetValues(
   const offset = paginationSettings.offset || 0;
 
   console.log('🔍 [8kit] Parameters (Uniq):', { name });
-  console.log('🔍 [8kit] Pagination parameters (Uniq):', { page, limit, offset });
+  console.log('🔍 [8kit] Pagination parameters (Uniq):', {
+    page,
+    limit,
+    offset,
+  });
 
   // Validate inputs
   validateSetName(name);
@@ -51,8 +56,16 @@ export async function executeGetSetValues(
 
     console.log('🔍 [8kit] Uniq values retrieved successfully:', response.data);
     return response.data;
-  } catch (error) {
-    console.error('🔍 [8kit] Error getting Uniq values:', error);
-    throw error;
+  } catch (error: any) {
+    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
+    console.error('🔍 [8kit] Error getting Uniq values:', message);
+
+    if (!this.continueOnFail()) {
+      console.log('🔍 [8kit] Not continuing on fail, throwing error');
+      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+    }
+
+    console.log('🔍 [8kit] Continuing on fail, returning error as output');
+    return { error: message };
   }
 }

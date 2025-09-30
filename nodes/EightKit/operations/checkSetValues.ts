@@ -1,4 +1,5 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import {
   buildSetEndpoint,
   EightKitHttpClient,
@@ -92,8 +93,17 @@ export async function executeCheckSetValues(
       outputIndex: exists ? 0 : 1,
     };
   } catch (error: any) {
-    console.log('🔍 [8kit] Error in executeCheckSetValues (Uniq):', error.message);
-    throw error;
+    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
+    console.log('🔍 [8kit] Error in executeCheckSetValues (Uniq):', message);
+
+    if (!this.continueOnFail()) {
+      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+    }
+
+    return {
+      result: { error: message },
+      outputIndex: 0,
+    };
   }
 }
 

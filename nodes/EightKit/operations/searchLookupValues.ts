@@ -1,4 +1,5 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { EightKitHttpClient } from '../utils/httpClient';
 
 /**
@@ -45,7 +46,9 @@ export async function executeSearchLookupValues(
         throw new Error(`Invalid search type: ${searchType}`);
     }
 
-    const url = `${baseUrl}/api/v1/lookups/${encodeURIComponent(name)}/search?${queryParams.toString()}`;
+    const url = `${baseUrl}/api/v1/lookups/${encodeURIComponent(
+      name
+    )}/search?${queryParams.toString()}`;
     const response = await client.get<any>(url);
 
     if (!response?.success) {
@@ -62,6 +65,15 @@ export async function executeSearchLookupValues(
       count: response.data?.length || 0,
     };
   } catch (error: any) {
-    throw new Error(`Failed to search lookup values: ${error.message}`);
+    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
+    const safeMessage = `Failed to search lookup values: ${message}`;
+
+    if (!this.continueOnFail()) {
+      throw new NodeOperationError(this.getNode(), safeMessage, {
+        itemIndex: index,
+      });
+    }
+
+    return { error: safeMessage };
   }
 }

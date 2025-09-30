@@ -42,6 +42,6 @@ describe('executeAddToLookup', () => {
       response: { status: 404, data: { error: 'Lookup not found', code: 'LOOKUP_NOT_FOUND' } },
     });
 
-    await expect(executeAddToLookup.call(fx, 0)).rejects.toEqual('Lookup "missing" not found.');
+    await expect(executeAddToLookup.call(fx, 0)).rejects.toThrow('Lookup "missing" not found.');
   });
 });
