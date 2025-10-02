@@ -5,7 +5,9 @@ describe('executeCheckLock', () => {
   let fx: any;
 
   beforeEach(() => {
-    fx = createMockExecuteFunctions();
+    fx = createMockExecuteFunctions({
+      getInputData: jest.fn(() => [{ json: { testField: 'testValue' } }]),
+    } as any);
   });
 
   it('returns lock details when the lock exists', async () => {
@@ -31,7 +33,9 @@ describe('executeCheckLock', () => {
     const result = await executeCheckLock.call(fx, 0);
 
     expectSuccess(result);
-    expect(result.key).toBe('job-1');
+    expect(result.result).toBeDefined();
+    expect(result.result.testField).toBe('testValue'); // Verify input data is preserved
+    expect(result.outputIndex).toBe(0); // 0 = yes (exists)
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'GET',

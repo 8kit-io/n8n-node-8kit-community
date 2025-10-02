@@ -28,7 +28,7 @@ describe('executeGetSetValues', () => {
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'GET',
-        url: 'https://api.example.com/api/v1/sets/processed-users/values?page=1&limit=10',
+        url: 'https://api.example.com/api/v1/uniqs/processed-users/values?page=1&limit=10',
       })
     );
   });
@@ -54,7 +54,7 @@ describe('executeGetSetValues', () => {
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'GET',
-        url: 'https://api.example.com/api/v1/sets/processed-users/values?page=2&limit=25&offset=5',
+        url: 'https://api.example.com/api/v1/uniqs/processed-users/values?page=2&limit=25&offset=5',
       })
     );
   });

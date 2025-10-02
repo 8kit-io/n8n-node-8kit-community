@@ -44,7 +44,11 @@ export class EightKit implements INodeType {
       name: '8kit',
     },
     inputs: ['main'],
-    outputs: `={{$parameter["resource"] === "setValues" && $parameter["operation"] === "checkSetValues" ? [{"type": "main", "displayName": "Yes"}, {"type": "main", "displayName": "No"}] : [{"type": "main"}]}}`,
+    outputs: `={{(
+      ($parameter["resource"] === "setValues" && $parameter["operation"] === "checkSetValues") ||
+      ($parameter["resource"] === "lock" && $parameter["operation"] === "checkLock") ||
+      ($parameter["resource"] === "lock" && $parameter["operation"] === "acquireLock")
+    ) ? [{"type": "main", "displayName": "Yes"}, {"type": "main", "displayName": "No"}] : [{"type": "main"}]}}`,
     credentials: [
       {
         name: 'eightKitApi',
@@ -455,6 +459,86 @@ export class EightKit implements INodeType {
         },
       },
 
+      // Left System (for create lookup collection)
+      {
+        displayName: 'Left System',
+        name: 'leftSystem',
+        type: 'string',
+        default: '',
+        placeholder: 'system-a',
+        description:
+          'Optional identifier for the left-side system in the mapping (e.g., "Salesforce", "internal-db").',
+        displayOptions: {
+          show: { resource: ['lookup'], operation: ['createLookup'] },
+        },
+      },
+
+      // Right System (for create lookup collection)
+      {
+        displayName: 'Right System',
+        name: 'rightSystem',
+        type: 'string',
+        default: '',
+        placeholder: 'system-b',
+        description:
+          'Optional identifier for the right-side system in the mapping (e.g., "HubSpot", "external-api").',
+        displayOptions: {
+          show: { resource: ['lookup'], operation: ['createLookup'] },
+        },
+      },
+
+      // Allow Left Duplicates (for create lookup collection)
+      {
+        displayName: 'Allow Left Duplicates',
+        name: 'allowLeftDups',
+        type: 'boolean',
+        default: true,
+        description:
+          'Whether to allow duplicate values on the left side. When false, each left value can only map to one right value.',
+        displayOptions: {
+          show: { resource: ['lookup'], operation: ['createLookup'] },
+        },
+      },
+
+      // Allow Right Duplicates (for create lookup collection)
+      {
+        displayName: 'Allow Right Duplicates',
+        name: 'allowRightDups',
+        type: 'boolean',
+        default: true,
+        description:
+          'Whether to allow duplicate values on the right side. When false, each right value can only map to one left value.',
+        displayOptions: {
+          show: { resource: ['lookup'], operation: ['createLookup'] },
+        },
+      },
+
+      // Allow Left-Right Duplicates (for create lookup collection)
+      {
+        displayName: 'Allow Left-Right Duplicates',
+        name: 'allowLeftRightDups',
+        type: 'boolean',
+        default: true,
+        description:
+          'Whether to allow the same left-right pair to exist multiple times in the lookup.',
+        displayOptions: {
+          show: { resource: ['lookup'], operation: ['createLookup'] },
+        },
+      },
+
+      // Strict Checking (for create lookup collection)
+      {
+        displayName: 'Strict Checking',
+        name: 'strictChecking',
+        type: 'boolean',
+        default: false,
+        description:
+          'Whether to enforce strict validation rules when adding mappings to this lookup collection.',
+        displayOptions: {
+          show: { resource: ['lookup'], operation: ['createLookup'] },
+        },
+      },
+
       // Advanced Settings for Lookup Collection (listLookups)
       {
         displayName: 'Advanced Settings',
@@ -648,13 +732,13 @@ export class EightKit implements INodeType {
 
       // Value (for removeFromLookup)
       {
-        displayName: 'Value',
+        displayName: 'Lookup ID',
         name: 'value',
         type: 'string',
         default: '',
-        placeholder: 'value_to_remove',
+        placeholder: '',
         description:
-          'The specific value to remove from the lookup. This should match an existing entry exactly.',
+          'The specific lookup ID to remove from the lookup. This should match an existing entry exactly.',
         required: true,
         displayOptions: {
           show: { resource: ['lookupValues'], operation: ['removeFromLookup'] },
@@ -769,6 +853,21 @@ export class EightKit implements INodeType {
           'Unique identifier for the lock. Must contain only letters, numbers, hyphens, and underscores. Maximum 255 characters.',
         required: true,
         displayOptions: { show: { resource: ['lock'] } },
+      },
+
+      // Calling Function (for acquire lock)
+      {
+        displayName: 'Calling Function',
+        name: 'callingFn',
+        type: 'string',
+        default: 'n8n-workflow',
+        placeholder: 'my-workflow-name',
+        description:
+          'Identifier for the calling function or workflow. Used to track which process acquired the lock.',
+        required: true,
+        displayOptions: {
+          show: { resource: ['lock'], operation: ['acquireLock'] },
+        },
       },
 
       // Timeout (for acquire lock)
@@ -1027,13 +1126,25 @@ export class EightKit implements INodeType {
     const _resource = this.getNodeParameter('resource', 0) as string;
     const operation = this.getNodeParameter('operation', 0) as string;
 
-    // For checkSetValues, we need two output arrays
-    if (operation === 'checkSetValues') {
-      const existingData: INodeExecutionData[] = [];
-      const nonExistingData: INodeExecutionData[] = [];
+    // For operations with dual outputs (yes/no branches)
+    if (
+      operation === 'checkSetValues' ||
+      operation === 'checkLock' ||
+      operation === 'acquireLock'
+    ) {
+      const yesData: INodeExecutionData[] = [];
+      const noData: INodeExecutionData[] = [];
 
       for (let i = 0; i < items.length; i++) {
-        const result = await executeCheckSetValues.call(this, i);
+        let result: any;
+
+        if (operation === 'checkSetValues') {
+          result = await executeCheckSetValues.call(this, i);
+        } else if (operation === 'checkLock') {
+          result = await executeCheckLock.call(this, i);
+        } else if (operation === 'acquireLock') {
+          result = await executeAcquireLock.call(this, i);
+        }
 
         if (result === null || result === undefined) {
           continue;
@@ -1049,15 +1160,15 @@ export class EightKit implements INodeType {
           newItem.binary = inputItem.binary;
         }
 
-        // Route to appropriate output based on existence
+        // Route to appropriate output based on outputIndex
         if (result.outputIndex === 0) {
-          existingData.push(newItem);
+          yesData.push(newItem);
         } else {
-          nonExistingData.push(newItem);
+          noData.push(newItem);
         }
       }
 
-      return [existingData, nonExistingData];
+      return [yesData, noData];
     }
 
     // For other operations, use single output
@@ -1160,7 +1271,7 @@ export class EightKit implements INodeType {
       const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
 
       const client = new EightKitHttpClient(this as any, 0);
-      const response = await client.get<any>(`${baseUrl}/api/v1/sets`);
+      const response = await client.get<any>(`${baseUrl}/api/v1/uniqs`);
 
       if (response?.success && response.data?.items) {
         return (response.data.items as Array<{ name: string }>).map((s) => ({

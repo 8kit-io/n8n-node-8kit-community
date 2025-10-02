@@ -31,13 +31,13 @@ describe('executeAddToSet', () => {
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'GET',
-        url: expect.stringMatching(/\/api\/v1\/sets\/orders$/),
+        url: expect.stringMatching(/\/api\/v1\/uniqs\/orders$/),
       })
     );
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'POST',
-        url: expect.stringMatching(/\/api\/v1\/sets\/orders\/values$/),
+        url: expect.stringMatching(/\/api\/v1\/uniqs\/orders\/values$/),
       })
     );
   });

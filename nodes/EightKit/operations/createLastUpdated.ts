@@ -54,6 +54,47 @@ export async function executeCreateLastUpdated(
     return response.data;
   } catch (error: any) {
     const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
+    if (message.includes('DUPLICATE_KEY')) {
+      try {
+        await client.delete<{
+          success: boolean;
+          data: {
+            id: string;
+            key: string;
+            description: string | null;
+            date: string;
+            createdAt: string;
+            updatedAt: string;
+          };
+        }>(`${baseUrl}/api/v1/last-updated/key/${encodeURIComponent(key)}`);
+
+        const response = await client.post<{
+          success: boolean;
+          data: {
+            id: string;
+            key: string;
+            description: string | null;
+            date: string;
+            createdAt: string;
+            updatedAt: string;
+          };
+        }>(`${baseUrl}/api/v1/last-updated`, payload);
+        if (!response.success) {
+          throw new Error(
+            `Failed to touch last updated record: ${response.error || 'Unknown error'}`
+          );
+        }
+
+        return response.data;
+      } catch (error: any) {
+        const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
+        if (!this.continueOnFail()) {
+          throw new NodeOperationError(this.getNode(), message, { itemIndex });
+        }
+        return { error: message };
+      }
+    }
+
     console.log('⏰ [8kit] Error creating last updated record:', message);
 
     if (!this.continueOnFail()) {

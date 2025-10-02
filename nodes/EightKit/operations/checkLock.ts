@@ -14,28 +14,37 @@ export async function executeCheckLock(this: IExecuteFunctions, itemIndex: numbe
 
   const client = new EightKitHttpClient(this, itemIndex);
 
+  // Get input data to preserve in output
+  const inputData = this.getInputData()[itemIndex].json as Record<string, any>;
+
   try {
     const response = await client.get<{
-      success: boolean;
-      data: {
+      key: string;
+      exists: boolean;
+      lockInfo: {
         key: string;
-        exists: boolean;
-        lockInfo: {
-          key: string;
-          callingFn: string;
-          timestamp: string;
-          timeoutSeconds: number;
-          appId: string;
-        } | null;
+        callingFn: string;
         timestamp: string;
-      };
+        timeoutSeconds: number;
+        appId: string;
+      } | null;
+      timestamp: string;
     }>(`${baseUrl}/api/v1/locks/${encodeURIComponent(key)}`);
 
-    if (!response.success) {
+    if (!response.success || !response.data) {
       throw new Error(`Failed to check lock: ${response.error || 'Unknown error'}`);
     }
 
-    return response.data;
+    const lockData = response.data;
+    const exists = lockData.exists;
+
+    // Return dual-output format
+    return {
+      result: {
+        ...inputData,
+      },
+      outputIndex: exists ? 0 : 1, // 0 = yes (exists), 1 = no (doesn't exist)
+    };
   } catch (error: any) {
     const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
     console.log('🔒 [8kit] Error checking lock:', message);
@@ -44,6 +53,9 @@ export async function executeCheckLock(this: IExecuteFunctions, itemIndex: numbe
       throw new NodeOperationError(this.getNode(), message, { itemIndex });
     }
 
-    return { error: message };
+    return {
+      result: { error: message },
+      outputIndex: 1, // Route errors to "no" branch
+    };
   }
 }

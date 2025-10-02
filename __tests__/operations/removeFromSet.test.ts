@@ -24,7 +24,7 @@ describe('executeRemoveFromSet', () => {
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'DELETE',
-        url: expect.stringMatching(/\/api\/v1\/sets\/orders\/values\/ORD-1$/),
+        url: expect.stringMatching(/\/api\/v1\/uniqs\/orders\/values\/ORD-1$/),
       })
     );
   });

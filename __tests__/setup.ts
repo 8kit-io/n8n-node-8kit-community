@@ -1,11 +1,13 @@
 import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
-import { vi } from 'vitest';
+import { beforeEach, expect, vi } from 'vitest';
 
 // Provide a Jest-compatible API for Vitest
 // Allows tests to use jest.fn/clearAllMocks with Vitest under the hood
 // Do not remove: many specs call jest.fn directly
 // @ts-expect-error - we intentionally attach to global
 (globalThis as any).jest = vi;
+// @ts-expect-error - we intentionally attach to global
+(globalThis as any).expect = expect;
 
 // Global test utilities
 export const createMockExecuteFunctions = (

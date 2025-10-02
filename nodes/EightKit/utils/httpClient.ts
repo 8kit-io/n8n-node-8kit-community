@@ -22,7 +22,7 @@ export class EightKitHttpClient {
   ) {}
 
   async request<T = any>(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
     endpoint: string,
     data?: any
   ): Promise<ApiResponse<T>> {
@@ -163,6 +163,11 @@ export class EightKitHttpClient {
   async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
     return this.request<T>('DELETE', endpoint);
   }
+
+  async patch<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    console.log(`🔍 [8kit HTTP] PATCH request to: ${endpoint}`);
+    return this.request<T>('PATCH', endpoint, data);
+  }
 }
 
 // Utility functions for building endpoints
@@ -175,7 +180,7 @@ export function buildSetEndpoint(setName: string, operation?: string): string {
     throw new Error('Uniq collection name is required to build endpoint');
   }
 
-  const base = `/api/v1/sets/${encodeURIComponent(setName)}`;
+  const base = `/api/v1/uniqs/${encodeURIComponent(setName)}`;
   const endpoint = operation ? `${base}/${operation}` : base;
 
   console.log(`🔍 [8kit Endpoint] Built Uniq endpoint: "${endpoint}"`);

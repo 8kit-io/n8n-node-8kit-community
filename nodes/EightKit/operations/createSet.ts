@@ -27,7 +27,7 @@ export async function executeCreateSet(this: IExecuteFunctions, itemIndex: numbe
   const client = new EightKitHttpClient(this, itemIndex);
 
   try {
-    const endpoint = '/api/v1/sets';
+    const endpoint = '/api/v1/uniqs';
     const data = {
       name: name,
       description: description || undefined,

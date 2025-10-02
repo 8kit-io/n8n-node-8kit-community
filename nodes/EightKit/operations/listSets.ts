@@ -34,7 +34,7 @@ export async function executeListSets(this: IExecuteFunctions, itemIndex: number
       queryParams.append('offset', offset.toString());
     }
 
-    const endpoint = `/api/v1/sets?${queryParams.toString()}`;
+    const endpoint = `/api/v1/uniqs?${queryParams.toString()}`;
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {

@@ -30,7 +30,7 @@ describe('executeCreateSet', () => {
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'POST',
-        url: 'https://api.example.com/api/v1/sets',
+        url: 'https://api.example.com/api/v1/uniqs',
         body: {
           name: 'processed-users',
           description: 'Users we have processed',

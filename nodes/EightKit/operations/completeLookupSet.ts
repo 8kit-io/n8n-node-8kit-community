@@ -41,7 +41,7 @@ interface AddSetValueResult {
 interface CompleteLookupSetResult {
   success: boolean;
   lookupResult: AddLookupValueResult;
-  setResult: AddSetValueResult;
+  uniqResult: AddSetValueResult;
 }
 
 export async function executeCompleteLookupSet(
@@ -156,7 +156,7 @@ export async function executeCompleteLookupSet(
     const result: CompleteLookupSetResult = {
       success: true,
       lookupResult: lookupResult.data,
-      setResult: setResult.data,
+      uniqResult: setResult.data,
     };
 
     // Return the combined result

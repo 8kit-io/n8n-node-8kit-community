@@ -10,6 +10,7 @@ export interface AcquireLockParams {
 
 export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: number): Promise<any> {
   const key = this.getNodeParameter('key', itemIndex) as string;
+  const callingFn = this.getNodeParameter('callingFn', itemIndex) as string;
   const timeout = this.getNodeParameter('timeout', itemIndex, null) as number | null;
 
   const credentials = await this.getCredentials('eightKitApi');
@@ -17,9 +18,12 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
 
   const client = new EightKitHttpClient(this, itemIndex);
 
+  // Get input data to preserve in output
+  const inputData = this.getInputData()[itemIndex].json as Record<string, any>;
+
   const payload: any = {
     key,
-    callingFn: 'n8n-node-acquireLock',
+    callingFn,
   };
 
   if (timeout !== null && timeout !== undefined) {
@@ -43,15 +47,32 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
       throw new Error(`Failed to acquire lock: ${response.error || 'Unknown error'}`);
     }
 
-    return response.data;
+    // Return dual-output format - success goes to "yes" branch
+    return {
+      result: {
+        ...inputData,
+      },
+      outputIndex: 0, // 0 = yes (lock acquired)
+    };
   } catch (error: any) {
     const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
     console.log('🔒 [8kit] Error acquiring lock:', message);
 
-    if (!this.continueOnFail()) {
+    // Check if error is LOCK_CONFLICT
+    const isLockConflict = message.includes('LOCK_CONFLICT');
+
+    // If continueOnFail is false and not a LOCK_CONFLICT, throw error
+    if (!this.continueOnFail() && !isLockConflict) {
       throw new NodeOperationError(this.getNode(), message, { itemIndex });
     }
 
-    return { error: message };
+    // Return dual-output format - lock conflict or error goes to "no" branch
+    return {
+      result: {
+        ...inputData,
+        error: isLockConflict ? undefined : message,
+      },
+      outputIndex: 1, // 1 = no (lock not acquired)
+    };
   }
 }

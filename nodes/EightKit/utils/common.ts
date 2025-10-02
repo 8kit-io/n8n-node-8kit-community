@@ -29,7 +29,7 @@ async function createSet(
   baseUrl: string,
   setName: string
 ): Promise<CreateSetResult> {
-  const url = `${baseUrl}/api/v1/sets`;
+  const url = `${baseUrl}/api/v1/uniqs`;
 
   console.log('➕ [8kit] Creating Uniq collection:', url);
 

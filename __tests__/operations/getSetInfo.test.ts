@@ -24,7 +24,7 @@ describe('executeGetSetInfo', () => {
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'GET',
-        url: expect.stringMatching(/\/api\/v1\/sets\/orders$/),
+        url: expect.stringMatching(/\/api\/v1\/uniqs\/orders$/),
       })
     );
   });

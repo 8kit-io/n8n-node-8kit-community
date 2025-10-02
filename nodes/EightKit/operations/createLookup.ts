@@ -5,6 +5,12 @@ import { EightKitHttpClient } from '../utils/httpClient';
 export interface CreateLookupParams {
   name: string;
   description?: string;
+  leftSystem?: string;
+  rightSystem?: string;
+  allowLeftDups?: boolean;
+  allowRightDups?: boolean;
+  allowLeftRightDups?: boolean;
+  strictChecking?: boolean;
 }
 
 export async function executeCreateLookup(
@@ -15,8 +21,27 @@ export async function executeCreateLookup(
 
   const name = this.getNodeParameter('name', itemIndex) as string;
   const description = this.getNodeParameter('description', itemIndex, '') as string;
+  const leftSystem = this.getNodeParameter('leftSystem', itemIndex, '') as string;
+  const rightSystem = this.getNodeParameter('rightSystem', itemIndex, '') as string;
+  const allowLeftDups = this.getNodeParameter('allowLeftDups', itemIndex, true) as boolean;
+  const allowRightDups = this.getNodeParameter('allowRightDups', itemIndex, true) as boolean;
+  const allowLeftRightDups = this.getNodeParameter(
+    'allowLeftRightDups',
+    itemIndex,
+    true
+  ) as boolean;
+  const strictChecking = this.getNodeParameter('strictChecking', itemIndex, false) as boolean;
 
-  console.log('🔍 [8kit] Parameters:', { name, description });
+  console.log('🔍 [8kit] Parameters:', {
+    name,
+    description,
+    leftSystem,
+    rightSystem,
+    allowLeftDups,
+    allowRightDups,
+    allowLeftRightDups,
+    strictChecking,
+  });
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
@@ -31,10 +56,24 @@ export async function executeCreateLookup(
 
   try {
     const endpoint = '/api/v1/lookups';
-    const data = {
-      name: name,
-      description: description || undefined,
+    const data: any = {
+      name,
+      allowLeftDups,
+      allowRightDups,
+      allowLeftRightDups,
+      strictChecking,
     };
+
+    // Add optional string fields only if they have values
+    if (description) {
+      data.description = description;
+    }
+    if (leftSystem) {
+      data.leftSystem = leftSystem;
+    }
+    if (rightSystem) {
+      data.rightSystem = rightSystem;
+    }
 
     const response = await client.post(`${formattedBaseUrl}${endpoint}`, data);
 
