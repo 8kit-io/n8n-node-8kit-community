@@ -8,6 +8,29 @@ export interface ApiResponse<T = any> {
   details?: any;
 }
 
+export interface EightKitErrorData {
+  status: number;
+  message: string;
+  code: string;
+  details?: any;
+}
+
+export class EightKitError extends Error {
+  public readonly status: number;
+  public readonly code: string;
+  public readonly message: string;
+  public readonly details: any;
+  constructor(data: EightKitErrorData) {
+    super(data.message);
+    this.status = data.status;
+    this.code = data.code;
+    this.message = data.message;
+    this.details = data.details
+      ? formatErrors({ details: data.details }, { includeFieldPrefix: 'never' })
+      : undefined;
+  }
+}
+
 export interface HttpClientOptions {
   timeout?: number;
   retryOnFailure?: number;
@@ -109,26 +132,40 @@ export class EightKitHttpClient {
     });
   }
 
-  private formatError(error: any): Error {
-    console.log('🔍 [8kit HTTP] Formatting error:', error);
-
+  private formatError(error: any): EightKitError {
     if (error.response?.data) {
       const apiError = error.response.data;
-      const errorMessage = `API Error (${error.response.status}): ${apiError.error || 'Unknown error'} - Code: ${apiError.code || 'UNKNOWN'}`;
-      console.log('🔍 [8kit HTTP] Formatted API error:', errorMessage);
-      return new Error(errorMessage);
+      const details = apiError.details;
+      return new EightKitError({
+        status: error.response.status || 500,
+        message: apiError.error || 'Unknown error',
+        code: apiError.code || 'UNKNOWN',
+        details,
+      });
     }
 
     if (error.code === 'ECONNABORTED') {
-      return new Error('Request timeout - the server took too long to respond');
+      return new EightKitError({
+        status: 408,
+        message: 'Request timeout - the server took too long to respond',
+        code: 'TIMEOUT',
+      });
     }
 
     if (error.code === 'ENOTFOUND') {
-      return new Error('Host not found - check your Host URL configuration');
+      return new EightKitError({
+        status: 503,
+        message: 'Host not found - check your Host URL configuration',
+        code: 'HOST_NOT_FOUND',
+      });
     }
 
     if (error.code === 'ECONNREFUSED') {
-      return new Error('Connection refused - check if the server is running');
+      return new EightKitError({
+        status: 503,
+        message: 'Connection refused - check if the server is running',
+        code: 'CONNECTION_REFUSED',
+      });
     }
 
     if (error.message?.includes('Invalid URL')) {
@@ -136,12 +173,20 @@ export class EightKitHttpClient {
         error: error.message,
         url: error.config?.url || 'Unknown URL',
       });
-      return new Error(`Invalid URL: ${error.config?.url || 'Unknown URL'} `);
+      return new EightKitError({
+        status: 400,
+        message: `Invalid URL: ${error.config?.url || 'Unknown URL'}`,
+        code: 'INVALID_URL',
+      });
     }
 
-    const errorMessage = `Network error: ${error.message || 'Unknown error'} `;
+    const errorMessage = `Network error: ${error.message || 'Unknown error'}`;
     console.log('🔍 [8kit HTTP] Formatted network error:', errorMessage);
-    return new Error(errorMessage);
+    return new EightKitError({
+      status: 500,
+      message: errorMessage,
+      code: 'NETWORK_ERROR',
+    });
   }
 
   // Helper methods for common operations
@@ -171,16 +216,16 @@ export class EightKitHttpClient {
 }
 
 // Utility functions for building endpoints
-export function buildSetEndpoint(setName: string, operation?: string): string {
+export function buildUniqEndpoint(uniqName: string, operation?: string): string {
   console.log(
-    `🔍 [8kit Endpoint] Building Uniq endpoint for: "${setName}", operation: "${operation || 'none'}"`
+    `🔍 [8kit Endpoint] Building Uniq endpoint for: "${uniqName}", operation: "${operation || 'none'}"`
   );
 
-  if (!setName) {
+  if (!uniqName) {
     throw new Error('Uniq collection name is required to build endpoint');
   }
 
-  const base = `/api/v1/uniqs/${encodeURIComponent(setName)}`;
+  const base = `/api/v1/uniqs/${encodeURIComponent(uniqName)}`;
   const endpoint = operation ? `${base}/${operation}` : base;
 
   console.log(`🔍 [8kit Endpoint] Built Uniq endpoint: "${endpoint}"`);
@@ -219,7 +264,7 @@ export function buildMetadata(
 }
 
 // Utility functions for validation
-export function validateSetName(name: string): void {
+export function validateUniqName(name: string): void {
   console.log(`🔍 [8kit Validation] Validating Uniq collection name: "${name}"`);
 
   if (!name || typeof name !== 'string') {
@@ -265,4 +310,80 @@ export function validateValue(value: string): void {
   }
 
   console.log(`🔍 [8kit Validation] Value validation passed`);
+}
+
+/**
+ * Convert an API error payload into a list of user-friendly strings.
+ *
+ * @param {object} errorResponse - e.g. { details: [{ type, errors: [{ field, message }] }] }
+ * @param {object} [opts]
+ * @param {"auto"|"never"|"always"} [opts.includeFieldPrefix="auto"]
+ *   - "auto": include the field only if the message doesn't already start with it
+ *   - "never": never prefix with field
+ *   - "always": always prefix with field (if present)
+ * @param {string} [opts.defaultMessage="Something went wrong. Please try again."]
+ *   - Returned as a single-item array when there are no details
+ * @returns {string[]} e.g. ["Invalid email or password.", "Password must be at least 8 characters"]
+ */
+function formatErrors(
+  errorResponse: any,
+  opts: {
+    includeFieldPrefix?: string;
+    defaultMessage?: string;
+  } = {}
+) {
+  const {
+    includeFieldPrefix = 'auto',
+    defaultMessage = 'Something went wrong. Please try again.',
+  } = opts;
+
+  const details = errorResponse?.details;
+  if (!Array.isArray(details) || details.length === 0) {
+    return [defaultMessage];
+  }
+
+  const out = [];
+  const seen = new Set();
+
+  for (const d of details) {
+    const errs = Array.isArray(d?.errors) ? d.errors : [];
+    for (const e of errs) {
+      const msg = typeof e?.message === 'string' ? e.message.trim() : '';
+      if (!msg) continue;
+
+      const fieldPretty = e?.field ? prettifyField(e.field) : '';
+      const startsWithField =
+        fieldPretty && new RegExp(`^${escapeRegExp(fieldPretty)}\\b`, 'i').test(msg);
+
+      let finalMsg = msg;
+
+      if (fieldPretty) {
+        if (includeFieldPrefix === 'always') {
+          finalMsg = `${fieldPretty}: ${msg}`;
+        } else if (includeFieldPrefix === 'auto' && !startsWithField) {
+          finalMsg = `${fieldPretty}: ${msg}`;
+        } // "never" → leave msg as-is
+      }
+
+      if (!seen.has(finalMsg)) {
+        seen.add(finalMsg);
+        out.push(finalMsg);
+      }
+    }
+  }
+
+  return out.length ? out : [defaultMessage];
+
+  function prettifyField(s: string) {
+    const spaced = String(s)
+      .replace(/\[|\]/g, '')
+      .replace(/[_.]/g, ' ')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  }
+  function escapeRegExp(x: string) {
+    return String(x).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
 }

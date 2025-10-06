@@ -1,14 +1,14 @@
-import { executeGetSetValues } from '../../nodes/EightKit/operations/getSetValues';
+import { executeGetUniqs } from '../../nodes/EightKit/operations/getUniqs';
 import { createMockCredentials, createMockExecuteFunctions, expectSuccess } from '../setup';
 
-describe('executeGetSetValues', () => {
+describe('executeGetUniqs', () => {
   let fx: any;
 
   beforeEach(() => {
     fx = createMockExecuteFunctions();
   });
 
-  it('fetches set values with default pagination', async () => {
+  it('fetches uniq values with default pagination', async () => {
     fx.getNodeParameter.mockReturnValueOnce('processed-users').mockReturnValueOnce({});
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
@@ -21,7 +21,7 @@ describe('executeGetSetValues', () => {
       },
     });
 
-    const result = await executeGetSetValues.call(fx, 0);
+    const result = await executeGetUniqs.call(fx, 0);
 
     expectSuccess(result);
     expect(result.items).toHaveLength(1);
@@ -49,7 +49,7 @@ describe('executeGetSetValues', () => {
       },
     });
 
-    await executeGetSetValues.call(fx, 0);
+    await executeGetUniqs.call(fx, 0);
 
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -63,10 +63,13 @@ describe('executeGetSetValues', () => {
     fx.getNodeParameter.mockReturnValueOnce('processed-users').mockReturnValueOnce({});
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({ success: false, error: 'Set not found' });
+    fx.helpers.httpRequest.mockResolvedValue({
+      success: false,
+      error: 'Uniq collection not found',
+    });
 
-    await expect(executeGetSetValues.call(fx, 0)).rejects.toThrow(
-      'Failed to get Uniq values: Set not found'
+    await expect(executeGetUniqs.call(fx, 0)).rejects.toThrow(
+      'Failed to get Uniq values: Uniq collection not found'
     );
   });
 });

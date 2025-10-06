@@ -15,9 +15,9 @@ export async function executeSearchLookupValues(
     const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
 
     // Get parameters
-    const name = this.getNodeParameter('name', index) as string;
+    const name = (this.getNodeParameter('name', index) as string).trim();
     const searchType = this.getNodeParameter('searchType', index) as 'left' | 'right' | 'search';
-    const searchValue = this.getNodeParameter('searchValue', index) as string;
+    const searchValue = (this.getNodeParameter('searchValue', index) as string).trim();
 
     if (!name?.trim()) {
       throw new Error('Lookup name is required');
@@ -65,15 +65,29 @@ export async function executeSearchLookupValues(
       count: response.data?.length || 0,
     };
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
+    const message = error.message || 'Unknown error';
     const safeMessage = `Failed to search lookup values: ${message}`;
 
+    console.log('🔍 [8kit] Error searching lookup values:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
+
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), safeMessage, {
+      throw new NodeOperationError(this.getNode(), error, {
         itemIndex: index,
       });
     }
 
-    return { error: safeMessage };
+    return {
+      error: {
+        status: error.status,
+        message: safeMessage,
+        code: error.code,
+        details: error.details,
+      },
+    };
   }
 }

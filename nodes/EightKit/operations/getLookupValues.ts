@@ -8,7 +8,7 @@ export async function executeGetLookupValues(
 ): Promise<any> {
   console.log('🔍 [8kit] executeGetLookupValues called for itemIndex:', itemIndex);
 
-  const name = this.getNodeParameter('name', itemIndex) as string;
+  const name = (this.getNodeParameter('name', itemIndex) as string).trim();
 
   // Get pagination parameters from advanced settings
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex, {}) as any;
@@ -53,15 +53,26 @@ export async function executeGetLookupValues(
     console.log('🔍 [8kit] Lookup values retrieved successfully:', response.data);
     return response.data;
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.error('🔍 [8kit] Error getting lookup values:', message);
+    console.error('🔍 [8kit] Error getting lookup values:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
       console.log('🔍 [8kit] Not continuing on fail, throwing error');
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     console.log('🔍 [8kit] Continuing on fail, returning error as output');
-    return { error: message };
+    return {
+      error: {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      },
+    };
   }
 }
