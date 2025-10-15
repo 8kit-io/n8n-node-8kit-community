@@ -13,8 +13,8 @@ export async function executeRemoveFromLookup(
 ): Promise<any> {
   console.log('🔍 [8kit] executeRemoveFromLookup called for itemIndex:', itemIndex);
 
-  const name = this.getNodeParameter('name', itemIndex) as string;
-  const value = this.getNodeParameter('value', itemIndex) as string;
+  const name = (this.getNodeParameter('name', itemIndex) as string).trim();
+  const value = (this.getNodeParameter('value', itemIndex) as string).trim();
 
   console.log('🔍 [8kit] Parameters:', { name, value });
 
@@ -53,16 +53,27 @@ export async function executeRemoveFromLookup(
       inputData
     );
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.error('🔍 [8kit] Error removing from lookup:', message);
+    console.error('🔍 [8kit] Error removing from lookup:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
       console.log('🔍 [8kit] Not continuing on fail, throwing error');
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     console.log('🔍 [8kit] Continuing on fail, returning error as output');
-    return { error: message };
+    return {
+      error: {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      },
+    };
   }
 }
 

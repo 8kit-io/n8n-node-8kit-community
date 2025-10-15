@@ -1,14 +1,14 @@
-import { executeListSets } from '../../nodes/EightKit/operations/listSets';
+import { executeListUniqCollections } from '../../nodes/EightKit/operations/listUniqCollections';
 import { createMockCredentials, createMockExecuteFunctions, expectSuccess } from '../setup';
 
-describe('executeListSets', () => {
+describe('executeListUniqCollections', () => {
   let fx: any;
 
   beforeEach(() => {
     fx = createMockExecuteFunctions();
   });
 
-  it('should list sets with default pagination', async () => {
+  it('should list uniq collections with default pagination', async () => {
     // Arrange
     fx.getNodeParameter.mockReturnValueOnce({}); // advancedSettings
 
@@ -21,7 +21,7 @@ describe('executeListSets', () => {
     fx.helpers.httpRequest.mockResolvedValue(apiResponse);
 
     // Act
-    const result = await executeListSets.call(fx, 0);
+    const result = await executeListUniqCollections.call(fx, 0);
 
     // Assert
     expectSuccess(result);
@@ -35,7 +35,7 @@ describe('executeListSets', () => {
     );
   });
 
-  it('should list sets with custom pagination', async () => {
+  it('should list uniq collections with custom pagination', async () => {
     // Arrange
     fx.getNodeParameter.mockReturnValueOnce({
       pagination: { pagination: { page: 2, limit: 5, offset: 10 } },
@@ -50,7 +50,7 @@ describe('executeListSets', () => {
     fx.helpers.httpRequest.mockResolvedValue(apiResponse);
 
     // Act
-    const result = await executeListSets.call(fx, 0);
+    const result = await executeListUniqCollections.call(fx, 0);
 
     // Assert
     expectSuccess(result);

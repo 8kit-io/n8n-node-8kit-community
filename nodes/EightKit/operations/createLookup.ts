@@ -19,10 +19,14 @@ export async function executeCreateLookup(
 ): Promise<any> {
   console.log('🔍 [8kit] executeCreateLookup (lookup collection) called for itemIndex:', itemIndex);
 
-  const name = this.getNodeParameter('name', itemIndex) as string;
-  const description = this.getNodeParameter('description', itemIndex, '') as string;
-  const leftSystem = this.getNodeParameter('leftSystem', itemIndex, '') as string;
-  const rightSystem = this.getNodeParameter('rightSystem', itemIndex, '') as string;
+  const name = (this.getNodeParameter('name', itemIndex) as string).trim();
+  const description = (
+    (this.getNodeParameter('description', itemIndex, '') as string) || ''
+  ).trim();
+  const leftSystem = ((this.getNodeParameter('leftSystem', itemIndex, '') as string) || '').trim();
+  const rightSystem = (
+    (this.getNodeParameter('rightSystem', itemIndex, '') as string) || ''
+  ).trim();
   const allowLeftDups = this.getNodeParameter('allowLeftDups', itemIndex, true) as boolean;
   const allowRightDups = this.getNodeParameter('allowRightDups', itemIndex, true) as boolean;
   const allowLeftRightDups = this.getNodeParameter(
@@ -84,15 +88,26 @@ export async function executeCreateLookup(
     console.log('🔍 [8kit] Lookup collection created successfully:', response.data);
     return response.data;
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.error('🔍 [8kit] Error creating lookup collection:', message);
+    console.error('🔍 [8kit] Error creating lookup collection:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
       console.log('🔍 [8kit] Not continuing on fail, throwing error');
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     console.log('🔍 [8kit] Continuing on fail, returning error as output');
-    return { error: message };
+    return {
+      error: {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      },
+    };
   }
 }

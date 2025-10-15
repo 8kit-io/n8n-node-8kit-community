@@ -4,9 +4,7 @@ import { beforeEach, expect, vi } from 'vitest';
 // Provide a Jest-compatible API for Vitest
 // Allows tests to use jest.fn/clearAllMocks with Vitest under the hood
 // Do not remove: many specs call jest.fn directly
-// @ts-expect-error - we intentionally attach to global
 (globalThis as any).jest = vi;
-// @ts-expect-error - we intentionally attach to global
 (globalThis as any).expect = expect;
 
 // Global test utilities
@@ -19,6 +17,7 @@ export const createMockExecuteFunctions = (
     getCredentials: jest.fn(),
     continueOnFail: jest.fn(() => false),
     getNode: jest.fn(() => ({ name: 'TestNode' })),
+    getTimezone: jest.fn(() => 'America/New_York'),
     helpers: {
       httpRequest: jest.fn(),
     },
@@ -46,7 +45,7 @@ export const createMockCredentials = (credentials: any) => ({
 
 // Common test data
 export const testData = {
-  validSetName: 'test-set',
+  validUniqName: 'test-uniq',
   validLookupName: 'test-lookup',
   validValue: 'test-value-123',
   validLeftValue: 'left-123',
@@ -60,11 +59,11 @@ export const mockHttpResponses = {
     success: true,
     data: { result: 'success' },
   },
-  setExists: {
+  uniqExists: {
     success: true,
     data: { exists: true },
   },
-  setNotExists: {
+  uniqNotExists: {
     success: true,
     data: { exists: false },
   },

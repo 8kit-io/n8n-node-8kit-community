@@ -1,11 +1,17 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { buildSetEndpoint, EightKitHttpClient } from '../utils/httpClient';
+import { buildUniqEndpoint, EightKitHttpClient } from '../utils/httpClient';
 
-export async function executeGetSetInfo(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('🔍 [8kit] executeGetSetInfo (Uniq collection) called for itemIndex:', itemIndex);
+export async function executeGetUniqCollectionInfo(
+  this: IExecuteFunctions,
+  itemIndex: number
+): Promise<any> {
+  console.log(
+    '🔍 [8kit] executeGetUniqCollectionInfo (Uniq collection) called for itemIndex:',
+    itemIndex
+  );
 
-  const name = this.getNodeParameter('name', itemIndex) as string;
+  const name = (this.getNodeParameter('name', itemIndex) as string).trim();
 
   console.log('🔍 [8kit] Parameters:', { name });
 
@@ -21,7 +27,7 @@ export async function executeGetSetInfo(this: IExecuteFunctions, itemIndex: numb
   const client = new EightKitHttpClient(this, itemIndex);
 
   try {
-    const endpoint = buildSetEndpoint(name);
+    const endpoint = buildUniqEndpoint(name);
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
@@ -31,15 +37,26 @@ export async function executeGetSetInfo(this: IExecuteFunctions, itemIndex: numb
     console.log('🔍 [8kit] Uniq collection info retrieved successfully:', response.data);
     return response.data;
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.error('🔍 [8kit] Error getting Uniq collection info:', message);
+    console.error('🔍 [8kit] Error getting Uniq collection info:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
       console.log('🔍 [8kit] Not continuing on fail, throwing error');
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     console.log('🔍 [8kit] Continuing on fail, returning error as output');
-    return { error: message };
+    return {
+      error: {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      },
+    };
   }
 }
