@@ -23,9 +23,9 @@ export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: num
   console.log('🔗 [8kit] executeAddToLookup called for itemIndex:', itemIndex);
   console.log('🔗 [8kit] Starting addToLookup operation...');
 
-  const name = this.getNodeParameter('name', itemIndex) as string;
-  const leftValue = this.getNodeParameter('leftValue', itemIndex) as string;
-  const rightValue = this.getNodeParameter('rightValue', itemIndex) as string;
+  const name = (this.getNodeParameter('name', itemIndex) as string).trim();
+  const leftValue = (this.getNodeParameter('leftValue', itemIndex) as string).trim();
+  const rightValue = (this.getNodeParameter('rightValue', itemIndex) as string).trim();
 
   console.log('🔗 [8kit] Parameters:', {
     name,
@@ -91,17 +91,26 @@ export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: num
     // Return the enriched input data with operation result
     return result;
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.log('🔗 [8kit] Error in executeAddToLookup:', message);
+    console.log('🔗 [8kit] Error in executeAddToLookup:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
       console.log('🔗 [8kit] Not continuing on fail, throwing error');
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     console.log('🔗 [8kit] Continuing on fail, returning error as output');
     return {
-      error: message,
+      error: {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      },
     };
   }
 }

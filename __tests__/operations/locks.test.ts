@@ -15,7 +15,8 @@ describe('locks operations', () => {
     fx.getNodeParameter
       .mockReturnValueOnce('job-1') // key
       .mockReturnValueOnce('test-workflow') // callingFn
-      .mockReturnValueOnce(5000); // timeout
+      .mockReturnValueOnce(5000) // timeout
+      .mockReturnValueOnce(false); // getLockData
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
     fx.helpers.httpRequest.mockResolvedValue({
@@ -33,7 +34,9 @@ describe('locks operations', () => {
   });
 
   it('should release a lock', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('job-1'); // key
+    fx.getNodeParameter
+      .mockReturnValueOnce('job-1') // key
+      .mockReturnValueOnce(false); // getLockData
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
     fx.helpers.httpRequest.mockResolvedValue({
@@ -43,7 +46,7 @@ describe('locks operations', () => {
 
     const result = await executeReleaseLock.call(fx, 0);
     expectSuccess(result);
-    expect(result.released).toBe(true);
+    expect(result.testField).toBe('testValue'); // Verify input data is preserved
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'DELETE',

@@ -148,7 +148,7 @@ describe('executeSearchLookupValues', () => {
     });
 
     await expect(executeSearchLookupValues.call(mockExecuteFunctions, 0)).rejects.toThrow(
-      'Failed to search lookup values: Lookup not found'
+      'Lookup not found'
     );
   });
 });

@@ -6,12 +6,26 @@ export interface AcquireLockParams {
   key: string;
   callingFn: string;
   timeout?: number;
+  includeLockData?: boolean;
+  lockDataFieldName?: string;
 }
 
 export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  const key = this.getNodeParameter('key', itemIndex) as string;
-  const callingFn = this.getNodeParameter('callingFn', itemIndex) as string;
+  const key = (this.getNodeParameter('key', itemIndex) as string).trim();
+  const callingFn = (this.getNodeParameter('callingFn', itemIndex) as string).trim();
   const timeout = this.getNodeParameter('timeout', itemIndex, null) as number | null;
+  const includeLockData = this.getNodeParameter('getLockData', itemIndex, false) as boolean;
+  const lockDataFieldName = includeLockData
+    ? (this.getNodeParameter('lockDataFieldName', itemIndex) as string)?.trim() || undefined
+    : undefined;
+
+  console.log('🔒 [8kit] Parameters:', {
+    key,
+    callingFn,
+    timeout,
+    includeLockData,
+    lockDataFieldName,
+  });
 
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
@@ -47,31 +61,58 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
       throw new Error(`Failed to acquire lock: ${response.error || 'Unknown error'}`);
     }
 
-    // Return dual-output format - success goes to "yes" branch
+    const outputJson: Record<string, any> = {
+      ...inputData,
+    };
+
+    if (includeLockData) {
+      const fieldName = (lockDataFieldName || '__lockData').trim();
+      outputJson[fieldName || '__lockData'] = response.data;
+    }
+
+    // Return dual-date format - success goes to "yes" branch
     return {
-      result: {
-        ...inputData,
-      },
+      result: outputJson,
       outputIndex: 0, // 0 = yes (lock acquired)
     };
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.log('🔒 [8kit] Error acquiring lock:', message);
+    console.log('🔒 [8kit] Error acquiring lock:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     // Check if error is LOCK_CONFLICT
-    const isLockConflict = message.includes('LOCK_CONFLICT');
+    const isLockConflict =
+      error.code === 'LOCK_CONFLICT' || error.message?.includes('LOCK_CONFLICT');
 
     // If continueOnFail is false and not a LOCK_CONFLICT, throw error
     if (!this.continueOnFail() && !isLockConflict) {
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    // Return dual-output format - lock conflict or error goes to "no" branch
+    const outputJson: Record<string, any> = {
+      ...inputData,
+      error: isLockConflict
+        ? undefined
+        : {
+            status: error.status,
+            message: error.message,
+            code: error.code,
+            details: error.details,
+          },
+    };
+
+    // Include lock conflict data if requested
+    if (includeLockData && isLockConflict && error.details?.lockInfo) {
+      const fieldName = (lockDataFieldName || '__lockData').trim();
+      outputJson[fieldName || '__lockData'] = error.details.lockInfo;
+    }
+
+    // Return dual-date format - lock conflict or error goes to "no" branch
     return {
-      result: {
-        ...inputData,
-        error: isLockConflict ? undefined : message,
-      },
+      result: outputJson,
       outputIndex: 1, // 1 = no (lock not acquired)
     };
   }

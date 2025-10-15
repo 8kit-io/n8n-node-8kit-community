@@ -1,44 +1,45 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import {
-  buildSetEndpoint,
+  buildUniqEndpoint,
   EightKitHttpClient,
-  validateSetName,
+  validateUniqName,
   validateValue,
 } from '../utils/httpClient';
 
-export interface CheckSetValuesParams {
+export interface CheckUniqValuesParams {
   name: string;
   value: string;
-  includeSetValueData: boolean;
-  setValueDataFieldName?: string;
-  createSetIfMissing?: boolean;
+  includeUniqValueData: boolean;
+  uniqValueDataFieldName?: string;
+  createUniqIfMissing?: boolean;
 }
 
-export async function executeCheckSetValues(
-  this: IExecuteFunctions,
-  itemIndex: number
-): Promise<any> {
-  console.log('🔍 [8kit] executeCheckSetValues (Uniq) called for itemIndex:', itemIndex);
+export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: number): Promise<any> {
+  console.log('🔍 [8kit] executeCheckUniqs (Uniq) called for itemIndex:', itemIndex);
   console.log('🔍 [8kit] Starting Uniq check operation...');
 
   // Parameters (adapted to single-mode only)
-  const name = this.getNodeParameter('name', itemIndex) as string;
-  const value = this.getNodeParameter('value', itemIndex) as string;
-  const includeSetValueData = this.getNodeParameter('getSetValueData', itemIndex, false) as boolean;
-  const setValueDataFieldName = includeSetValueData
-    ? (this.getNodeParameter('setValueDataFieldName', itemIndex) as string)
+  const name = (this.getNodeParameter('name', itemIndex) as string).trim();
+  const value = (this.getNodeParameter('value', itemIndex) as string).trim();
+  const includeUniqValueData = this.getNodeParameter(
+    'getUniqValueData',
+    itemIndex,
+    false
+  ) as boolean;
+  const uniqValueDataFieldName = includeUniqValueData
+    ? (this.getNodeParameter('uniqValueDataFieldName', itemIndex) as string)?.trim() || undefined
     : undefined;
 
   console.log('🔍 [8kit] Parameters (Uniq):', {
     name,
     value,
-    includeSetValueData,
-    setValueDataFieldName,
+    includeUniqValueData,
+    uniqValueDataFieldName,
   });
 
   // Validate inputs
-  validateSetName(name);
+  validateUniqName(name);
 
   const inputData = this.getInputData()[itemIndex].json as Record<string, any>;
   console.log('🔍 [8kit] Input data:', { inputData, value });
@@ -58,7 +59,7 @@ export async function executeCheckSetValues(
   const client = new EightKitHttpClient(this, itemIndex);
 
   // Build endpoint
-  const endpoint = buildSetEndpoint(name, 'contains');
+  const endpoint = buildUniqEndpoint(name, 'contains');
   const url = `${formattedBaseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
   try {
@@ -81,8 +82,8 @@ export async function executeCheckSetValues(
       ...inputData,
     };
 
-    if (includeSetValueData) {
-      const fieldName = (setValueDataFieldName || '__checkData').trim();
+    if (includeUniqValueData) {
+      const fieldName = (uniqValueDataFieldName || '__checkData').trim();
       outputJson[fieldName || '__checkData'] =
         response.data.value !== undefined ? response.data.value : response.data;
     }
@@ -93,15 +94,26 @@ export async function executeCheckSetValues(
       outputIndex: exists ? 0 : 1,
     };
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.log('🔍 [8kit] Error in executeCheckSetValues (Uniq):', message);
+    console.log('🔍 [8kit] Error in executeCheckUniqs (Uniq):', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     return {
-      result: { error: message },
+      result: {
+        error: {
+          status: error.status,
+          message: error.message,
+          code: error.code,
+          details: error.details,
+        },
+      },
       outputIndex: 0,
     };
   }

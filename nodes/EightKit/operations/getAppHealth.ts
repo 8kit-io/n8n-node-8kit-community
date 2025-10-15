@@ -28,13 +28,24 @@ export async function executeGetAppHealth(
 
     return response.data;
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.log('🩺 [8kit] Error getting app health:', message);
+    console.log('🩺 [8kit] Error getting app health:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    return { error: message };
+    return {
+      error: {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      },
+    };
   }
 }
