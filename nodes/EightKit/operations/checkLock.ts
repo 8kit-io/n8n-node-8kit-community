@@ -4,10 +4,22 @@ import { EightKitHttpClient } from '../utils/httpClient';
 
 export interface CheckLockParams {
   key: string;
+  includeLockData?: boolean;
+  lockDataFieldName?: string;
 }
 
 export async function executeCheckLock(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  const key = this.getNodeParameter('key', itemIndex) as string;
+  const key = (this.getNodeParameter('key', itemIndex) as string).trim();
+  const includeLockData = this.getNodeParameter('getLockData', itemIndex, false) as boolean;
+  const lockDataFieldName = includeLockData
+    ? (this.getNodeParameter('lockDataFieldName', itemIndex) as string)?.trim() || undefined
+    : undefined;
+
+  console.log('🔒 [8kit] Parameters:', {
+    key,
+    includeLockData,
+    lockDataFieldName,
+  });
 
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
@@ -38,23 +50,41 @@ export async function executeCheckLock(this: IExecuteFunctions, itemIndex: numbe
     const lockData = response.data;
     const exists = lockData.exists;
 
-    // Return dual-output format
+    const outputJson: Record<string, any> = {
+      ...inputData,
+    };
+
+    if (includeLockData && lockData.lockInfo) {
+      const fieldName = (lockDataFieldName || '__lockData').trim();
+      outputJson[fieldName || '__lockData'] = lockData.lockInfo;
+    }
+
+    // Return dual-date format
     return {
-      result: {
-        ...inputData,
-      },
+      result: outputJson,
       outputIndex: exists ? 0 : 1, // 0 = yes (exists), 1 = no (doesn't exist)
     };
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.log('🔒 [8kit] Error checking lock:', message);
+    console.log('🔒 [8kit] Error checking lock:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     return {
-      result: { error: message },
+      result: {
+        error: {
+          status: error.status,
+          message: error.message,
+          code: error.code,
+          details: error.details,
+        },
+      },
       outputIndex: 1, // Route errors to "no" branch
     };
   }

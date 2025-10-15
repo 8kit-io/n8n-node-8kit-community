@@ -1,36 +1,36 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { checkSetExists } from '../utils/common';
+import { checkUniqExists } from '../utils/common';
 import {
-  buildSetEndpoint,
+  buildUniqEndpoint,
   EightKitHttpClient,
-  validateSetName,
+  validateUniqName,
   validateValue,
 } from '../utils/httpClient';
 
-export interface AddToSetParams {
+export interface AddToUniqParams {
   name: string;
   value: string;
   advancedSettings?: {
     metadata?: any;
   };
-  createSetIfMissing: boolean;
+  createUniqIfMissing: boolean;
 }
 
-interface AddSetValueResult {
+interface AddUniqValueResult {
   id: string;
-  setId: string;
+  uniqId: string;
   value: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export async function executeAddToSet(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('➕ [8kit] executeAddToSet (Uniq) called for itemIndex:', itemIndex);
+export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: number): Promise<any> {
+  console.log('➕ [8kit] executeAddToUniq (Uniq) called for itemIndex:', itemIndex);
   console.log('➕ [8kit] Starting Uniq add operation...');
 
-  const name = this.getNodeParameter('name', itemIndex) as string;
-  const value = this.getNodeParameter('value', itemIndex) as string;
+  const name = (this.getNodeParameter('name', itemIndex) as string).trim();
+  const value = (this.getNodeParameter('value', itemIndex) as string).trim();
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex) as {
     metadata?: any;
   };
@@ -45,7 +45,7 @@ export async function executeAddToSet(this: IExecuteFunctions, itemIndex: number
   });
 
   // Validate inputs
-  validateSetName(name);
+  validateUniqName(name);
 
   const inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
 
@@ -80,43 +80,52 @@ export async function executeAddToSet(this: IExecuteFunctions, itemIndex: number
   const client = new EightKitHttpClient(this, itemIndex);
 
   try {
-    // First, check if the set exists
-    const setExists = await checkSetExists(client, formattedBaseUrl, name);
-    console.log('➕ [8kit] Uniq collection exists:', setExists);
+    // First, check if the uniq collection exists
+    const uniqExists = await checkUniqExists(client, formattedBaseUrl, name);
+    console.log('➕ [8kit] Uniq collection exists:', uniqExists);
 
-    // If set doesn't exist, throw error
-    if (!setExists) {
+    // If uniq collection doesn't exist, throw error
+    if (!uniqExists) {
       throw new Error(`Uniq collection "${name}" not found.`);
     }
 
     // Add value to the Uniq collection
-    const result = await addValueToSet(client, formattedBaseUrl, name, value, metadata);
+    const result = await addValueToUniq(client, formattedBaseUrl, name, value, metadata);
     console.log('➕ [8kit] Value added to Uniq collection:', result);
 
     // Return the enriched input data with operation result
     return result;
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.log('➕ [8kit] Error in executeAddToSet (Uniq):', message);
+    console.log('➕ [8kit] Error in executeAddToUniq (Uniq):', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
     if (!this.continueOnFail()) {
       console.log('➕ [8kit] Not continuing on fail, throwing error');
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
     console.log('➕ [8kit] Continuing on fail, returning error as output');
     return {
-      error: message,
+      error: {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      },
     };
   }
 }
 
-async function addValueToSet(
+async function addValueToUniq(
   client: EightKitHttpClient,
   baseUrl: string,
   name: string,
   value: string,
   metadata?: any
-): Promise<{ success: boolean; data: AddSetValueResult }> {
-  const endpoint = buildSetEndpoint(name, 'values');
+): Promise<{ success: boolean; data: AddUniqValueResult }> {
+  const endpoint = buildUniqEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
 
   console.log('➕ [8kit] Adding value to Uniq collection:', url);
@@ -144,7 +153,7 @@ async function addValueToSet(
 
   console.log('➕ [8kit] Add Uniq value payload:', payload);
 
-  const response = await client.post<AddSetValueResult>(url, payload);
+  const response = await client.post<AddUniqValueResult>(url, payload);
 
   if (!response.success) {
     throw new Error(

@@ -1,7 +1,7 @@
-import { executeCompleteLookupSet } from '../../nodes/EightKit/operations/completeLookupSet';
+import { executeCompleteLookupUniq } from '../../nodes/EightKit/operations/completeLookupUniq';
 import { createMockCredentials, createMockExecuteFunctions, expectSuccess } from '../setup';
 
-describe('executeCompleteLookupSet', () => {
+describe('executeCompleteLookupUniq', () => {
   let fx: any;
 
   beforeEach(() => {
@@ -10,7 +10,7 @@ describe('executeCompleteLookupSet', () => {
     } as any);
   });
 
-  it('performs lookup and set additions when both resources exist', async () => {
+  it('performs lookup and uniq additions when both resources exist', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('user-mapping')
       .mockReturnValueOnce('internal-123')
@@ -29,7 +29,7 @@ describe('executeCompleteLookupSet', () => {
       }
 
       if (method === 'GET' && url === 'https://api.example.com/api/v1/uniqs/processed-users') {
-        return { success: true, data: { id: 'set-1' } };
+        return { success: true, data: { id: 'uniq-1' } };
       }
 
       if (
@@ -59,7 +59,7 @@ describe('executeCompleteLookupSet', () => {
           success: true,
           data: {
             id: 'uniq-value-1',
-            uniqId: 'set-1',
+            uniqId: 'uniq-1',
             value: 'external-456',
             createdAt: '2024-03-01T12:00:00Z',
             updatedAt: '2024-03-01T12:00:00Z',
@@ -70,7 +70,7 @@ describe('executeCompleteLookupSet', () => {
       throw new Error(`Unexpected request: ${method} ${url}`);
     });
 
-    const result = await executeCompleteLookupSet.call(fx, 0);
+    const result = await executeCompleteLookupUniq.call(fx, 0);
 
     expectSuccess(result);
     expect(result.lookupResult.id).toBe('lookup-value-1');
@@ -105,8 +105,6 @@ describe('executeCompleteLookupSet', () => {
       throw new Error(`Unexpected request: ${method} ${url}`);
     });
 
-    await expect(executeCompleteLookupSet.call(fx, 0)).rejects.toThrow(
-      'Uniq collection "missing-uniq" not found.'
-    );
+    await expect(executeCompleteLookupUniq.call(fx, 0)).rejects.toThrow('Uniq not found');
   });
 });

@@ -1,7 +1,7 @@
-import { executeAddToSet } from '../../nodes/EightKit/operations/addToSet';
+import { executeAddToUniq } from '../../nodes/EightKit/operations/addToUniq';
 import { createMockCredentials, createMockExecuteFunctions } from '../setup';
 
-describe('executeAddToSet', () => {
+describe('executeAddToUniq', () => {
   let fx: any;
 
   beforeEach(() => {
@@ -10,22 +10,22 @@ describe('executeAddToSet', () => {
     } as any);
   });
 
-  it('should add value to existing set', async () => {
+  it('should add value to existing uniq collection', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('orders') // name
       .mockReturnValueOnce('ORD-1'); // value
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    // First GET to check set exists
-    fx.helpers.httpRequest.mockResolvedValueOnce({ success: true, data: { id: 'set-1' } });
+    // First GET to check uniq collection exists
+    fx.helpers.httpRequest.mockResolvedValueOnce({ success: true, data: { id: 'uniq-1' } });
     // Then POST to add value
     fx.helpers.httpRequest.mockResolvedValueOnce({
       success: true,
       data: { id: 'val-1', value: 'ORD-1' },
     });
 
-    const result = await executeAddToSet.call(fx, 0);
+    const result = await executeAddToUniq.call(fx, 0);
 
     expect(result).toEqual({ success: true, data: { id: 'val-1', value: 'ORD-1' } });
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
@@ -42,18 +42,19 @@ describe('executeAddToSet', () => {
     );
   });
 
-  it('should throw when set does not exist', async () => {
+  it('should throw when uniq collection does not exist', async () => {
     fx.getNodeParameter.mockReturnValueOnce('missing').mockReturnValueOnce('ORD-1');
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     // Mock 404 response shape to trigger non-retry and formatted error
     fx.helpers.httpRequest.mockRejectedValueOnce({
-      response: { status: 404, data: { error: 'Set not found', code: 'SET_NOT_FOUND' } },
+      response: {
+        status: 404,
+        data: { error: 'Uniq collection not found', code: 'UNIQ_NOT_FOUND' },
+      },
     });
 
-    await expect(executeAddToSet.call(fx, 0)).rejects.toThrow(
-      'Uniq collection "missing" not found.'
-    );
+    await expect(executeAddToUniq.call(fx, 0)).rejects.toThrow('Uniq collection not found');
   });
 });

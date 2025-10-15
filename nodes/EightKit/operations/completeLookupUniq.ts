@@ -1,20 +1,20 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { checkLookupExists, checkSetExists } from '../utils/common';
+import { checkLookupExists, checkUniqExists } from '../utils/common';
 import {
   buildLookupEndpoint,
-  buildSetEndpoint,
+  buildUniqEndpoint,
   EightKitHttpClient,
   validateLookupName,
-  validateSetName,
+  validateUniqName,
   validateValue,
 } from '../utils/httpClient';
 
-export interface CompleteLookupSetParams {
+export interface CompleteLookupUniqParams {
   lookupName: string;
   leftValue: string;
   rightValue: string;
-  setName: string;
+  uniqName: string;
   value: string;
   advancedSettings?: {
     metadata?: any;
@@ -30,35 +30,35 @@ interface AddLookupValueResult {
   updatedAt: string;
 }
 
-interface AddSetValueResult {
+interface AddUniqValueResult {
   id: string;
-  setId: string;
+  uniqId: string;
   value: string;
   createdAt: string;
   updatedAt: string;
 }
 
-interface CompleteLookupSetResult {
+interface CompleteLookupUniqResult {
   success: boolean;
   lookupResult: AddLookupValueResult;
-  uniqResult: AddSetValueResult;
+  uniqResult: AddUniqValueResult;
 }
 
-export async function executeCompleteLookupSet(
+export async function executeCompleteLookupUniq(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
   console.log(
-    '🔥 [8kit] executeCompleteLookupSet (Lookup + Uniq) called for itemIndex:',
+    '🔥 [8kit] executeCompleteLookupUniq (Lookup + Uniq) called for itemIndex:',
     itemIndex
   );
   console.log('🔥 [8kit] Starting combined lookup + Uniq operation...');
 
-  const lookupName = this.getNodeParameter('lookupName', itemIndex) as string;
-  const leftValue = this.getNodeParameter('leftValue', itemIndex) as string;
-  const rightValue = this.getNodeParameter('rightValue', itemIndex) as string;
-  const setName = this.getNodeParameter('setName', itemIndex) as string;
-  const value = this.getNodeParameter('value', itemIndex) as string;
+  const lookupName = (this.getNodeParameter('lookupName', itemIndex) as string).trim();
+  const leftValue = (this.getNodeParameter('leftValue', itemIndex) as string).trim();
+  const rightValue = (this.getNodeParameter('rightValue', itemIndex) as string).trim();
+  const uniqName = (this.getNodeParameter('uniqName', itemIndex) as string).trim();
+  const value = (this.getNodeParameter('value', itemIndex) as string).trim();
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex) as {
     metadata?: any;
   };
@@ -70,14 +70,14 @@ export async function executeCompleteLookupSet(
     lookupName,
     leftValue,
     rightValue,
-    setName,
+    uniqName,
     value,
     metadata,
   });
 
   // Validate inputs
   validateLookupName(lookupName);
-  validateSetName(setName);
+  validateUniqName(uniqName);
   validateValue(value);
 
   const inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
@@ -125,54 +125,63 @@ export async function executeCompleteLookupSet(
   const client = new EightKitHttpClient(this, itemIndex);
 
   try {
-    // First, check if both lookup and set exist
-    const [lookupExists, setExists] = await Promise.all([
+    // First, check if both lookup and uniq collection exist
+    const [lookupExists, uniqExists] = await Promise.all([
       checkLookupExists(client, formattedBaseUrl, lookupName),
-      checkSetExists(client, formattedBaseUrl, setName),
+      checkUniqExists(client, formattedBaseUrl, uniqName),
     ]);
 
     console.log('🔥 [8kit] Lookup exists:', lookupExists);
-    console.log('🔥 [8kit] Uniq collection exists:', setExists);
+    console.log('🔥 [8kit] Uniq collection exists:', uniqExists);
 
     // If lookup doesn't exist, throw error
     if (!lookupExists) {
       throw new Error(`Lookup "${lookupName}" not found.`);
     }
 
-    // If set doesn't exist, throw error
-    if (!setExists) {
-      throw new Error(`Uniq collection "${setName}" not found.`);
+    // If uniq collection doesn't exist, throw error
+    if (!uniqExists) {
+      throw new Error(`Uniq collection "${uniqName}" not found.`);
     }
 
     // Perform both operations
-    const [lookupResult, setResult] = await Promise.all([
+    const [lookupResult, uniqResult] = await Promise.all([
       addValueToLookup(client, formattedBaseUrl, lookupName, leftValue, rightValue),
-      addValueToSet(client, formattedBaseUrl, setName, value, metadata),
+      addValueToUniq(client, formattedBaseUrl, uniqName, value, metadata),
     ]);
 
     console.log('🔥 [8kit] Lookup operation result:', lookupResult);
-    console.log('🔥 [8kit] Uniq operation result:', setResult);
+    console.log('🔥 [8kit] Uniq operation result:', uniqResult);
 
-    const result: CompleteLookupSetResult = {
+    const result: CompleteLookupUniqResult = {
       success: true,
       lookupResult: lookupResult.data,
-      uniqResult: setResult.data,
+      uniqResult: uniqResult.data,
     };
 
     // Return the combined result
     return result;
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.log('🔥 [8kit] Error in executeCompleteLookupSet (Lookup + Uniq):', message);
+    console.log('🔥 [8kit] Error in executeCompleteLookupUniq (Lookup + Uniq):', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
       console.log('🔥 [8kit] Not continuing on fail, throwing error');
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     console.log('🔥 [8kit] Continuing on fail, returning error as output');
     return {
-      error: message,
+      error: {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      },
     };
   }
 }
@@ -206,14 +215,14 @@ async function addValueToLookup(
   return { success: true, data: response.data };
 }
 
-async function addValueToSet(
+async function addValueToUniq(
   client: EightKitHttpClient,
   baseUrl: string,
   name: string,
   value: string,
   metadata?: any
-): Promise<{ success: boolean; data: AddSetValueResult }> {
-  const endpoint = buildSetEndpoint(name, 'values');
+): Promise<{ success: boolean; data: AddUniqValueResult }> {
+  const endpoint = buildUniqEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
 
   console.log('🔥 [8kit] Adding value to Uniq collection:', url);
@@ -241,7 +250,7 @@ async function addValueToSet(
 
   console.log('🔥 [8kit] Add Uniq value payload:', payload);
 
-  const response = await client.post<AddSetValueResult>(url, payload);
+  const response = await client.post<AddUniqValueResult>(url, payload);
 
   if (!response.success) {
     throw new Error(`Failed to add value to Uniq collection: ${response.error || 'Unknown error'}`);

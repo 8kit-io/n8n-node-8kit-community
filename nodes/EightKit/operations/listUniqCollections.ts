@@ -1,14 +1,15 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { buildSetEndpoint, EightKitHttpClient, validateSetName } from '../utils/httpClient';
+import { EightKitHttpClient } from '../utils/httpClient';
 
-export async function executeGetSetValues(
+export async function executeListUniqCollections(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🔍 [8kit] executeGetSetValues (Uniq) called for itemIndex:', itemIndex);
-
-  const name = this.getNodeParameter('name', itemIndex) as string;
+  console.log(
+    '🔍 [8kit] executeListUniqCollections (Uniq collections) called for itemIndex:',
+    itemIndex
+  );
 
   // Get pagination parameters from advanced settings
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex, {}) as any;
@@ -17,15 +18,7 @@ export async function executeGetSetValues(
   const limit = paginationSettings.limit || 10;
   const offset = paginationSettings.offset || 0;
 
-  console.log('🔍 [8kit] Parameters (Uniq):', { name });
-  console.log('🔍 [8kit] Pagination parameters (Uniq):', {
-    page,
-    limit,
-    offset,
-  });
-
-  // Validate inputs
-  validateSetName(name);
+  console.log('🔍 [8kit] Pagination parameters:', { page, limit, offset });
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
@@ -47,25 +40,36 @@ export async function executeGetSetValues(
       queryParams.append('offset', offset.toString());
     }
 
-    const endpoint = `${buildSetEndpoint(name)}/values?${queryParams.toString()}`;
+    const endpoint = `/api/v1/uniqs?${queryParams.toString()}`;
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new Error(`Failed to get Uniq values: ${response.error || 'Unknown error'}`);
+      throw new Error(`Failed to list Uniq collections: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🔍 [8kit] Uniq values retrieved successfully:', response.data);
+    console.log('🔍 [8kit] Uniq collections listed successfully:', response.data);
     return response.data;
   } catch (error: any) {
-    const message = error instanceof Error ? error.message : (error ?? 'Unknown error');
-    console.error('🔍 [8kit] Error getting Uniq values:', message);
+    console.error('🔍 [8kit] Error listing Uniq collections:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    });
 
     if (!this.continueOnFail()) {
       console.log('🔍 [8kit] Not continuing on fail, throwing error');
-      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+      throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     console.log('🔍 [8kit] Continuing on fail, returning error as output');
-    return { error: message };
+    return {
+      error: {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      },
+    };
   }
 }

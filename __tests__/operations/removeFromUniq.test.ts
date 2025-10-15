@@ -1,14 +1,14 @@
-import { executeRemoveFromSet } from '../../nodes/EightKit/operations/removeFromSet';
+import { executeRemoveFromUniqs } from '../../nodes/EightKit/operations/removeFromUniq';
 import { createMockCredentials, createMockExecuteFunctions, expectSuccess } from '../setup';
 
-describe('executeRemoveFromSet', () => {
+describe('executeRemoveFromUniqs', () => {
   let fx: any;
 
   beforeEach(() => {
     fx = createMockExecuteFunctions();
   });
 
-  it('should remove a value from set', async () => {
+  it('should remove a value from uniq collection', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('orders') // name
       .mockReturnValueOnce('ORD-1'); // value
@@ -18,7 +18,7 @@ describe('executeRemoveFromSet', () => {
 
     fx.helpers.httpRequest.mockResolvedValue({ success: true, data: { removed: true } });
 
-    const result = await executeRemoveFromSet.call(fx, 0);
+    const result = await executeRemoveFromUniqs.call(fx, 0);
     expectSuccess(result);
     expect(result.removed).toBe(true);
     expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
