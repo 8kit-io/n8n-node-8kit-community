@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.17
+
+### 🕒 Last Update Date
+
+Support for specifying a default fallback date in the Get Last Updated node configuration.
+
 ## 1.0.16
 
 ### 🕒 Timezone & Update Handling

@@ -1238,6 +1238,20 @@ export class EightKit implements INodeType {
           },
         },
       },
+      // Default Date (for get lastUpdated)
+      {
+        displayName: 'Fallback Date',
+        name: 'defaultDateString',
+        type: 'string',
+        default: '',
+        placeholder: '',
+        description:
+          'The fallback date value to use when no last updated record exists. Must be in the same format as the Date Format setting above.',
+        required: false,
+        displayOptions: {
+          show: { resource: ['lastUpdated'], operation: ['getLastUpdated'] },
+        },
+      },
       /* =========================
        * 5) APP
        * ========================= */

@@ -1,6 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { formatDateWithFormat } from '../utils/dateFormat';
+import { formatDateWithFormat, parseDateWithFormat } from '../utils/dateFormat';
 import { EightKitHttpClient } from '../utils/httpClient';
 
 export interface GetLastUpdatedParams {
@@ -19,6 +19,12 @@ export async function executeGetLastUpdated(
       ? (this.getNodeParameter('outputCustomFormat', itemIndex, '') as string)
       : undefined;
   const outputCustomFormat = rawOutputCustomFormat?.trim() || undefined;
+
+  // Get default date parameter
+  const rawDefaultDateString = this.getNodeParameter('defaultDateString', itemIndex, '') as
+    | string
+    | null;
+  const defaultDateString = rawDefaultDateString?.trim() || null;
 
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
@@ -45,7 +51,34 @@ export async function executeGetLastUpdated(
     }
 
     if (!response.data) {
-      return { date: null };
+      // If no data exists, use the default date if provided
+      if (!defaultDateString) {
+        return { date: null };
+      }
+
+      try {
+        // Parse the default date using the same format as the output format
+        const parsedDefaultDate = parseDateWithFormat(
+          defaultDateString,
+          outputFormat,
+          outputCustomFormat
+        );
+        // Format it again using the output format (to ensure consistency with timezone settings)
+        const formatted = formatDateWithFormat(
+          parsedDefaultDate,
+          outputFormat,
+          outputCustomFormat,
+          useUtcTimezone,
+          n8nTomezone
+        );
+        return { date: formatted };
+      } catch (error: any) {
+        throw new NodeOperationError(
+          this.getNode(),
+          `Failed to parse default date string: ${error.message}`,
+          { itemIndex }
+        );
+      }
     }
 
     const result = response.data as unknown as {

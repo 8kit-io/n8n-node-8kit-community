@@ -133,8 +133,12 @@ describe('executeGetLastUpdated', () => {
     expect(result.date).toBe('F(custom|yyyy/MM/dd HH:mm:ss)');
   });
 
-  test('returns { date: null } when API returns data: null', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('sync-job'); // key
+  test('returns { date: null } when API returns data: null and no defaultDateString', async () => {
+    fx.getNodeParameter
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce(false) // useUtcTimezone
+      .mockReturnValueOnce('iso8601-tz') // outputFormat
+      .mockReturnValueOnce(''); // defaultDateString (empty)
     fx.getCredentials.mockResolvedValue(mockCreds);
 
     jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
@@ -144,6 +148,124 @@ describe('executeGetLastUpdated', () => {
 
     const result = await executeGetLastUpdated.call(fx, 0);
     expect(result).toEqual({ date: null });
+  });
+
+  test('uses defaultDateString when API returns data: null (iso8601-tz format)', async () => {
+    fx.getNodeParameter
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce(false) // useUtcTimezone
+      .mockReturnValueOnce('iso8601-tz') // outputFormat
+      .mockReturnValueOnce('2024-01-15T10:30:00Z'); // defaultDateString
+    fx.getCredentials.mockResolvedValue(mockCreds);
+
+    jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
+      success: true,
+      data: null,
+    });
+
+    const parseSpy = jest
+      .spyOn(dateFormat, 'parseDateWithFormat')
+      .mockReturnValue(new Date('2024-01-15T10:30:00Z'));
+
+    const fmtSpy = jest
+      .spyOn(dateFormat, 'formatDateWithFormat')
+      .mockReturnValue('2024-01-15T05:30:00-05:00');
+
+    const result = await executeGetLastUpdated.call(fx, 0);
+
+    expect(parseSpy).toHaveBeenCalledWith('2024-01-15T10:30:00Z', 'iso8601-tz', undefined);
+    expect(fmtSpy).toHaveBeenCalledWith(
+      new Date('2024-01-15T10:30:00Z'),
+      'iso8601-tz',
+      undefined,
+      false, // useUtcTimezone
+      'America/New_York' // n8nTomezone from mock
+    );
+    expect(result).toEqual({ date: '2024-01-15T05:30:00-05:00' });
+  });
+
+  test('uses defaultDateString with custom format when API returns data: null', async () => {
+    fx.getNodeParameter
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce(true) // useUtcTimezone
+      .mockReturnValueOnce('custom') // outputFormat
+      .mockReturnValueOnce('yyyy-MM-dd HH:mm:ss') // outputCustomFormat
+      .mockReturnValueOnce('2024-03-20 14:45:30'); // defaultDateString
+    fx.getCredentials.mockResolvedValue(mockCreds);
+
+    jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
+      success: true,
+      data: null,
+    });
+
+    const parseSpy = jest
+      .spyOn(dateFormat, 'parseDateWithFormat')
+      .mockReturnValue(new Date('2024-03-20T14:45:30Z'));
+
+    const fmtSpy = jest
+      .spyOn(dateFormat, 'formatDateWithFormat')
+      .mockReturnValue('2024-03-20 14:45:30');
+
+    const result = await executeGetLastUpdated.call(fx, 0);
+
+    expect(parseSpy).toHaveBeenCalledWith('2024-03-20 14:45:30', 'custom', 'yyyy-MM-dd HH:mm:ss');
+    expect(fmtSpy).toHaveBeenCalledWith(
+      new Date('2024-03-20T14:45:30Z'),
+      'custom',
+      'yyyy-MM-dd HH:mm:ss',
+      true, // useUtcTimezone
+      'America/New_York' // n8nTomezone from mock
+    );
+    expect(result).toEqual({ date: '2024-03-20 14:45:30' });
+  });
+
+  test('throws NodeOperationError when defaultDateString is invalid (continueOnFail=false)', async () => {
+    fx.getNodeParameter
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce(false) // useUtcTimezone
+      .mockReturnValueOnce('iso8601-tz') // outputFormat (not custom, so no outputCustomFormat)
+      .mockReturnValueOnce('invalid-date-string'); // defaultDateString
+    fx.getCredentials.mockResolvedValue(mockCreds);
+    fx.continueOnFail.mockReturnValue(false);
+
+    jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
+      success: true,
+      data: null,
+    });
+
+    jest.spyOn(dateFormat, 'parseDateWithFormat').mockImplementation(() => {
+      throw new Error('Invalid date format');
+    });
+
+    await expect(executeGetLastUpdated.call(fx, 0)).rejects.toThrow(
+      'Failed to parse default date string: Invalid date format'
+    );
+  });
+
+  test('returns error object when defaultDateString is invalid (continueOnFail=true)', async () => {
+    fx.getNodeParameter
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce(false) // useUtcTimezone
+      .mockReturnValueOnce('iso8601-tz') // outputFormat (not custom, so no outputCustomFormat)
+      .mockReturnValueOnce('bad-date'); // defaultDateString
+    fx.getCredentials.mockResolvedValue(mockCreds);
+    fx.continueOnFail.mockReturnValue(true);
+
+    jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
+      success: true,
+      data: null,
+    });
+
+    jest.spyOn(dateFormat, 'parseDateWithFormat').mockImplementation(() => {
+      throw new Error('Cannot parse date');
+    });
+
+    const result = await executeGetLastUpdated.call(fx, 0);
+
+    expect(result).toHaveProperty('error');
+    expect(result.error?.message).toContain(
+      'Failed to parse default date string: Cannot parse date'
+    );
   });
 
   test('URL-encodes key in request path', async () => {
