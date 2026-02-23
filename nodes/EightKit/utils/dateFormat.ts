@@ -339,7 +339,6 @@ export function formatDateWithFormat(
 
         tzOffset = getTimezoneOffset(date, timezone);
       } catch (error: any) {
-        console.error('Error getting date components in timezone', error);
         // Fallback to UTC if timezone is invalid
         tzOffset = 0;
         year = date.getUTCFullYear();
@@ -402,7 +401,6 @@ export function formatDateWithFormat(
         .sort((a, b) => b.length - a.length)
         .reduce((acc, token) => acc.replace(new RegExp(token, 'g'), replacements[token]), pattern);
     } catch (error: any) {
-      console.error('Error getting date components in timezone', error);
       // Fallback to UTC if timezone is invalid
       return formatWithPattern(date, pattern);
     }

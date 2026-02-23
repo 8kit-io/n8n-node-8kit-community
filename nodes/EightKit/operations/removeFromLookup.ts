@@ -11,19 +11,13 @@ export async function executeRemoveFromLookup(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🔍 [8kit] executeRemoveFromLookup called for itemIndex:', itemIndex);
-
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
-
-  console.log('🔍 [8kit] Parameters:', { name, value });
 
   // Validate inputs
   validateLookupName(name);
 
   const inputData = this.getInputData()[itemIndex].json;
-
-  console.log('🔍 [8kit] Input data:', { inputData, value });
 
   if (!value) {
     throw new Error(`Value is required and cannot be empty`);
@@ -53,19 +47,10 @@ export async function executeRemoveFromLookup(
       inputData
     );
   } catch (error: any) {
-    console.error('🔍 [8kit] Error removing from lookup:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
-      console.log('🔍 [8kit] Not continuing on fail, throwing error');
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    console.log('🔍 [8kit] Continuing on fail, returning error as output');
     return {
       error: {
         status: error.status,
@@ -99,7 +84,6 @@ async function executeSingleRemove(
     throw new Error(`Failed to remove value from lookup: ${response.error || 'Unknown error'}`);
   }
 
-  console.log('🔍 [8kit] Value removed successfully:', response.data);
   return {
     ...inputData,
     removed: true,

@@ -31,15 +31,11 @@ async function createUniq(
 ): Promise<CreateUniqResult> {
   const url = `${baseUrl}/api/v1/uniqs`;
 
-  console.log('➕ [8kit] Creating Uniq collection:', url);
-
   //ToDo: add more info about the app that created the uniq collection
   const payload = {
     name: uniqName,
     description: `Auto-created Uniq collection for ${uniqName} by n8n node`,
   };
-
-  console.log('➕ [8kit] Create Uniq payload:', payload);
 
   const response = await client.post<CreateUniqResult>(url, payload);
 
@@ -63,13 +59,9 @@ async function checkUniqExists(
     const endpoint = buildUniqEndpoint(uniqName, '');
     const url = `${baseUrl}${endpoint}`;
 
-    console.log('➕ [8kit] Checking if Uniq collection exists:', url);
-
     const response = await client.get(url);
     return response.success && response.data;
   } catch (error: any) {
-    console.log('➕ [8kit] Uniq collection check error:', error.message);
-
     // If 404 or UNIQ_NOT_FOUND, the Uniq collection doesn't exist
     if (error.message.includes('404') || error.message.includes('UNIQ_NOT_FOUND')) {
       return false;
@@ -89,13 +81,9 @@ async function checkLookupExists(
     const endpoint = buildLookupEndpoint(lookupName, '');
     const url = `${baseUrl}${endpoint}`;
 
-    console.log('🔗 [8kit] Checking if lookup exists:', url);
-
     const response = await client.get(url);
     return response.success && response.data;
   } catch (error: any) {
-    console.log('🔗 [8kit] Lookup check error:', error.message);
-
     // If 404 or LOOKUP_NOT_FOUND, the lookup doesn't exist
     if (error.message.includes('404') || error.message.includes('LOOKUP_NOT_FOUND')) {
       return false;
@@ -113,14 +101,10 @@ async function createLookup(
 ): Promise<CreateLookupResult> {
   const url = `${baseUrl}/api/v1/lookups`;
 
-  console.log('🔗 [8kit] Creating lookup collection:', url);
-
   const payload = {
     name: lookupName,
     description: `Auto-created lookup collection for ${lookupName} by n8n node`,
   };
-
-  console.log('🔗 [8kit] Create lookup payload:', payload);
 
   const response = await client.post<CreateLookupResult>(url, payload);
 

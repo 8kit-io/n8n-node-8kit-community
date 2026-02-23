@@ -15,12 +15,6 @@ export async function executeReleaseLock(this: IExecuteFunctions, itemIndex: num
     ? (this.getNodeParameter('lockDataFieldName', itemIndex) as string)?.trim() || undefined
     : undefined;
 
-  console.log('🔓 [8kit] Parameters:', {
-    key,
-    includeLockData,
-    lockDataFieldName,
-  });
-
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
 
@@ -55,13 +49,6 @@ export async function executeReleaseLock(this: IExecuteFunctions, itemIndex: num
 
     return outputJson;
   } catch (error: any) {
-    console.log('🔓 [8kit] Error releasing lock:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }

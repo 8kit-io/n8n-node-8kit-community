@@ -15,12 +15,6 @@ export async function executeCheckLock(this: IExecuteFunctions, itemIndex: numbe
     ? (this.getNodeParameter('lockDataFieldName', itemIndex) as string)?.trim() || undefined
     : undefined;
 
-  console.log('🔒 [8kit] Parameters:', {
-    key,
-    includeLockData,
-    lockDataFieldName,
-  });
-
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
 
@@ -65,13 +59,6 @@ export async function executeCheckLock(this: IExecuteFunctions, itemIndex: numbe
       outputIndex: exists ? 0 : 1, // 0 = yes (exists), 1 = no (doesn't exist)
     };
   } catch (error: any) {
-    console.log('🔒 [8kit] Error checking lock:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }

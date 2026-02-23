@@ -1581,7 +1581,7 @@ export class EightKit implements INodeType {
         }));
       }
     } catch (error) {
-      console.log('Error loading Uniq collections:', error);
+      // Silently fail - return empty list
     }
 
     return [];
@@ -1602,7 +1602,7 @@ export class EightKit implements INodeType {
         }));
       }
     } catch (error) {
-      console.log('Error loading lookup collections:', error);
+      // Silently fail - return empty list
     }
 
     return [];

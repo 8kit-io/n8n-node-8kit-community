@@ -6,19 +6,12 @@ export async function executeListUniqCollections(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log(
-    '🔍 [8kit] executeListUniqCollections (Uniq collections) called for itemIndex:',
-    itemIndex
-  );
-
   // Get pagination parameters from advanced settings
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex, {}) as any;
   const paginationSettings = advancedSettings.pagination?.pagination || {};
   const page = paginationSettings.page || 1;
   const limit = paginationSettings.limit || 10;
   const offset = paginationSettings.offset || 0;
-
-  console.log('🔍 [8kit] Pagination parameters:', { page, limit, offset });
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
@@ -47,22 +40,12 @@ export async function executeListUniqCollections(
       throw new Error(`Failed to list Uniq collections: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🔍 [8kit] Uniq collections listed successfully:', response.data);
     return response.data;
   } catch (error: any) {
-    console.error('🔍 [8kit] Error listing Uniq collections:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
-      console.log('🔍 [8kit] Not continuing on fail, throwing error');
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    console.log('🔍 [8kit] Continuing on fail, returning error as output');
     return {
       error: {
         status: error.status,

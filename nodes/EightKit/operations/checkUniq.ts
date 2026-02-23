@@ -16,9 +16,6 @@ export interface CheckUniqValuesParams {
 }
 
 export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('🔍 [8kit] executeCheckUniqs (Uniq) called for itemIndex:', itemIndex);
-  console.log('🔍 [8kit] Starting Uniq check operation...');
-
   // Parameters (adapted to single-mode only)
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
@@ -31,18 +28,10 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
     ? (this.getNodeParameter('uniqValueDataFieldName', itemIndex) as string)?.trim() || undefined
     : undefined;
 
-  console.log('🔍 [8kit] Parameters (Uniq):', {
-    name,
-    value,
-    includeUniqValueData,
-    uniqValueDataFieldName,
-  });
-
   // Validate inputs
   validateUniqName(name);
 
   const inputData = this.getInputData()[itemIndex].json as Record<string, any>;
-  console.log('🔍 [8kit] Input data:', { inputData, value });
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
@@ -51,10 +40,6 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
     throw new Error('Host URL is not configured in credentials');
   }
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
-  console.log('🔍 [8kit] API Configuration:', {
-    originalUrl: baseUrl,
-    formattedUrl: formattedBaseUrl,
-  });
 
   const client = new EightKitHttpClient(this, itemIndex);
 
@@ -66,8 +51,6 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
     // Single mode only: validate value and perform check
     validateValue(value);
 
-    console.log('🔍 [8kit] Single check URL:', url);
-    console.log('🔍 [8kit] Single check payload:', { value });
     const response = await client.post<{ exists: boolean; value?: any }>(url, {
       value,
     });
@@ -94,13 +77,6 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
       outputIndex: exists ? 0 : 1,
     };
   } catch (error: any) {
-    console.log('🔍 [8kit] Error in executeCheckUniqs (Uniq):', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }

@@ -17,8 +17,6 @@ export async function executeCreateLookup(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🔍 [8kit] executeCreateLookup (lookup collection) called for itemIndex:', itemIndex);
-
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const description = (
     (this.getNodeParameter('description', itemIndex, '') as string) || ''
@@ -35,17 +33,6 @@ export async function executeCreateLookup(
     true
   ) as boolean;
   const strictChecking = this.getNodeParameter('strictChecking', itemIndex, false) as boolean;
-
-  console.log('🔍 [8kit] Parameters:', {
-    name,
-    description,
-    leftSystem,
-    rightSystem,
-    allowLeftDups,
-    allowRightDups,
-    allowLeftRightDups,
-    strictChecking,
-  });
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
@@ -85,22 +72,12 @@ export async function executeCreateLookup(
       throw new Error(`Failed to create lookup collection: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🔍 [8kit] Lookup collection created successfully:', response.data);
     return response.data;
   } catch (error: any) {
-    console.error('🔍 [8kit] Error creating lookup collection:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
-      console.log('🔍 [8kit] Not continuing on fail, throwing error');
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    console.log('🔍 [8kit] Continuing on fail, returning error as output');
     return {
       error: {
         status: error.status,

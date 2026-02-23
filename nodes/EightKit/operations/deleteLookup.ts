@@ -11,12 +11,8 @@ export async function executeDeleteLookup(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🗑️ [8kit] executeDeleteLookup called for itemIndex:', itemIndex);
-
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const confirmDelete = (this.getNodeParameter('confirmDelete', itemIndex) as string).trim();
-
-  console.log('🗑️ [8kit] Parameters:', { name, confirmDelete });
 
   // Validate confirmation
   if (confirmDelete !== 'delete') {
@@ -50,8 +46,6 @@ export async function executeDeleteLookup(
       throw new Error(`Failed to delete lookup collection: ${response.error || 'Unknown error'}`);
     }
 
-    console.log('🗑️ [8kit] Lookup collection deleted successfully');
-
     return {
       ...inputData,
       deleted: true,
@@ -59,19 +53,10 @@ export async function executeDeleteLookup(
       message: 'Lookup collection deleted successfully',
     };
   } catch (error: any) {
-    console.error('🗑️ [8kit] Error deleting lookup collection:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
-      console.log('🗑️ [8kit] Not continuing on fail, throwing error');
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    console.log('🗑️ [8kit] Continuing on fail, returning error as output');
     return {
       ...inputData,
       error: {

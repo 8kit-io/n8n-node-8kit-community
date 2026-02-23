@@ -28,13 +28,6 @@ export async function executeGetAppHealth(
 
     return response.data;
   } catch (error: any) {
-    console.log('🩺 [8kit] Error getting app health:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }

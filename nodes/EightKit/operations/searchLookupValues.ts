@@ -68,13 +68,6 @@ export async function executeSearchLookupValues(
     const message = error.message || 'Unknown error';
     const safeMessage = `Failed to search lookup values: ${message}`;
 
-    console.log('🔍 [8kit] Error searching lookup values:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, {
         itemIndex: index,

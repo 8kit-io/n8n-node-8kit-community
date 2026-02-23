@@ -48,12 +48,6 @@ export async function executeCompleteLookupUniq(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log(
-    '🔥 [8kit] executeCompleteLookupUniq (Lookup + Uniq) called for itemIndex:',
-    itemIndex
-  );
-  console.log('🔥 [8kit] Starting combined lookup + Uniq operation...');
-
   const lookupName = (this.getNodeParameter('lookupName', itemIndex) as string).trim();
   const leftValue = (this.getNodeParameter('leftValue', itemIndex) as string).trim();
   const rightValue = (this.getNodeParameter('rightValue', itemIndex) as string).trim();
@@ -66,23 +60,12 @@ export async function executeCompleteLookupUniq(
   // Extract metadata from advanced settings
   const metadata = advancedSettings?.metadata;
 
-  console.log('🔥 [8kit] Parameters:', {
-    lookupName,
-    leftValue,
-    rightValue,
-    uniqName,
-    value,
-    metadata,
-  });
-
   // Validate inputs
   validateLookupName(lookupName);
   validateUniqName(uniqName);
   validateValue(value);
 
   const inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
-
-  console.log('🔥 [8kit] Input data:', { inputData });
 
   // Validate required values
   if (!leftValue) {
@@ -117,11 +100,6 @@ export async function executeCompleteLookupUniq(
   // Ensure baseUrl is properly formatted
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, ''); // Remove trailing slash if present
 
-  console.log('🔥 [8kit] API Configuration:', {
-    originalUrl: baseUrl,
-    formattedUrl: formattedBaseUrl,
-  });
-
   const client = new EightKitHttpClient(this, itemIndex);
 
   try {
@@ -130,9 +108,6 @@ export async function executeCompleteLookupUniq(
       checkLookupExists(client, formattedBaseUrl, lookupName),
       checkUniqExists(client, formattedBaseUrl, uniqName),
     ]);
-
-    console.log('🔥 [8kit] Lookup exists:', lookupExists);
-    console.log('🔥 [8kit] Uniq collection exists:', uniqExists);
 
     // If lookup doesn't exist, throw error
     if (!lookupExists) {
@@ -150,9 +125,6 @@ export async function executeCompleteLookupUniq(
       addValueToUniq(client, formattedBaseUrl, uniqName, value, metadata),
     ]);
 
-    console.log('🔥 [8kit] Lookup operation result:', lookupResult);
-    console.log('🔥 [8kit] Uniq operation result:', uniqResult);
-
     const result: CompleteLookupUniqResult = {
       success: true,
       lookupResult: lookupResult.data,
@@ -162,19 +134,10 @@ export async function executeCompleteLookupUniq(
     // Return the combined result
     return result;
   } catch (error: any) {
-    console.log('🔥 [8kit] Error in executeCompleteLookupUniq (Lookup + Uniq):', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
-      console.log('🔥 [8kit] Not continuing on fail, throwing error');
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    console.log('🔥 [8kit] Continuing on fail, returning error as output');
     return {
       error: {
         status: error.status,
@@ -196,11 +159,7 @@ async function addValueToLookup(
   const endpoint = buildLookupEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
 
-  console.log('🔥 [8kit] Adding value pair to lookup:', url);
-
   const payload = { left, right };
-
-  console.log('🔥 [8kit] Add lookup value payload:', payload);
 
   const response = await client.post<AddLookupValueResult>(url, payload);
 
@@ -225,8 +184,6 @@ async function addValueToUniq(
   const endpoint = buildUniqEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
 
-  console.log('🔥 [8kit] Adding value to Uniq collection:', url);
-
   const payload: { value: string; metadata?: any } = { value };
 
   // Add metadata if provided
@@ -236,19 +193,12 @@ async function addValueToUniq(
       try {
         payload.metadata = JSON.parse(metadata);
       } catch (error: any) {
-        console.log(
-          '🔥 [8kit] Warning: Could not parse metadata as JSON, using as string:',
-          metadata,
-          error
-        );
         payload.metadata = metadata;
       }
     } else {
       payload.metadata = metadata;
     }
   }
-
-  console.log('🔥 [8kit] Add Uniq value payload:', payload);
 
   const response = await client.post<AddUniqValueResult>(url, payload);
 

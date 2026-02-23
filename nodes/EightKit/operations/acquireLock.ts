@@ -19,14 +19,6 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
     ? (this.getNodeParameter('lockDataFieldName', itemIndex) as string)?.trim() || undefined
     : undefined;
 
-  console.log('🔒 [8kit] Parameters:', {
-    key,
-    callingFn,
-    timeout,
-    includeLockData,
-    lockDataFieldName,
-  });
-
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
 
@@ -76,13 +68,6 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
       outputIndex: 0, // 0 = yes (lock acquired)
     };
   } catch (error: any) {
-    console.log('🔒 [8kit] Error acquiring lock:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     // Check if error is LOCK_CONFLICT
     const isLockConflict =
       error.code === 'LOCK_CONFLICT' || error.message?.includes('LOCK_CONFLICT');
