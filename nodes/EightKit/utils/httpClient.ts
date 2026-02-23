@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, INode } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeOperationError, sleep } from 'n8n-workflow';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -101,7 +101,7 @@ export class EightKitHttpClient {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return sleep(ms);
   }
 
   private formatError(error: any): EightKitError {
