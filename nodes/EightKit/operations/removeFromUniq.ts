@@ -11,22 +11,16 @@ export async function executeRemoveFromUniqs(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🔍 [8kit] executeRemoveFromUniqs (Uniq) called for itemIndex:', itemIndex);
-
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
 
-  console.log('🔍 [8kit] Parameters (Uniq):', { name, value });
-
   // Validate inputs
-  validateUniqName(name);
+  validateUniqName(name, this.getNode(), itemIndex);
 
   const inputData = this.getInputData()[itemIndex].json;
 
-  console.log('🔍 [8kit] Input data:', { inputData, value });
-
   if (!value) {
-    throw new Error(`Value is required and cannot be empty`);
+    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', { itemIndex });
   }
 
   // Initialize HTTP client
@@ -34,7 +28,7 @@ export async function executeRemoveFromUniqs(
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -53,19 +47,10 @@ export async function executeRemoveFromUniqs(
       inputData
     );
   } catch (error: any) {
-    console.error('🔍 [8kit] Error removing from Uniq collection:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
-      console.log('🔍 [8kit] Not continuing on fail, throwing error');
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    console.log('🔍 [8kit] Continuing on fail, returning error as output');
     return {
       error: {
         status: error.status,
@@ -90,18 +75,19 @@ async function executeSingleRemove(
 ): Promise<any> {
   const { name, value, client, baseUrl } = params;
 
-  validateValue(value);
+  validateValue(value, this.getNode(), _itemIndex);
 
   const endpoint = `${buildUniqEndpoint(name)}/values/${encodeURIComponent(value)}`;
   const response = await client.delete(`${baseUrl}${endpoint}`);
 
   if (!response.success) {
-    throw new Error(
-      `Failed to remove value from Uniq collection: ${response.error || 'Unknown error'}`
+    throw new NodeOperationError(
+      this.getNode(),
+      `Failed to remove value from Uniq collection: ${response.error || 'Unknown error'}`,
+      { itemIndex: _itemIndex },
     );
   }
 
-  console.log('🔍 [8kit] Value removed from Uniq collection successfully:', response.data);
   return {
     ...inputData,
     removed: true,

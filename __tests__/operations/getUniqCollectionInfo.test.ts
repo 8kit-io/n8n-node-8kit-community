@@ -16,12 +16,13 @@ describe('executeGetUniqCollectionInfo', () => {
       success: true,
       data: { id: 'uniq-1', name: 'orders' },
     };
-    fx.helpers.httpRequest.mockResolvedValue(apiResponse);
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue(apiResponse);
 
     const result = await executeGetUniqCollectionInfo.call(fx, 0);
     expectSuccess(result);
     expect(result.name).toBe('orders');
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: expect.stringMatching(/\/api\/v1\/uniqs\/orders$/),

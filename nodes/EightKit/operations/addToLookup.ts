@@ -1,4 +1,4 @@
-import type { IExecuteFunctions } from 'n8n-workflow';
+import type { IExecuteFunctions, INode } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { checkLookupExists } from '../utils/common';
 import { buildLookupEndpoint, EightKitHttpClient, validateLookupName } from '../utils/httpClient';
@@ -20,40 +20,29 @@ interface AddLookupValueResult {
 }
 
 export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('🔗 [8kit] executeAddToLookup called for itemIndex:', itemIndex);
-  console.log('🔗 [8kit] Starting addToLookup operation...');
-
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const leftValue = (this.getNodeParameter('leftValue', itemIndex) as string).trim();
   const rightValue = (this.getNodeParameter('rightValue', itemIndex) as string).trim();
 
-  console.log('🔗 [8kit] Parameters:', {
-    name,
-    leftValue,
-    rightValue,
-  });
-
   // Validate inputs
-  validateLookupName(name);
+  validateLookupName(name, this.getNode(), itemIndex);
 
   const inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
 
-  console.log('🔗 [8kit] Input data:', { inputData, leftValue, rightValue });
-
   if (!leftValue) {
-    throw new Error(`Left value is required and cannot be empty`);
+    throw new NodeOperationError(this.getNode(), 'Left value is required and cannot be empty', { itemIndex });
   }
 
   if (!rightValue) {
-    throw new Error(`Right value is required and cannot be empty`);
+    throw new NodeOperationError(this.getNode(), 'Right value is required and cannot be empty', { itemIndex });
   }
 
   // Validate the values
   if (typeof leftValue !== 'string') {
-    throw new Error(`Left value must be a string, got ${typeof leftValue}`);
+    throw new NodeOperationError(this.getNode(), `Left value must be a string, got ${typeof leftValue}`, { itemIndex });
   }
   if (typeof rightValue !== 'string') {
-    throw new Error(`Right value must be a string, got ${typeof rightValue}`);
+    throw new NodeOperationError(this.getNode(), `Right value must be a string, got ${typeof rightValue}`, { itemIndex });
   }
 
   // Initialize HTTP client
@@ -61,49 +50,33 @@ export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: num
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
 
   // Ensure baseUrl is properly formatted
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, ''); // Remove trailing slash if present
-
-  console.log('🔗 [8kit] API Configuration:', {
-    originalUrl: baseUrl,
-    formattedUrl: formattedBaseUrl,
-  });
 
   const client = new EightKitHttpClient(this, itemIndex);
 
   try {
     // First, check if the lookup exists
     const lookupExists = await checkLookupExists(client, formattedBaseUrl, name);
-    console.log('🔗 [8kit] Lookup exists:', lookupExists);
 
     // If lookup doesn't exist, throw error
     if (!lookupExists) {
-      throw new Error(`Lookup "${name}" not found.`);
+      throw new NodeOperationError(this.getNode(), `Lookup "${name}" not found.`, { itemIndex });
     }
 
     // Add value pair to the lookup
-    const result = await addValueToLookup(client, formattedBaseUrl, name, leftValue, rightValue);
-    console.log('🔗 [8kit] Value pair added to lookup:', result);
+    const result = await addValueToLookup(client, formattedBaseUrl, name, leftValue, rightValue, this.getNode(), itemIndex);
 
     // Return the enriched input data with operation result
     return result;
   } catch (error: any) {
-    console.log('🔗 [8kit] Error in executeAddToLookup:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
-      console.log('🔗 [8kit] Not continuing on fail, throwing error');
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    console.log('🔗 [8kit] Continuing on fail, returning error as output');
     return {
       error: {
         status: error.status,
@@ -120,25 +93,23 @@ async function addValueToLookup(
   baseUrl: string,
   name: string,
   left: string,
-  right: string
+  right: string,
+  node: INode,
+  itemIndex: number,
 ): Promise<{ success: boolean; data: AddLookupValueResult }> {
   const endpoint = buildLookupEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
 
-  console.log('🔗 [8kit] Adding value pair to lookup:', url);
-
   const payload = { left, right };
-
-  console.log('🔗 [8kit] Add value pair payload:', payload);
 
   const response = await client.post<AddLookupValueResult>(url, payload);
 
   if (!response.success) {
-    throw new Error(`Failed to add value pair to lookup: ${response.error || 'Unknown error'}`);
+    throw new NodeOperationError(node, `Failed to add value pair to lookup: ${response.error || 'Unknown error'}`, { itemIndex });
   }
 
   if (!response.data) {
-    throw new Error('Add value pair response missing data field');
+    throw new NodeOperationError(node, 'Add value pair response missing data field', { itemIndex });
   }
 
   return { success: true, data: response.data };

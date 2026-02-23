@@ -14,19 +14,18 @@ export async function executeCreateLastUpdated(
   itemIndex: number
 ): Promise<any> {
   const key = (this.getNodeParameter('key', itemIndex) as string).trim();
-  const description = (
-    (this.getNodeParameter('description', itemIndex, '') as string) || ''
-  ).trim();
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const description = ((additionalFields.description as string) || '').trim();
 
-  const rawDateInput = this.getNodeParameter('dateString', itemIndex, '') as
+  const rawDateInput = (additionalFields.dateString ?? '') as
     | string
     | number
     | Date
     | null;
-  const inputFormat = this.getNodeParameter('inputFormat', itemIndex, 'iso8601-tz') as string;
+  const inputFormat = (additionalFields.inputFormat as string) || 'iso8601-tz';
   const rawInputCustomFormat =
     inputFormat === 'custom'
-      ? (this.getNodeParameter('inputCustomFormat', itemIndex, '') as string)
+      ? ((additionalFields.inputCustomFormat as string) || '')
       : undefined;
   const inputCustomFormat = rawInputCustomFormat?.trim() || undefined;
 
@@ -86,8 +85,10 @@ export async function executeCreateLastUpdated(
     }>(`${baseUrl}/api/v1/last-updated`, payload);
 
     if (!response.success || !response.data) {
-      throw new Error(
-        `Failed to create last updated record: ${(response as any).error || 'Unknown error'}`
+      throw new NodeOperationError(
+        this.getNode(),
+        `Failed to create last updated record: ${(response as any).error || 'Unknown error'}`,
+        { itemIndex },
       );
     }
 
@@ -132,8 +133,10 @@ export async function executeCreateLastUpdated(
           };
         }>(`${baseUrl}/api/v1/last-updated`, payload);
         if (!response.success || !response.data) {
-          throw new Error(
-            `Failed to touch last updated record: ${(response as any).error || 'Unknown error'}`
+          throw new NodeOperationError(
+            this.getNode(),
+            `Failed to touch last updated record: ${(response as any).error || 'Unknown error'}`,
+            { itemIndex },
           );
         }
 

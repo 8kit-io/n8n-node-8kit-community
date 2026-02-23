@@ -13,19 +13,12 @@ export interface AcquireLockParams {
 export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: number): Promise<any> {
   const key = (this.getNodeParameter('key', itemIndex) as string).trim();
   const callingFn = (this.getNodeParameter('callingFn', itemIndex) as string).trim();
-  const timeout = this.getNodeParameter('timeout', itemIndex, null) as number | null;
-  const includeLockData = this.getNodeParameter('getLockData', itemIndex, false) as boolean;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const timeout = additionalFields.timeout !== undefined ? additionalFields.timeout as number : 600;
+  const includeLockData = (additionalFields.getLockData as boolean) || false;
   const lockDataFieldName = includeLockData
-    ? (this.getNodeParameter('lockDataFieldName', itemIndex) as string)?.trim() || undefined
+    ? (additionalFields.lockDataFieldName as string)?.trim() || undefined
     : undefined;
-
-  console.log('🔒 [8kit] Parameters:', {
-    key,
-    callingFn,
-    timeout,
-    includeLockData,
-    lockDataFieldName,
-  });
 
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
@@ -58,7 +51,7 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
     }>(`${baseUrl}/api/v1/locks`, payload);
 
     if (!response.success) {
-      throw new Error(`Failed to acquire lock: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to acquire lock: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     const outputJson: Record<string, any> = {
@@ -76,13 +69,6 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
       outputIndex: 0, // 0 = yes (lock acquired)
     };
   } catch (error: any) {
-    console.log('🔒 [8kit] Error acquiring lock:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     // Check if error is LOCK_CONFLICT
     const isLockConflict =
       error.code === 'LOCK_CONFLICT' || error.message?.includes('LOCK_CONFLICT');

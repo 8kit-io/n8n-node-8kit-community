@@ -19,12 +19,13 @@ describe('executeGetLookupValues', () => {
       success: true,
       data: { items: [{ left: 'A', right: '1' }], pagination: { page: 2, limit: 5, offset: 10 } },
     };
-    fx.helpers.httpRequest.mockResolvedValue(apiResponse);
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue(apiResponse);
 
     const result = await executeGetLookupValues.call(fx, 0);
     expectSuccess(result);
     expect(result.items).toHaveLength(1);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: expect.stringMatching(

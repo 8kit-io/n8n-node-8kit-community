@@ -11,10 +11,12 @@ describe('executeCheckLock', () => {
   });
 
   it('returns lock details when the lock exists', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('job-1');
+    fx.getNodeParameter
+      .mockReturnValueOnce('job-1') // key
+      .mockReturnValueOnce({}); // additionalFields (empty = defaults)
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         key: 'job-1',
@@ -36,7 +38,8 @@ describe('executeCheckLock', () => {
     expect(result.result).toBeDefined();
     expect(result.result.testField).toBe('testValue'); // Verify input data is preserved
     expect(result.outputIndex).toBe(0); // 0 = yes (exists)
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: 'https://api.example.com/api/v1/locks/job-1',
@@ -45,10 +48,12 @@ describe('executeCheckLock', () => {
   });
 
   it('throws when the API indicates failure', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('missing-lock');
+    fx.getNodeParameter
+      .mockReturnValueOnce('missing-lock') // key
+      .mockReturnValueOnce({}); // additionalFields
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({ success: false, error: 'Lock not found' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Lock not found' });
 
     await expect(executeCheckLock.call(fx, 0)).rejects.toThrow(
       'Failed to check lock: Lock not found'

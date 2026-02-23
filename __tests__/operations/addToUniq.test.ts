@@ -18,9 +18,9 @@ describe('executeAddToUniq', () => {
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     // First GET to check uniq collection exists
-    fx.helpers.httpRequest.mockResolvedValueOnce({ success: true, data: { id: 'uniq-1' } });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({ success: true, data: { id: 'uniq-1' } });
     // Then POST to add value
-    fx.helpers.httpRequest.mockResolvedValueOnce({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({
       success: true,
       data: { id: 'val-1', value: 'ORD-1' },
     });
@@ -28,13 +28,15 @@ describe('executeAddToUniq', () => {
     const result = await executeAddToUniq.call(fx, 0);
 
     expect(result).toEqual({ success: true, data: { id: 'val-1', value: 'ORD-1' } });
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: expect.stringMatching(/\/api\/v1\/uniqs\/orders$/),
       })
     );
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'POST',
         url: expect.stringMatching(/\/api\/v1\/uniqs\/orders\/values$/),
@@ -48,7 +50,7 @@ describe('executeAddToUniq', () => {
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     // Mock 404 response shape to trigger non-retry and formatted error
-    fx.helpers.httpRequest.mockRejectedValueOnce({
+    fx.helpers.httpRequestWithAuthentication.mockRejectedValueOnce({
       response: {
         status: 404,
         data: { error: 'Uniq collection not found', code: 'UNIQ_NOT_FOUND' },

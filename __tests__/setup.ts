@@ -20,6 +20,7 @@ export const createMockExecuteFunctions = (
     getTimezone: jest.fn(() => 'America/New_York'),
     helpers: {
       httpRequest: jest.fn(),
+      httpRequestWithAuthentication: jest.fn(),
     },
     logger: {
       info: jest.fn(),

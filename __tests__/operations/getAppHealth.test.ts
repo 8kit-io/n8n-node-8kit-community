@@ -20,12 +20,13 @@ describe('executeGetAppHealth', () => {
         timestamp: '2024-01-01T10:00:00Z',
       },
     };
-    fx.helpers.httpRequest.mockResolvedValue(apiResponse);
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue(apiResponse);
 
     const result = await executeGetAppHealth.call(fx, 0);
     expectSuccess(result);
     expect(result.status).toBe('healthy');
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: expect.stringMatching(/\/api\/v1\/apps\/health$/),

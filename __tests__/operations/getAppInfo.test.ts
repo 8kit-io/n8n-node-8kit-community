@@ -21,12 +21,13 @@ describe('executeGetAppInfo', () => {
         updatedAt: '2024-01-02T00:00:00Z',
       },
     };
-    fx.helpers.httpRequest.mockResolvedValue(apiResponse);
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue(apiResponse);
 
     const result = await executeGetAppInfo.call(fx, 0);
     expectSuccess(result);
     expect(result.id).toBe('app-123');
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: expect.stringMatching(/\/api\/v1\/apps\/me$/),

@@ -22,13 +22,13 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validUniqName) // name
         .mockReturnValueOnce(testData.validValue) // value
-        .mockReturnValueOnce(false); // getUniqValueData
+        .mockReturnValueOnce({}); // additionalFields (empty = defaults)
 
       const originalItem = createMockItem({ value: testData.validValue, tag: 'original' });
       mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue({
         success: true,
         data: { exists: true },
       });
@@ -46,7 +46,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validUniqName)
         .mockReturnValueOnce(testData.validValue)
-        .mockReturnValueOnce(false);
+        .mockReturnValueOnce({}); // additionalFields (empty = defaults)
 
       const originalItem = createMockItem({
         value: testData.validValue,
@@ -55,7 +55,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue({
         success: true,
         data: { exists: false },
       });
@@ -73,14 +73,13 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validUniqName)
         .mockReturnValueOnce(testData.validValue)
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce('uniqInfo');
+        .mockReturnValueOnce({ getUniqValueData: true, uniqValueDataFieldName: 'uniqInfo' }); // additionalFields
 
       const originalItem = createMockItem({ value: testData.validValue });
       mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue({
         success: true,
         data: {
           exists: true,
@@ -110,14 +109,13 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validUniqName)
         .mockReturnValueOnce(testData.validValue)
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce('   ');
+        .mockReturnValueOnce({ getUniqValueData: true, uniqValueDataFieldName: '   ' }); // additionalFields
 
       const originalItem = createMockItem({ value: testData.validValue });
       mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue({
         success: true,
         data: {
           exists: true,
@@ -143,14 +141,14 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validUniqName)
         .mockReturnValueOnce(testData.validValue)
-        .mockReturnValueOnce(false);
+        .mockReturnValueOnce({}); // additionalFields
 
       mockExecuteFunctions.getInputData.mockReturnValue([
         createMockItem({ value: testData.validValue }),
       ]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockRejectedValue(
         new Error('API Error: Uniq collection not found')
       );
 
@@ -165,7 +163,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce('')
         .mockReturnValueOnce(testData.validValue)
-        .mockReturnValueOnce(false);
+        .mockReturnValueOnce({}); // additionalFields
 
       mockExecuteFunctions.getInputData.mockReturnValue([
         createMockItem({ value: testData.validValue }),
@@ -182,7 +180,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce('invalid uniq name!')
         .mockReturnValueOnce(testData.validValue)
-        .mockReturnValueOnce(false);
+        .mockReturnValueOnce({}); // additionalFields
 
       mockExecuteFunctions.getInputData.mockReturnValue([
         createMockItem({ value: testData.validValue }),
@@ -202,7 +200,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(longUniqName)
         .mockReturnValueOnce(testData.validValue)
-        .mockReturnValueOnce(false);
+        .mockReturnValueOnce({}); // additionalFields
 
       mockExecuteFunctions.getInputData.mockReturnValue([
         createMockItem({ value: testData.validValue }),
@@ -220,7 +218,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce(testData.validUniqName)
         .mockReturnValueOnce(longValue)
-        .mockReturnValueOnce(false);
+        .mockReturnValueOnce({}); // additionalFields
 
       mockExecuteFunctions.getInputData.mockReturnValue([createMockItem({ value: longValue })]);
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));

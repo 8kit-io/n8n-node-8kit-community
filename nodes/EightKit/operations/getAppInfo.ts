@@ -21,18 +21,11 @@ export async function executeGetAppInfo(this: IExecuteFunctions, itemIndex: numb
     }>(`${baseUrl}/api/v1/apps/me`);
 
     if (!response.success) {
-      throw new Error(`Failed to get app info: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to get app info: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     return response.data;
   } catch (error: any) {
-    console.log('ℹ️ [8kit] Error getting app info:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }

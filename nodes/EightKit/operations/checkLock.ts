@@ -10,16 +10,11 @@ export interface CheckLockParams {
 
 export async function executeCheckLock(this: IExecuteFunctions, itemIndex: number): Promise<any> {
   const key = (this.getNodeParameter('key', itemIndex) as string).trim();
-  const includeLockData = this.getNodeParameter('getLockData', itemIndex, false) as boolean;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const includeLockData = (additionalFields.getLockData as boolean) || false;
   const lockDataFieldName = includeLockData
-    ? (this.getNodeParameter('lockDataFieldName', itemIndex) as string)?.trim() || undefined
+    ? (additionalFields.lockDataFieldName as string)?.trim() || undefined
     : undefined;
-
-  console.log('🔒 [8kit] Parameters:', {
-    key,
-    includeLockData,
-    lockDataFieldName,
-  });
 
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string).trim().replace(/\/$/, '');
@@ -44,7 +39,7 @@ export async function executeCheckLock(this: IExecuteFunctions, itemIndex: numbe
     }>(`${baseUrl}/api/v1/locks/${encodeURIComponent(key)}`);
 
     if (!response.success || !response.data) {
-      throw new Error(`Failed to check lock: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to check lock: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     const lockData = response.data;
@@ -65,13 +60,6 @@ export async function executeCheckLock(this: IExecuteFunctions, itemIndex: numbe
       outputIndex: exists ? 0 : 1, // 0 = yes (exists), 1 = no (doesn't exist)
     };
   } catch (error: any) {
-    console.log('🔒 [8kit] Error checking lock:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }

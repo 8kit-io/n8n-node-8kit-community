@@ -6,8 +6,6 @@ export async function executeGetLookupValues(
   this: IExecuteFunctions,
   itemIndex: number
 ): Promise<any> {
-  console.log('🔍 [8kit] executeGetLookupValues called for itemIndex:', itemIndex);
-
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
 
   // Get pagination parameters from advanced settings
@@ -17,18 +15,15 @@ export async function executeGetLookupValues(
   const limit = paginationSettings.limit || 10;
   const offset = paginationSettings.offset || 0;
 
-  console.log('🔍 [8kit] Parameters:', { name });
-  console.log('🔍 [8kit] Pagination parameters:', { page, limit, offset });
-
   // Validate inputs
-  validateLookupName(name);
+  validateLookupName(name, this.getNode(), itemIndex);
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -47,25 +42,15 @@ export async function executeGetLookupValues(
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new Error(`Failed to get lookup values: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to get lookup values: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
-    console.log('🔍 [8kit] Lookup values retrieved successfully:', response.data);
     return response.data;
   } catch (error: any) {
-    console.error('🔍 [8kit] Error getting lookup values:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
-      console.log('🔍 [8kit] Not continuing on fail, throwing error');
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
-    console.log('🔍 [8kit] Continuing on fail, returning error as output');
     return {
       error: {
         status: error.status,

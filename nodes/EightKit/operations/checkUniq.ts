@@ -16,45 +16,27 @@ export interface CheckUniqValuesParams {
 }
 
 export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: number): Promise<any> {
-  console.log('🔍 [8kit] executeCheckUniqs (Uniq) called for itemIndex:', itemIndex);
-  console.log('🔍 [8kit] Starting Uniq check operation...');
-
   // Parameters (adapted to single-mode only)
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
-  const includeUniqValueData = this.getNodeParameter(
-    'getUniqValueData',
-    itemIndex,
-    false
-  ) as boolean;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const includeUniqValueData = (additionalFields.getUniqValueData as boolean) || false;
   const uniqValueDataFieldName = includeUniqValueData
-    ? (this.getNodeParameter('uniqValueDataFieldName', itemIndex) as string)?.trim() || undefined
+    ? (additionalFields.uniqValueDataFieldName as string)?.trim() || undefined
     : undefined;
 
-  console.log('🔍 [8kit] Parameters (Uniq):', {
-    name,
-    value,
-    includeUniqValueData,
-    uniqValueDataFieldName,
-  });
-
   // Validate inputs
-  validateUniqName(name);
+  validateUniqName(name, this.getNode(), itemIndex);
 
   const inputData = this.getInputData()[itemIndex].json as Record<string, any>;
-  console.log('🔍 [8kit] Input data:', { inputData, value });
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string) || '';
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
-  console.log('🔍 [8kit] API Configuration:', {
-    originalUrl: baseUrl,
-    formattedUrl: formattedBaseUrl,
-  });
 
   const client = new EightKitHttpClient(this, itemIndex);
 
@@ -64,16 +46,14 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
 
   try {
     // Single mode only: validate value and perform check
-    validateValue(value);
+    validateValue(value, this.getNode(), itemIndex);
 
-    console.log('🔍 [8kit] Single check URL:', url);
-    console.log('🔍 [8kit] Single check payload:', { value });
     const response = await client.post<{ exists: boolean; value?: any }>(url, {
       value,
     });
 
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'API Error: Unknown');
+      throw new NodeOperationError(this.getNode(), response.error || 'API Error: Unknown', { itemIndex });
     }
 
     const exists = response.data.exists;
@@ -94,13 +74,6 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
       outputIndex: exists ? 0 : 1,
     };
   } catch (error: any) {
-    console.log('🔍 [8kit] Error in executeCheckUniqs (Uniq):', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }

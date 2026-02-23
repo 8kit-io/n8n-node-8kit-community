@@ -23,18 +23,11 @@ export async function executeGetAppHealth(
     }>(`${baseUrl}/api/v1/apps/health`);
 
     if (!response.success) {
-      throw new Error(`Failed to get app health: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to get app health: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     return response.data;
   } catch (error: any) {
-    console.log('🩺 [8kit] Error getting app health:', {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }

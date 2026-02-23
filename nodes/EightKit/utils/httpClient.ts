@@ -1,4 +1,5 @@
-import type { IExecuteFunctions } from 'n8n-workflow';
+import type { IExecuteFunctions, INode } from 'n8n-workflow';
+import { NodeOperationError, sleep } from 'n8n-workflow';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -49,48 +50,33 @@ export class EightKitHttpClient {
     endpoint: string,
     data?: any
   ): Promise<ApiResponse<T>> {
-    console.log(
-      `🔍 [8kit HTTP] ${method} ${endpoint}`,
-      data ? `with data: ${JSON.stringify(data)}` : ''
-    );
-
     const { timeout = 30000, retryOnFailure = 3, retryDelay = 1000 } = this.options;
     let lastError: any;
 
     for (let attempt = 0; attempt <= retryOnFailure; attempt++) {
       try {
-        if (attempt > 0) {
-          console.log(`🔍 [8kit HTTP] Retry attempt ${attempt + 1}/${retryOnFailure + 1}`);
-        }
-
-        // Get credentials for API key
-        const credentials = await this.executeFunctions.getCredentials('eightKitApi');
-        const apiKey = credentials.apiKey as string;
-
-        if (!apiKey) {
-          console.log('🔍 [8kit HTTP] WARNING: No API key found in credentials!');
-        } else {
-          // Log masked API key for debugging (only show first 4 chars)
-          const maskedKey = apiKey.length > 4 ? `${apiKey.substring(0, 4)}...` : '****';
-          console.log(`🔍 [8kit HTTP] Using API Key: ${maskedKey}`);
-        }
-
-        const response = await this.executeFunctions.helpers.httpRequest({
+        const requestOptions: any = {
           method,
           url: endpoint,
-          body: data,
           timeout,
           headers: {
             'Content-Type': 'application/json',
-            'X-Api-Key': apiKey || '', // Add API key to headers
           },
-        });
+        };
 
-        console.log(`🔍 [8kit HTTP] Response status: ${response.status || 'N/A'}`);
+        if (data) {
+          requestOptions.body = data;
+        }
+
+        const response = await this.executeFunctions.helpers.httpRequestWithAuthentication.call(
+          this.executeFunctions,
+          'eightKitApi',
+          requestOptions,
+        );
+
         return response as ApiResponse<T>;
       } catch (error: any) {
         lastError = error;
-        console.log(`🔍 [8kit HTTP] Error on attempt ${attempt + 1}:`, error.message);
 
         // Don't retry on client errors (4xx) except for rate limiting
         if (
@@ -98,18 +84,15 @@ export class EightKitHttpClient {
           error.response?.status < 500 &&
           error.response?.status !== 429
         ) {
-          console.log(`🔍 [8kit HTTP] Client error (${error.response?.status}), not retrying`);
           throw this.formatError(error);
         }
 
         // Don't retry on last attempt
         if (attempt === retryOnFailure) {
-          console.log(`🔍 [8kit HTTP] Max retries reached, giving up`);
           throw this.formatError(error);
         }
 
         // Wait before retrying
-        console.log(`🔍 [8kit HTTP] Waiting ${retryDelay}ms before retry...`);
         await this.delay(retryDelay);
       }
     }
@@ -118,18 +101,7 @@ export class EightKitHttpClient {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-      const start = Date.now();
-      const check = () => {
-        if (Date.now() - start >= ms) {
-          resolve();
-        } else {
-          // Use setImmediate for non-blocking delay
-          setImmediate(check);
-        }
-      };
-      check();
-    });
+    return sleep(ms);
   }
 
   private formatError(error: any): EightKitError {
@@ -169,10 +141,6 @@ export class EightKitHttpClient {
     }
 
     if (error.message?.includes('Invalid URL')) {
-      console.log('🔍 [8kit HTTP] Invalid URL error. URL details:', {
-        error: error.message,
-        url: error.config?.url || 'Unknown URL',
-      });
       return new EightKitError({
         status: 400,
         message: `Invalid URL: ${error.config?.url || 'Unknown URL'}`,
@@ -181,7 +149,6 @@ export class EightKitHttpClient {
     }
 
     const errorMessage = `Network error: ${error.message || 'Unknown error'}`;
-    console.log('🔍 [8kit HTTP] Formatted network error:', errorMessage);
     return new EightKitError({
       status: 500,
       message: errorMessage,
@@ -191,17 +158,14 @@ export class EightKitHttpClient {
 
   // Helper methods for common operations
   async get<T = any>(endpoint: string): Promise<ApiResponse<T>> {
-    console.log(`🔍 [8kit HTTP] GET request to: ${endpoint}`);
     return this.request<T>('GET', endpoint);
   }
 
   async post<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    console.log(`🔍 [8kit HTTP] POST request to: ${endpoint}`);
     return this.request<T>('POST', endpoint, data);
   }
 
   async put<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    console.log(`🔍 [8kit HTTP] PUT request to: ${endpoint}`);
     return this.request<T>('PUT', endpoint, data);
   }
 
@@ -210,25 +174,19 @@ export class EightKitHttpClient {
   }
 
   async patch<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    console.log(`🔍 [8kit HTTP] PATCH request to: ${endpoint}`);
     return this.request<T>('PATCH', endpoint, data);
   }
 }
 
 // Utility functions for building endpoints
-export function buildUniqEndpoint(uniqName: string, operation?: string): string {
-  console.log(
-    `🔍 [8kit Endpoint] Building Uniq endpoint for: "${uniqName}", operation: "${operation || 'none'}"`
-  );
-
+export function buildUniqEndpoint(uniqName: string, operation?: string, node?: INode, itemIndex?: number): string {
   if (!uniqName) {
-    throw new Error('Uniq collection name is required to build endpoint');
+    throw new NodeOperationError(node as INode, 'Uniq collection name is required to build endpoint', { itemIndex });
   }
 
   const base = `/api/v1/uniqs/${encodeURIComponent(uniqName)}`;
   const endpoint = operation ? `${base}/${operation}` : base;
 
-  console.log(`🔍 [8kit Endpoint] Built Uniq endpoint: "${endpoint}"`);
   return endpoint;
 }
 
@@ -264,52 +222,46 @@ export function buildMetadata(
 }
 
 // Utility functions for validation
-export function validateUniqName(name: string): void {
-  console.log(`🔍 [8kit Validation] Validating Uniq collection name: "${name}"`);
-
+export function validateUniqName(name: string, node?: INode, itemIndex?: number): void {
   if (!name || typeof name !== 'string') {
-    throw new Error('Uniq collection name is required and must be a string');
+    throw new NodeOperationError(node as INode, 'Uniq collection name is required and must be a string', { itemIndex });
   }
 
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-    throw new Error(
-      'Uniq collection name can only contain letters, numbers, hyphens, and underscores'
+    throw new NodeOperationError(
+      node as INode,
+      'Uniq collection name can only contain letters, numbers, hyphens, and underscores',
+      { itemIndex },
     );
   }
 
   if (name.length > 100) {
-    throw new Error('Uniq collection name cannot exceed 100 characters');
+    throw new NodeOperationError(node as INode, 'Uniq collection name cannot exceed 100 characters', { itemIndex });
   }
-
-  console.log(`🔍 [8kit Validation] Uniq collection name validation passed`);
 }
 
-export function validateLookupName(name: string): void {
+export function validateLookupName(name: string, node?: INode, itemIndex?: number): void {
   if (!name || typeof name !== 'string') {
-    throw new Error('Lookup name is required and must be a string');
+    throw new NodeOperationError(node as INode, 'Lookup name is required and must be a string', { itemIndex });
   }
 
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-    throw new Error('Lookup name can only contain letters, numbers, hyphens, and underscores');
+    throw new NodeOperationError(node as INode, 'Lookup name can only contain letters, numbers, hyphens, and underscores', { itemIndex });
   }
 
   if (name.length > 100) {
-    throw new Error('Lookup name cannot exceed 100 characters');
+    throw new NodeOperationError(node as INode, 'Lookup name cannot exceed 100 characters', { itemIndex });
   }
 }
 
-export function validateValue(value: string): void {
-  console.log(`🔍 [8kit Validation] Validating value: "${value}"`);
-
+export function validateValue(value: string, node?: INode, itemIndex?: number): void {
   if (!value || typeof value !== 'string') {
-    throw new Error('Value is required and must be a string');
+    throw new NodeOperationError(node as INode, 'Value is required and must be a string', { itemIndex });
   }
 
   if (value.length > 255) {
-    throw new Error('Value cannot exceed 255 characters');
+    throw new NodeOperationError(node as INode, 'Value cannot exceed 255 characters', { itemIndex });
   }
-
-  console.log(`🔍 [8kit Validation] Value validation passed`);
 }
 
 /**

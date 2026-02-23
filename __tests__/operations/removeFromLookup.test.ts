@@ -14,7 +14,7 @@ describe('executeRemoveFromLookup', () => {
     fx.getNodeParameter.mockReturnValueOnce('user-map').mockReturnValueOnce('external-456');
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: { id: 'lookup-value-1', deleted: true },
     });
@@ -28,7 +28,8 @@ describe('executeRemoveFromLookup', () => {
       value: 'external-456',
       result: { id: 'lookup-value-1', deleted: true },
     });
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'DELETE',
         url: 'https://api.example.com/api/v1/lookups/user-map/values/external-456',
@@ -40,7 +41,7 @@ describe('executeRemoveFromLookup', () => {
     fx.getNodeParameter.mockReturnValueOnce('user-map').mockReturnValueOnce('external-456');
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({ success: false, error: 'Lookup value missing' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Lookup value missing' });
 
     await expect(executeRemoveFromLookup.call(fx, 0)).rejects.toThrow(
       'Failed to remove value from lookup: Lookup value missing'

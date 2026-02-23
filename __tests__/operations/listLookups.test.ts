@@ -16,13 +16,14 @@ describe('executeListLookups', () => {
       success: true,
       data: { items: [{ id: '1', name: 'lkp' }], pagination: { page: 1, limit: 10 } },
     };
-    fx.helpers.httpRequest.mockResolvedValue(apiResponse);
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue(apiResponse);
 
     const result = await executeListLookups.call(fx, 0);
 
     expectSuccess(result);
     expect(result.items).toHaveLength(1);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: expect.stringMatching(/\/api\/v1\/lookups\?page=1&limit=10$/),
@@ -40,12 +41,13 @@ describe('executeListLookups', () => {
       success: true,
       data: { items: [], pagination: { page: 3, limit: 20, offset: 40 } },
     };
-    fx.helpers.httpRequest.mockResolvedValue(apiResponse);
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue(apiResponse);
 
     const result = await executeListLookups.call(fx, 0);
 
     expectSuccess(result);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         url: expect.stringMatching(/page=3&limit=20&offset=40$/),
       })

@@ -16,12 +16,13 @@ describe('executeRemoveFromUniqs', () => {
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
     fx.getInputData.mockReturnValue([{ json: {} }]);
 
-    fx.helpers.httpRequest.mockResolvedValue({ success: true, data: { removed: true } });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: true, data: { removed: true } });
 
     const result = await executeRemoveFromUniqs.call(fx, 0);
     expectSuccess(result);
     expect(result.removed).toBe(true);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'DELETE',
         url: expect.stringMatching(/\/api\/v1\/uniqs\/orders\/values\/ORD-1$/),

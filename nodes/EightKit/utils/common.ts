@@ -1,3 +1,5 @@
+import type { INode } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { buildLookupEndpoint, buildUniqEndpoint, type EightKitHttpClient } from './httpClient';
 
 interface CreateLookupResult {
@@ -27,11 +29,11 @@ interface CreateUniqResult {
 async function createUniq(
   client: EightKitHttpClient,
   baseUrl: string,
-  uniqName: string
+  uniqName: string,
+  node: INode,
+  itemIndex: number,
 ): Promise<CreateUniqResult> {
   const url = `${baseUrl}/api/v1/uniqs`;
-
-  console.log('➕ [8kit] Creating Uniq collection:', url);
 
   //ToDo: add more info about the app that created the uniq collection
   const payload = {
@@ -39,16 +41,14 @@ async function createUniq(
     description: `Auto-created Uniq collection for ${uniqName} by n8n node`,
   };
 
-  console.log('➕ [8kit] Create Uniq payload:', payload);
-
   const response = await client.post<CreateUniqResult>(url, payload);
 
   if (!response.success) {
-    throw new Error(`Failed to create Uniq collection: ${response.error || 'Unknown error'}`);
+    throw new NodeOperationError(node, `Failed to create Uniq collection: ${response.error || 'Unknown error'}`, { itemIndex });
   }
 
   if (!response.data) {
-    throw new Error('Create Uniq collection response missing data field');
+    throw new NodeOperationError(node, 'Create Uniq collection response missing data field', { itemIndex });
   }
 
   return response.data;
@@ -63,13 +63,9 @@ async function checkUniqExists(
     const endpoint = buildUniqEndpoint(uniqName, '');
     const url = `${baseUrl}${endpoint}`;
 
-    console.log('➕ [8kit] Checking if Uniq collection exists:', url);
-
     const response = await client.get(url);
     return response.success && response.data;
   } catch (error: any) {
-    console.log('➕ [8kit] Uniq collection check error:', error.message);
-
     // If 404 or UNIQ_NOT_FOUND, the Uniq collection doesn't exist
     if (error.message.includes('404') || error.message.includes('UNIQ_NOT_FOUND')) {
       return false;
@@ -89,13 +85,9 @@ async function checkLookupExists(
     const endpoint = buildLookupEndpoint(lookupName, '');
     const url = `${baseUrl}${endpoint}`;
 
-    console.log('🔗 [8kit] Checking if lookup exists:', url);
-
     const response = await client.get(url);
     return response.success && response.data;
   } catch (error: any) {
-    console.log('🔗 [8kit] Lookup check error:', error.message);
-
     // If 404 or LOOKUP_NOT_FOUND, the lookup doesn't exist
     if (error.message.includes('404') || error.message.includes('LOOKUP_NOT_FOUND')) {
       return false;
@@ -109,27 +101,25 @@ async function checkLookupExists(
 async function createLookup(
   client: EightKitHttpClient,
   baseUrl: string,
-  lookupName: string
+  lookupName: string,
+  node: INode,
+  itemIndex: number,
 ): Promise<CreateLookupResult> {
   const url = `${baseUrl}/api/v1/lookups`;
-
-  console.log('🔗 [8kit] Creating lookup collection:', url);
 
   const payload = {
     name: lookupName,
     description: `Auto-created lookup collection for ${lookupName} by n8n node`,
   };
 
-  console.log('🔗 [8kit] Create lookup payload:', payload);
-
   const response = await client.post<CreateLookupResult>(url, payload);
 
   if (!response.success) {
-    throw new Error(`Failed to create lookup collection: ${response.error || 'Unknown error'}`);
+    throw new NodeOperationError(node, `Failed to create lookup collection: ${response.error || 'Unknown error'}`, { itemIndex });
   }
 
   if (!response.data) {
-    throw new Error('Create lookup response missing data field');
+    throw new NodeOperationError(node, 'Create lookup response missing data field', { itemIndex });
   }
 
   return response.data;

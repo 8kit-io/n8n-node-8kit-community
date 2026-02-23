@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: e2e_user
+      POSTGRES_PASSWORD: e2e_password
+      POSTGRES_DB: e2e_db
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U e2e_user -d e2e_db"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  backend:
+    build:
+      context: ../service-8kit-community
+      dockerfile: Dockerfile
+    ports:
+      - "3333:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://e2e_user:e2e_password@postgres:5432/e2e_db
+      JWT_SECRET: e2e-test-jwt-secret-that-is-at-least-32-chars
+      RATE_LIMIT_POINTS: 10000
+      RATE_LIMIT_DURATION: 60
+      LOG_LEVEL: error
+      TEST_DATA: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 3s
+      timeout: 5s
+      start_period: 15s
+      retries: 20
