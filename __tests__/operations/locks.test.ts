@@ -19,7 +19,7 @@ describe('locks operations', () => {
       .mockReturnValueOnce(false); // getLockData
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: { key: 'job-1', acquired: true, timestamp: '2024-01-01T00:00:00Z' },
     });
@@ -28,7 +28,8 @@ describe('locks operations', () => {
     expectSuccess(result);
     expect(result.result.testField).toBe('testValue'); // Verify input data is preserved
     expect(result.outputIndex).toBe(0); // 0 = yes (acquired)
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({ method: 'POST', url: expect.stringMatching(/\/api\/v1\/locks$/) })
     );
   });
@@ -39,7 +40,7 @@ describe('locks operations', () => {
       .mockReturnValueOnce(false); // getLockData
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: { key: 'job-1', released: true, timestamp: '2024-01-01T00:00:00Z' },
     });
@@ -47,7 +48,8 @@ describe('locks operations', () => {
     const result = await executeReleaseLock.call(fx, 0);
     expectSuccess(result);
     expect(result.testField).toBe('testValue'); // Verify input data is preserved
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'DELETE',
         url: expect.stringMatching(/\/api\/v1\/locks\/job-1$/),

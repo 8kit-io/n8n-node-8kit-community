@@ -17,7 +17,7 @@ describe('executeCreateLastUpdated', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         id: 'lu-1',
@@ -33,7 +33,8 @@ describe('executeCreateLastUpdated', () => {
 
     expectSuccess(result);
     expect(result.key).toBe('sync-job');
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'POST',
         url: 'https://api.example.com/api/v1/last-updated',
@@ -54,7 +55,7 @@ describe('executeCreateLastUpdated', () => {
       .mockReturnValueOnce('iso8601-tz');
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({ success: false, error: 'Duplicate key' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Duplicate key' });
 
     await expect(executeCreateLastUpdated.call(fx, 0)).rejects.toThrow(
       'Failed to create last updated record: Duplicate key'
@@ -73,7 +74,7 @@ describe('executeCreateLastUpdated', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         id: 'lu-2',
@@ -88,7 +89,8 @@ describe('executeCreateLastUpdated', () => {
     const result = await executeCreateLastUpdated.call(fx, 0);
 
     expectSuccess(result);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
           key: 'sync-job',
@@ -110,7 +112,7 @@ describe('executeCreateLastUpdated', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         id: 'lu-3',
@@ -125,7 +127,8 @@ describe('executeCreateLastUpdated', () => {
     const result = await executeCreateLastUpdated.call(fx, 0);
 
     expectSuccess(result);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
           date: expectedDate, // Now includes milliseconds
@@ -143,7 +146,7 @@ describe('executeCreateLastUpdated', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         id: 'lu-4',
@@ -157,7 +160,8 @@ describe('executeCreateLastUpdated', () => {
     const result = await executeCreateLastUpdated.call(fx, 0);
 
     expectSuccess(result);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
           date: '2024-03-15T14:30:00.000Z', // Now includes milliseconds
@@ -178,7 +182,7 @@ describe('executeCreateLastUpdated', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         id: 'lu-5',
@@ -192,7 +196,8 @@ describe('executeCreateLastUpdated', () => {
     const result = await executeCreateLastUpdated.call(fx, 0);
 
     expectSuccess(result);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
           date: '2024-04-20T12:00:00.000Z', // Now includes milliseconds
@@ -215,7 +220,7 @@ describe('executeCreateLastUpdated', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         id: 'lu-6',
@@ -229,7 +234,8 @@ describe('executeCreateLastUpdated', () => {
     const result = await executeCreateLastUpdated.call(fx, 0);
 
     expectSuccess(result);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
           date: '2024-04-20T12:00:00.000Z', // Now includes milliseconds
@@ -249,7 +255,7 @@ describe('executeCreateLastUpdated', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         id: 'lu-7',
@@ -263,7 +269,8 @@ describe('executeCreateLastUpdated', () => {
     const result = await executeCreateLastUpdated.call(fx, 0);
 
     expectSuccess(result);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
           date: '2024-05-10T08:30:45.123Z', // Now includes milliseconds

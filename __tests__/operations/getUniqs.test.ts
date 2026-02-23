@@ -12,7 +12,7 @@ describe('executeGetUniqs', () => {
     fx.getNodeParameter.mockReturnValueOnce('processed-users').mockReturnValueOnce({});
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         items: [{ id: 'value-1', value: 'user-1' }],
@@ -25,7 +25,8 @@ describe('executeGetUniqs', () => {
 
     expectSuccess(result);
     expect(result.items).toHaveLength(1);
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: 'https://api.example.com/api/v1/uniqs/processed-users/values?page=1&limit=10',
@@ -39,7 +40,7 @@ describe('executeGetUniqs', () => {
       .mockReturnValueOnce({ pagination: { pagination: { page: 2, limit: 25, offset: 5 } } });
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         items: [],
@@ -51,7 +52,8 @@ describe('executeGetUniqs', () => {
 
     await executeGetUniqs.call(fx, 0);
 
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: 'https://api.example.com/api/v1/uniqs/processed-users/values?page=2&limit=25&offset=5',
@@ -63,7 +65,7 @@ describe('executeGetUniqs', () => {
     fx.getNodeParameter.mockReturnValueOnce('processed-users').mockReturnValueOnce({});
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: false,
       error: 'Uniq collection not found',
     });

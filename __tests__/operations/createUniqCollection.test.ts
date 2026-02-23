@@ -14,7 +14,7 @@ describe('executeCreateUniqCollection', () => {
       .mockReturnValueOnce('Users we have processed');
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         id: 'uniq-1',
@@ -27,7 +27,8 @@ describe('executeCreateUniqCollection', () => {
 
     expectSuccess(result);
     expect(result.name).toBe('processed-users');
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'POST',
         url: 'https://api.example.com/api/v1/uniqs',
@@ -43,7 +44,7 @@ describe('executeCreateUniqCollection', () => {
     fx.getNodeParameter.mockReturnValueOnce('processed-users').mockReturnValueOnce('');
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({ success: false, error: 'Uniq collection exists' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Uniq collection exists' });
 
     await expect(executeCreateUniqCollection.call(fx, 0)).rejects.toThrow(
       'Failed to create Uniq collection: Uniq collection exists'

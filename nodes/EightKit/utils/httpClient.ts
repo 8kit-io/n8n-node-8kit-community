@@ -54,20 +54,24 @@ export class EightKitHttpClient {
 
     for (let attempt = 0; attempt <= retryOnFailure; attempt++) {
       try {
-        // Get credentials for API key
-        const credentials = await this.executeFunctions.getCredentials('eightKitApi');
-        const apiKey = credentials.apiKey as string;
-
-        const response = await this.executeFunctions.helpers.httpRequest({
+        const requestOptions: any = {
           method,
           url: endpoint,
-          body: data,
           timeout,
           headers: {
             'Content-Type': 'application/json',
-            'X-Api-Key': apiKey || '', // Add API key to headers
           },
-        });
+        };
+
+        if (data) {
+          requestOptions.body = data;
+        }
+
+        const response = await this.executeFunctions.helpers.httpRequestWithAuthentication.call(
+          this.executeFunctions,
+          'eightKitApi',
+          requestOptions,
+        );
 
         return response as ApiResponse<T>;
       } catch (error: any) {
@@ -96,18 +100,7 @@ export class EightKitHttpClient {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-      const start = Date.now();
-      const check = () => {
-        if (Date.now() - start >= ms) {
-          resolve();
-        } else {
-          // Use setImmediate for non-blocking delay
-          setImmediate(check);
-        }
-      };
-      check();
-    });
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private formatError(error: any): EightKitError {

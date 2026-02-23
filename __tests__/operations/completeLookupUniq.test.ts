@@ -21,7 +21,7 @@ describe('executeCompleteLookupUniq', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockImplementation(async (config: any) => {
+    fx.helpers.httpRequestWithAuthentication.mockImplementation(async (_credType: any, config: any) => {
       const { method, url, body } = config;
 
       if (method === 'GET' && url === 'https://api.example.com/api/v1/lookups/user-mapping') {
@@ -75,7 +75,7 @@ describe('executeCompleteLookupUniq', () => {
     expectSuccess(result);
     expect(result.lookupResult.id).toBe('lookup-value-1');
     expect(result.uniqResult.id).toBe('uniq-value-1');
-    expect(fx.helpers.httpRequest).toHaveBeenCalledTimes(4);
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(4);
   });
 
   it('throws when the target uniq collection is missing', async () => {
@@ -89,7 +89,7 @@ describe('executeCompleteLookupUniq', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockImplementation(async (config: any) => {
+    fx.helpers.httpRequestWithAuthentication.mockImplementation(async (_credType: any, config: any) => {
       const { method, url } = config;
 
       if (method === 'GET' && url === 'https://api.example.com/api/v1/lookups/user-mapping') {

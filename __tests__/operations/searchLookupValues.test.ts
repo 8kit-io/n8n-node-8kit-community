@@ -29,7 +29,7 @@ describe('executeSearchLookupValues', () => {
       .mockReturnValueOnce('search') // searchType
       .mockReturnValueOnce('123'); // searchValue
 
-    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+    mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue(mockResponse);
 
     const result = await executeSearchLookupValues.call(mockExecuteFunctions, 0);
 
@@ -42,7 +42,8 @@ describe('executeSearchLookupValues', () => {
       count: 2,
     });
 
-    expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: 'https://api.example.com/api/v1/lookups/test-lookup/search?search=123',
@@ -61,7 +62,7 @@ describe('executeSearchLookupValues', () => {
       .mockReturnValueOnce('left') // searchType
       .mockReturnValueOnce('user123'); // searchValue
 
-    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+    mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue(mockResponse);
 
     const result = await executeSearchLookupValues.call(mockExecuteFunctions, 0);
 
@@ -74,7 +75,8 @@ describe('executeSearchLookupValues', () => {
       count: 1,
     });
 
-    expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: 'https://api.example.com/api/v1/lookups/test-lookup/search?left=user123',
@@ -93,7 +95,7 @@ describe('executeSearchLookupValues', () => {
       .mockReturnValueOnce('right') // searchType
       .mockReturnValueOnce('external456'); // searchValue
 
-    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+    mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue(mockResponse);
 
     const result = await executeSearchLookupValues.call(mockExecuteFunctions, 0);
 
@@ -106,7 +108,8 @@ describe('executeSearchLookupValues', () => {
       count: 1,
     });
 
-    expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'GET',
         url: 'https://api.example.com/api/v1/lookups/test-lookup/search?right=external456',
@@ -142,7 +145,7 @@ describe('executeSearchLookupValues', () => {
       .mockReturnValueOnce('search') // searchType
       .mockReturnValueOnce('123'); // searchValue
 
-    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+    mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: false,
       error: 'Lookup not found',
     });

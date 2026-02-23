@@ -18,9 +18,9 @@ describe('executeAddToLookup', () => {
     fx.getInputData.mockReturnValue([{ json: {} }]);
 
     // checkLookupExists -> true
-    fx.helpers.httpRequest.mockResolvedValueOnce({ success: true, data: { id: 'lkp-1' } });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({ success: true, data: { id: 'lkp-1' } });
     // addValueToLookup -> success
-    fx.helpers.httpRequest.mockResolvedValueOnce({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({
       success: true,
       data: { id: 'pair-1', lookupId: 'lkp-1', left: 'SKU-1', right: 'ID-1' },
     });
@@ -38,7 +38,7 @@ describe('executeAddToLookup', () => {
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
     fx.getInputData.mockReturnValue([{ json: {} }]);
     // checkLookupExists -> 404 path
-    fx.helpers.httpRequest.mockRejectedValueOnce({
+    fx.helpers.httpRequestWithAuthentication.mockRejectedValueOnce({
       response: { status: 404, data: { error: 'Lookup not found', code: 'LOOKUP_NOT_FOUND' } },
     });
 

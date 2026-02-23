@@ -14,7 +14,7 @@ describe('executeCreateLookup', () => {
       .mockReturnValueOnce('Primary mapping table');
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
       success: true,
       data: {
         id: 'lookup-1',
@@ -27,7 +27,8 @@ describe('executeCreateLookup', () => {
 
     expectSuccess(result);
     expect(result.name).toBe('user-map');
-    expect(fx.helpers.httpRequest).toHaveBeenCalledWith(
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
+      'eightKitApi',
       expect.objectContaining({
         method: 'POST',
         url: 'https://api.example.com/api/v1/lookups',
@@ -43,7 +44,7 @@ describe('executeCreateLookup', () => {
     fx.getNodeParameter.mockReturnValueOnce('user-map').mockReturnValueOnce('');
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequest.mockResolvedValue({ success: false, error: 'Already exists' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Already exists' });
 
     await expect(executeCreateLookup.call(fx, 0)).rejects.toThrow(
       'Failed to create lookup collection: Already exists'

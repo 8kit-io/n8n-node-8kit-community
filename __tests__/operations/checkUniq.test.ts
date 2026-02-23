@@ -28,7 +28,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue({
         success: true,
         data: { exists: true },
       });
@@ -55,7 +55,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue({
         success: true,
         data: { exists: false },
       });
@@ -80,7 +80,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue({
         success: true,
         data: {
           exists: true,
@@ -117,7 +117,7 @@ describe('executeCheckUniqs', () => {
       mockExecuteFunctions.getInputData.mockReturnValue([originalItem]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockResolvedValue({
         success: true,
         data: {
           exists: true,
@@ -150,7 +150,7 @@ describe('executeCheckUniqs', () => {
       ]);
 
       mockExecuteFunctions.getCredentials.mockResolvedValue(createMockCredentials({}));
-      mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockRejectedValue(
         new Error('API Error: Uniq collection not found')
       );
 
