@@ -65,28 +65,44 @@ export async function executeCompleteLookupUniq(
   validateUniqName(uniqName, this.getNode(), itemIndex);
   validateValue(value, this.getNode(), itemIndex);
 
-  const inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
+  const _inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
 
   // Validate required values
   if (!leftValue) {
-    throw new NodeOperationError(this.getNode(), 'Left value is required and cannot be empty', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Left value is required and cannot be empty', {
+      itemIndex,
+    });
   }
   if (!rightValue) {
-    throw new NodeOperationError(this.getNode(), 'Right value is required and cannot be empty', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Right value is required and cannot be empty', {
+      itemIndex,
+    });
   }
   if (!value) {
-    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', {
+      itemIndex,
+    });
   }
 
   // Validate value types
   if (typeof leftValue !== 'string') {
-    throw new NodeOperationError(this.getNode(), `Left value must be a string, got ${typeof leftValue}`, { itemIndex });
+    throw new NodeOperationError(
+      this.getNode(),
+      `Left value must be a string, got ${typeof leftValue}`,
+      { itemIndex }
+    );
   }
   if (typeof rightValue !== 'string') {
-    throw new NodeOperationError(this.getNode(), `Right value must be a string, got ${typeof rightValue}`, { itemIndex });
+    throw new NodeOperationError(
+      this.getNode(),
+      `Right value must be a string, got ${typeof rightValue}`,
+      { itemIndex }
+    );
   }
   if (typeof value !== 'string') {
-    throw new NodeOperationError(this.getNode(), `Value must be a string, got ${typeof value}`, { itemIndex });
+    throw new NodeOperationError(this.getNode(), `Value must be a string, got ${typeof value}`, {
+      itemIndex,
+    });
   }
 
   // Initialize HTTP client
@@ -94,7 +110,9 @@ export async function executeCompleteLookupUniq(
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
 
   // Ensure baseUrl is properly formatted
@@ -111,18 +129,38 @@ export async function executeCompleteLookupUniq(
 
     // If lookup doesn't exist, throw error
     if (!lookupExists) {
-      throw new NodeOperationError(this.getNode(), `Lookup "${lookupName}" not found.`, { itemIndex });
+      throw new NodeOperationError(this.getNode(), `Lookup "${lookupName}" not found.`, {
+        itemIndex,
+      });
     }
 
     // If uniq collection doesn't exist, throw error
     if (!uniqExists) {
-      throw new NodeOperationError(this.getNode(), `Uniq collection "${uniqName}" not found.`, { itemIndex });
+      throw new NodeOperationError(this.getNode(), `Uniq collection "${uniqName}" not found.`, {
+        itemIndex,
+      });
     }
 
     // Perform both operations
     const [lookupResult, uniqResult] = await Promise.all([
-      addValueToLookup(client, formattedBaseUrl, lookupName, leftValue, rightValue, this.getNode(), itemIndex),
-      addValueToUniq(client, formattedBaseUrl, uniqName, value, metadata, this.getNode(), itemIndex),
+      addValueToLookup(
+        client,
+        formattedBaseUrl,
+        lookupName,
+        leftValue,
+        rightValue,
+        this.getNode(),
+        itemIndex
+      ),
+      addValueToUniq(
+        client,
+        formattedBaseUrl,
+        uniqName,
+        value,
+        metadata,
+        this.getNode(),
+        itemIndex
+      ),
     ]);
 
     const result: CompleteLookupUniqResult = {
@@ -156,7 +194,7 @@ async function addValueToLookup(
   left: string,
   right: string,
   node: INode,
-  itemIndex: number,
+  itemIndex: number
 ): Promise<{ success: boolean; data: AddLookupValueResult }> {
   const endpoint = buildLookupEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
@@ -166,11 +204,17 @@ async function addValueToLookup(
   const response = await client.post<AddLookupValueResult>(url, payload);
 
   if (!response.success) {
-    throw new NodeOperationError(node, `Failed to add value pair to lookup: ${response.error || 'Unknown error'}`, { itemIndex });
+    throw new NodeOperationError(
+      node,
+      `Failed to add value pair to lookup: ${response.error || 'Unknown error'}`,
+      { itemIndex }
+    );
   }
 
   if (!response.data) {
-    throw new NodeOperationError(node, 'Add lookup value response missing data field', { itemIndex });
+    throw new NodeOperationError(node, 'Add lookup value response missing data field', {
+      itemIndex,
+    });
   }
 
   return { success: true, data: response.data };
@@ -183,7 +227,7 @@ async function addValueToUniq(
   value: string,
   metadata: any,
   node: INode,
-  itemIndex: number,
+  itemIndex: number
 ): Promise<{ success: boolean; data: AddUniqValueResult }> {
   const endpoint = buildUniqEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
@@ -196,7 +240,7 @@ async function addValueToUniq(
     if (typeof metadata === 'string') {
       try {
         payload.metadata = JSON.parse(metadata);
-      } catch (error: any) {
+      } catch (_error: any) {
         payload.metadata = metadata;
       }
     } else {
@@ -207,7 +251,11 @@ async function addValueToUniq(
   const response = await client.post<AddUniqValueResult>(url, payload);
 
   if (!response.success) {
-    throw new NodeOperationError(node, `Failed to add value to Uniq collection: ${response.error || 'Unknown error'}`, { itemIndex });
+    throw new NodeOperationError(
+      node,
+      `Failed to add value to Uniq collection: ${response.error || 'Unknown error'}`,
+      { itemIndex }
+    );
   }
 
   if (!response.data) {

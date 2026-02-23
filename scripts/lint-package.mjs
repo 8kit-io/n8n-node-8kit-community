@@ -5,9 +5,9 @@
  * Usage: node scripts/lint-package.mjs
  */
 
-import { ESLint } from 'eslint';
 import { readdir, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { ESLint } from 'eslint';
 
 const DIST_DIR = resolve(process.cwd(), 'dist');
 
@@ -78,7 +78,7 @@ async function main() {
 
   for (const result of results) {
     if (result.errorCount > 0 || result.warningCount > 0) {
-      const relPath = result.filePath.replace(DIST_DIR + '/', '');
+      const relPath = result.filePath.replace(`${DIST_DIR}/`, '');
       console.log(`\n${relPath}:`);
       for (const msg of result.messages) {
         const prefix = msg.severity === 2 ? 'ERROR' : 'WARN';

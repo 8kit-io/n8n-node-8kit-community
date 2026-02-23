@@ -41,7 +41,10 @@ describe('executeRemoveFromLookup', () => {
     fx.getNodeParameter.mockReturnValueOnce('user-map').mockReturnValueOnce('external-456');
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Lookup value missing' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
+      success: false,
+      error: 'Lookup value missing',
+    });
 
     await expect(executeRemoveFromLookup.call(fx, 0)).rejects.toThrow(
       'Failed to remove value from lookup: Lookup value missing'

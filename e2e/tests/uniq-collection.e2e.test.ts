@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import {
   executeCreateUniqCollection,
   executeDeleteUniqCollection,
@@ -78,7 +78,9 @@ describe('Uniq Collection CRUD (E2E)', () => {
   it('deletes a uniq collection', async () => {
     const fx = createE2EExecuteFunctions({
       params: { name: createdName, confirmDelete: 'delete' },
-      inputData: [{ json: { testField: 'keep-me' }, binary: {}, pairedItem: { item: 0, input: 0 } }],
+      inputData: [
+        { json: { testField: 'keep-me' }, binary: {}, pairedItem: { item: 0, input: 0 } },
+      ],
     });
 
     const result = await executeDeleteUniqCollection.call(fx, 0);

@@ -19,7 +19,7 @@ export async function executeDeleteLookup(
     throw new NodeOperationError(
       this.getNode(),
       'Delete operation cancelled. You must type "delete" (without quotes) to confirm the deletion.',
-      { itemIndex },
+      { itemIndex }
     );
   }
 
@@ -31,7 +31,9 @@ export async function executeDeleteLookup(
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -45,7 +47,11 @@ export async function executeDeleteLookup(
     const response = await client.delete(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new NodeOperationError(this.getNode(), `Failed to delete lookup collection: ${response.error || 'Unknown error'}`, { itemIndex });
+      throw new NodeOperationError(
+        this.getNode(),
+        `Failed to delete lookup collection: ${response.error || 'Unknown error'}`,
+        { itemIndex }
+      );
     }
 
     return {

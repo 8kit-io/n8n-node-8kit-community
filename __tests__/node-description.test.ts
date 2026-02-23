@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { EightKit } from '../nodes/EightKit/EightKit.node';
 
 describe('node description marketplace compliance', () => {
@@ -46,7 +46,10 @@ describe('node description marketplace compliance', () => {
       for (const op of ['acquireLock', 'checkLock', 'releaseLock']) {
         const fields = getTopLevelFields('lock', op);
         const names = fields.map((f: any) => f.name);
-        expect(names, `Lock ${op}: found top-level optional fields: ${names.join(', ')}`).toHaveLength(0);
+        expect(
+          names,
+          `Lock ${op}: found top-level optional fields: ${names.join(', ')}`
+        ).toHaveLength(0);
       }
     });
 

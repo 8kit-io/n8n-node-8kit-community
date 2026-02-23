@@ -202,9 +202,18 @@ export class EightKit implements INodeType {
         type: 'collection',
         placeholder: 'Add Field',
         default: {},
-        displayOptions: { show: { resource: ['uniqCollection'], operation: ['createUniqCollection'] } },
+        displayOptions: {
+          show: { resource: ['uniqCollection'], operation: ['createUniqCollection'] },
+        },
         options: [
-          { displayName: 'Description', name: 'description', type: 'string', default: '', description: 'Optional human-readable description explaining the purpose of this record.' },
+          {
+            displayName: 'Description',
+            name: 'description',
+            type: 'string',
+            default: '',
+            description:
+              'Optional human-readable description explaining the purpose of this record.',
+          },
         ],
       },
 
@@ -351,8 +360,22 @@ export class EightKit implements INodeType {
         default: {},
         displayOptions: { show: { resource: ['uniqs'], operation: ['checkUniqs'] } },
         options: [
-          { displayName: 'Include Uniq Data', name: 'getUniqValueData', type: 'boolean', default: false, description: 'Whether to include additional metadata about the Uniq value in the output.' },
-          { displayName: 'Uniq Data Field Name', name: 'uniqValueDataFieldName', type: 'string', default: '8kit', placeholder: '8kit', description: 'The field name where Uniq metadata will be stored in the output JSON.' },
+          {
+            displayName: 'Include Uniq Data',
+            name: 'getUniqValueData',
+            type: 'boolean',
+            default: false,
+            description:
+              'Whether to include additional metadata about the Uniq value in the output.',
+          },
+          {
+            displayName: 'Uniq Data Field Name',
+            name: 'uniqValueDataFieldName',
+            type: 'string',
+            default: '8kit',
+            placeholder: '8kit',
+            description: 'The field name where Uniq metadata will be stored in the output JSON.',
+          },
         ],
       },
 
@@ -494,13 +517,60 @@ export class EightKit implements INodeType {
         default: {},
         displayOptions: { show: { resource: ['lookup'], operation: ['createLookup'] } },
         options: [
-          { displayName: 'Description', name: 'description', type: 'string', default: '', description: 'Optional human-readable description explaining the purpose of this record.' },
-          { displayName: 'Left System', name: 'leftSystem', type: 'string', default: '', placeholder: 'system-a', description: 'Optional identifier for the left-side system in the mapping (e.g., "Salesforce", "internal-db").' },
-          { displayName: 'Right System', name: 'rightSystem', type: 'string', default: '', placeholder: 'system-b', description: 'Optional identifier for the right-side system in the mapping (e.g., "HubSpot", "external-api").' },
-          { displayName: 'Allow Left Duplicates', name: 'allowLeftDups', type: 'boolean', default: true, description: 'Whether to allow duplicate values on the left side.' },
-          { displayName: 'Allow Right Duplicates', name: 'allowRightDups', type: 'boolean', default: true, description: 'Whether to allow duplicate values on the right side.' },
-          { displayName: 'Allow Left-Right Duplicates', name: 'allowLeftRightDups', type: 'boolean', default: true, description: 'Whether to allow the same left-right pair to exist multiple times.' },
-          { displayName: 'Strict Checking', name: 'strictChecking', type: 'boolean', default: false, description: 'Whether to enforce strict validation rules when adding mappings.' },
+          {
+            displayName: 'Description',
+            name: 'description',
+            type: 'string',
+            default: '',
+            description:
+              'Optional human-readable description explaining the purpose of this record.',
+          },
+          {
+            displayName: 'Left System',
+            name: 'leftSystem',
+            type: 'string',
+            default: '',
+            placeholder: 'system-a',
+            description:
+              'Optional identifier for the left-side system in the mapping (e.g., "Salesforce", "internal-db").',
+          },
+          {
+            displayName: 'Right System',
+            name: 'rightSystem',
+            type: 'string',
+            default: '',
+            placeholder: 'system-b',
+            description:
+              'Optional identifier for the right-side system in the mapping (e.g., "HubSpot", "external-api").',
+          },
+          {
+            displayName: 'Allow Left Duplicates',
+            name: 'allowLeftDups',
+            type: 'boolean',
+            default: true,
+            description: 'Whether to allow duplicate values on the left side.',
+          },
+          {
+            displayName: 'Allow Right Duplicates',
+            name: 'allowRightDups',
+            type: 'boolean',
+            default: true,
+            description: 'Whether to allow duplicate values on the right side.',
+          },
+          {
+            displayName: 'Allow Left-Right Duplicates',
+            name: 'allowLeftRightDups',
+            type: 'boolean',
+            default: true,
+            description: 'Whether to allow the same left-right pair to exist multiple times.',
+          },
+          {
+            displayName: 'Strict Checking',
+            name: 'strictChecking',
+            type: 'boolean',
+            default: false,
+            description: 'Whether to enforce strict validation rules when adding mappings.',
+          },
         ],
       },
 
@@ -844,9 +914,30 @@ export class EightKit implements INodeType {
         default: {},
         displayOptions: { show: { resource: ['lock'] } },
         options: [
-          { displayName: 'Include Lock Data', name: 'getLockData', type: 'boolean', default: false, description: 'Whether to include lock details in the output.' },
-          { displayName: 'Lock Data Field Name', name: 'lockDataFieldName', type: 'string', default: '8kit', placeholder: '8kit', description: 'The field name where lock data will be stored in the output JSON.' },
-          { displayName: 'Timeout (Seconds)', name: 'timeout', type: 'number', typeOptions: { minValue: 1, maxValue: 3600 }, default: 600, description: 'Optional timeout in seconds for lock acquisition. If not specified, the lock will not expire automatically.' },
+          {
+            displayName: 'Include Lock Data',
+            name: 'getLockData',
+            type: 'boolean',
+            default: false,
+            description: 'Whether to include lock details in the output.',
+          },
+          {
+            displayName: 'Lock Data Field Name',
+            name: 'lockDataFieldName',
+            type: 'string',
+            default: '8kit',
+            placeholder: '8kit',
+            description: 'The field name where lock data will be stored in the output JSON.',
+          },
+          {
+            displayName: 'Timeout (Seconds)',
+            name: 'timeout',
+            type: 'number',
+            typeOptions: { minValue: 1, maxValue: 3600 },
+            default: 600,
+            description:
+              'Optional timeout in seconds for lock acquisition. If not specified, the lock will not expire automatically.',
+          },
         ],
       },
 
@@ -900,22 +991,70 @@ export class EightKit implements INodeType {
         default: {},
         displayOptions: { show: { resource: ['lastUpdated'], operation: ['createLastUpdated'] } },
         options: [
-          { displayName: 'Description', name: 'description', type: 'string', default: '', description: 'Optional human-readable description explaining the purpose of this record.' },
-          { displayName: 'Date', name: 'dateString', type: 'string', default: '', placeholder: '', description: 'The date in the format specified below. Leave empty to use current time.' },
-          { displayName: 'Date Format', name: 'inputFormat', type: 'options', default: 'iso8601-tz', options: [
-            { name: 'ISO 8601 with Timezone', description: 'Example: 2025-10-08T09:44:21.982+01:00', value: 'iso8601-tz' },
-            { name: 'ISO 8601 UTC', description: 'Example: 2024-01-01T00:00:00Z', value: 'iso8601-utc' },
-            { name: 'dd-MM-yyyy', description: 'Example: 08-10-2025', value: 'dd-MM-yyyy' },
-            { name: 'MM-dd-yyyy', description: 'Example: 10-08-2025', value: 'MM-dd-yyyy' },
-            { name: 'yyyy-MM-dd', description: 'Example: 2025-10-08', value: 'yyyy-MM-dd' },
-            { name: 'dd/MM/yyyy', description: 'Example: 08/10/2025', value: 'dd/MM/yyyy' },
-            { name: 'MM/dd/yyyy', description: 'Example: 10/08/2025', value: 'MM/dd/yyyy' },
-            { name: 'yyyy/MM/dd', description: 'Example: 2025/10/08', value: 'yyyy/MM/dd' },
-            { name: 'Unix Timestamp - Milliseconds', description: 'Example: 1728378261982', value: 'unix-ms' },
-            { name: 'Unix Timestamp - Seconds', description: 'Example: 1728378261', value: 'unix-s' },
-            { name: 'Custom Format', description: 'Define your own format using tokens like yyyy, MM, dd, HH, mm, ss', value: 'custom' },
-          ], description: 'The format of the input date string' },
-          { displayName: 'Custom Format', name: 'inputCustomFormat', type: 'string', default: 'yyyy-MM-dd HH:mm:ss', placeholder: 'yyyy-MM-dd HH:mm:ss', description: "Provide the expected format using tokens like yyyy, MM, dd, HH, mm, ss." },
+          {
+            displayName: 'Description',
+            name: 'description',
+            type: 'string',
+            default: '',
+            description:
+              'Optional human-readable description explaining the purpose of this record.',
+          },
+          {
+            displayName: 'Date',
+            name: 'dateString',
+            type: 'string',
+            default: '',
+            placeholder: '',
+            description: 'The date in the format specified below. Leave empty to use current time.',
+          },
+          {
+            displayName: 'Date Format',
+            name: 'inputFormat',
+            type: 'options',
+            default: 'iso8601-tz',
+            options: [
+              {
+                name: 'ISO 8601 with Timezone',
+                description: 'Example: 2025-10-08T09:44:21.982+01:00',
+                value: 'iso8601-tz',
+              },
+              {
+                name: 'ISO 8601 UTC',
+                description: 'Example: 2024-01-01T00:00:00Z',
+                value: 'iso8601-utc',
+              },
+              { name: 'dd-MM-yyyy', description: 'Example: 08-10-2025', value: 'dd-MM-yyyy' },
+              { name: 'MM-dd-yyyy', description: 'Example: 10-08-2025', value: 'MM-dd-yyyy' },
+              { name: 'yyyy-MM-dd', description: 'Example: 2025-10-08', value: 'yyyy-MM-dd' },
+              { name: 'dd/MM/yyyy', description: 'Example: 08/10/2025', value: 'dd/MM/yyyy' },
+              { name: 'MM/dd/yyyy', description: 'Example: 10/08/2025', value: 'MM/dd/yyyy' },
+              { name: 'yyyy/MM/dd', description: 'Example: 2025/10/08', value: 'yyyy/MM/dd' },
+              {
+                name: 'Unix Timestamp - Milliseconds',
+                description: 'Example: 1728378261982',
+                value: 'unix-ms',
+              },
+              {
+                name: 'Unix Timestamp - Seconds',
+                description: 'Example: 1728378261',
+                value: 'unix-s',
+              },
+              {
+                name: 'Custom Format',
+                description: 'Define your own format using tokens like yyyy, MM, dd, HH, mm, ss',
+                value: 'custom',
+              },
+            ],
+            description: 'The format of the input date string',
+          },
+          {
+            displayName: 'Custom Format',
+            name: 'inputCustomFormat',
+            type: 'string',
+            default: 'yyyy-MM-dd HH:mm:ss',
+            placeholder: 'yyyy-MM-dd HH:mm:ss',
+            description: 'Provide the expected format using tokens like yyyy, MM, dd, HH, mm, ss.',
+          },
         ],
       },
 
@@ -928,22 +1067,71 @@ export class EightKit implements INodeType {
         default: {},
         displayOptions: { show: { resource: ['lastUpdated'], operation: ['getLastUpdated'] } },
         options: [
-          { displayName: 'Date Format', name: 'outputFormat', type: 'options', default: 'iso8601-tz', hint: "The default timezone is n8n's timezone", options: [
-            { name: 'ISO 8601 with Timezone', description: 'Example: 2025-10-08T09:44:21.982+01:00', value: 'iso8601-tz' },
-            { name: 'ISO 8601 UTC', description: 'Example: 2024-01-01T00:00:00Z', value: 'iso8601-utc' },
-            { name: 'dd-MM-yyyy', description: 'Example: 08-10-2025', value: 'dd-MM-yyyy' },
-            { name: 'MM-dd-yyyy', description: 'Example: 10-08-2025', value: 'MM-dd-yyyy' },
-            { name: 'yyyy-MM-dd', description: 'Example: 2025-10-08', value: 'yyyy-MM-dd' },
-            { name: 'dd/MM/yyyy', description: 'Example: 08/10/2025', value: 'dd/MM/yyyy' },
-            { name: 'MM/dd/yyyy', description: 'Example: 10/08/2025', value: 'MM/dd/yyyy' },
-            { name: 'yyyy/MM/dd', description: 'Example: 2025/10/08', value: 'yyyy/MM/dd' },
-            { name: 'Unix Timestamp - Milliseconds', description: 'Example: 1728378261982', value: 'unix-ms' },
-            { name: 'Unix Timestamp - Seconds', description: 'Example: 1728378261', value: 'unix-s' },
-            { name: 'Custom Format', description: 'Define your own format using tokens like yyyy, MM, dd, HH, mm, ss', value: 'custom' },
-          ], description: 'The format to use for the date' },
-          { displayName: 'Custom Format', name: 'outputCustomFormat', type: 'string', default: 'yyyy-MM-dd HH:mm:ss', placeholder: 'yyyy-MM-dd HH:mm:ss', description: "Provide the date format using tokens like yyyy, MM, dd, HH, mm, ss." },
-          { displayName: 'Use UTC Timezone', name: 'useUtcTimezone', type: 'boolean', default: false, description: "Whether to convert the date to UTC timezone instead of using n8n's server timezone" },
-          { displayName: 'Fallback Date', name: 'defaultDateString', type: 'string', default: '', description: 'The fallback date value to use when no last updated record exists. Must be in the same format as the Date Format setting above.' },
+          {
+            displayName: 'Date Format',
+            name: 'outputFormat',
+            type: 'options',
+            default: 'iso8601-tz',
+            hint: "The default timezone is n8n's timezone",
+            options: [
+              {
+                name: 'ISO 8601 with Timezone',
+                description: 'Example: 2025-10-08T09:44:21.982+01:00',
+                value: 'iso8601-tz',
+              },
+              {
+                name: 'ISO 8601 UTC',
+                description: 'Example: 2024-01-01T00:00:00Z',
+                value: 'iso8601-utc',
+              },
+              { name: 'dd-MM-yyyy', description: 'Example: 08-10-2025', value: 'dd-MM-yyyy' },
+              { name: 'MM-dd-yyyy', description: 'Example: 10-08-2025', value: 'MM-dd-yyyy' },
+              { name: 'yyyy-MM-dd', description: 'Example: 2025-10-08', value: 'yyyy-MM-dd' },
+              { name: 'dd/MM/yyyy', description: 'Example: 08/10/2025', value: 'dd/MM/yyyy' },
+              { name: 'MM/dd/yyyy', description: 'Example: 10/08/2025', value: 'MM/dd/yyyy' },
+              { name: 'yyyy/MM/dd', description: 'Example: 2025/10/08', value: 'yyyy/MM/dd' },
+              {
+                name: 'Unix Timestamp - Milliseconds',
+                description: 'Example: 1728378261982',
+                value: 'unix-ms',
+              },
+              {
+                name: 'Unix Timestamp - Seconds',
+                description: 'Example: 1728378261',
+                value: 'unix-s',
+              },
+              {
+                name: 'Custom Format',
+                description: 'Define your own format using tokens like yyyy, MM, dd, HH, mm, ss',
+                value: 'custom',
+              },
+            ],
+            description: 'The format to use for the date',
+          },
+          {
+            displayName: 'Custom Format',
+            name: 'outputCustomFormat',
+            type: 'string',
+            default: 'yyyy-MM-dd HH:mm:ss',
+            placeholder: 'yyyy-MM-dd HH:mm:ss',
+            description: 'Provide the date format using tokens like yyyy, MM, dd, HH, mm, ss.',
+          },
+          {
+            displayName: 'Use UTC Timezone',
+            name: 'useUtcTimezone',
+            type: 'boolean',
+            default: false,
+            description:
+              "Whether to convert the date to UTC timezone instead of using n8n's server timezone",
+          },
+          {
+            displayName: 'Fallback Date',
+            name: 'defaultDateString',
+            type: 'string',
+            default: '',
+            description:
+              'The fallback date value to use when no last updated record exists. Must be in the same format as the Date Format setting above.',
+          },
         ],
       },
       /* =========================
@@ -1267,7 +1455,7 @@ export class EightKit implements INodeType {
           value: s.name,
         }));
       }
-    } catch (error) {
+    } catch (_error) {
       // Silently fail - return empty list
     }
 
@@ -1288,7 +1476,7 @@ export class EightKit implements INodeType {
           value: l.name,
         }));
       }
-    } catch (error) {
+    } catch (_error) {
       // Silently fail - return empty list
     }
 

@@ -20,7 +20,9 @@ export async function executeRemoveFromLookup(
   const inputData = this.getInputData()[itemIndex].json;
 
   if (!value) {
-    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', {
+      itemIndex,
+    });
   }
 
   // Initialize HTTP client
@@ -28,7 +30,9 @@ export async function executeRemoveFromLookup(
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -81,7 +85,11 @@ async function executeSingleRemove(
   const response = await client.delete(`${baseUrl}${endpoint}`);
 
   if (!response.success) {
-    throw new NodeOperationError(this.getNode(), `Failed to remove value from lookup: ${response.error || 'Unknown error'}`, { itemIndex: _itemIndex });
+    throw new NodeOperationError(
+      this.getNode(),
+      `Failed to remove value from lookup: ${response.error || 'Unknown error'}`,
+      { itemIndex: _itemIndex }
+    );
   }
 
   return {

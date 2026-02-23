@@ -27,22 +27,34 @@ export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: num
   // Validate inputs
   validateLookupName(name, this.getNode(), itemIndex);
 
-  const inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
+  const _inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
 
   if (!leftValue) {
-    throw new NodeOperationError(this.getNode(), 'Left value is required and cannot be empty', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Left value is required and cannot be empty', {
+      itemIndex,
+    });
   }
 
   if (!rightValue) {
-    throw new NodeOperationError(this.getNode(), 'Right value is required and cannot be empty', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Right value is required and cannot be empty', {
+      itemIndex,
+    });
   }
 
   // Validate the values
   if (typeof leftValue !== 'string') {
-    throw new NodeOperationError(this.getNode(), `Left value must be a string, got ${typeof leftValue}`, { itemIndex });
+    throw new NodeOperationError(
+      this.getNode(),
+      `Left value must be a string, got ${typeof leftValue}`,
+      { itemIndex }
+    );
   }
   if (typeof rightValue !== 'string') {
-    throw new NodeOperationError(this.getNode(), `Right value must be a string, got ${typeof rightValue}`, { itemIndex });
+    throw new NodeOperationError(
+      this.getNode(),
+      `Right value must be a string, got ${typeof rightValue}`,
+      { itemIndex }
+    );
   }
 
   // Initialize HTTP client
@@ -50,7 +62,9 @@ export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: num
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
 
   // Ensure baseUrl is properly formatted
@@ -68,7 +82,15 @@ export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: num
     }
 
     // Add value pair to the lookup
-    const result = await addValueToLookup(client, formattedBaseUrl, name, leftValue, rightValue, this.getNode(), itemIndex);
+    const result = await addValueToLookup(
+      client,
+      formattedBaseUrl,
+      name,
+      leftValue,
+      rightValue,
+      this.getNode(),
+      itemIndex
+    );
 
     // Return the enriched input data with operation result
     return result;
@@ -95,7 +117,7 @@ async function addValueToLookup(
   left: string,
   right: string,
   node: INode,
-  itemIndex: number,
+  itemIndex: number
 ): Promise<{ success: boolean; data: AddLookupValueResult }> {
   const endpoint = buildLookupEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
@@ -105,7 +127,11 @@ async function addValueToLookup(
   const response = await client.post<AddLookupValueResult>(url, payload);
 
   if (!response.success) {
-    throw new NodeOperationError(node, `Failed to add value pair to lookup: ${response.error || 'Unknown error'}`, { itemIndex });
+    throw new NodeOperationError(
+      node,
+      `Failed to add value pair to lookup: ${response.error || 'Unknown error'}`,
+      { itemIndex }
+    );
   }
 
   if (!response.data) {

@@ -9,7 +9,7 @@ const API_KEY = process.env.E2E_API_KEY || 'st_XXXXXXXXXXXXXXXXXXXXX';
 async function request<T = any>(
   method: string,
   path: string,
-  body?: any,
+  body?: any
 ): Promise<{ status: number; data: T }> {
   const url = `${BASE_URL}${path}`;
   const headers: Record<string, string> = {
@@ -68,17 +68,20 @@ export async function addUniqValue(name: string, value: string, metadata?: any) 
 export async function removeUniqValue(name: string, value: string) {
   return request(
     'DELETE',
-    `/api/v1/uniqs/${encodeURIComponent(name)}/values/${encodeURIComponent(value)}`,
+    `/api/v1/uniqs/${encodeURIComponent(name)}/values/${encodeURIComponent(value)}`
   );
 }
 
 // ── Lookup Collections ───────────────────────────────────────────
 
-export async function createLookup(name: string, options?: {
-  description?: string;
-  leftSystem?: string;
-  rightSystem?: string;
-}) {
+export async function createLookup(
+  name: string,
+  options?: {
+    description?: string;
+    leftSystem?: string;
+    rightSystem?: string;
+  }
+) {
   return request('POST', '/api/v1/lookups', { name, ...options });
 }
 
@@ -102,7 +105,7 @@ export async function addLookupValue(name: string, left: string, right: string) 
 export async function removeLookupValue(name: string, valueId: string) {
   return request(
     'DELETE',
-    `/api/v1/lookups/${encodeURIComponent(name)}/values/${encodeURIComponent(valueId)}`,
+    `/api/v1/lookups/${encodeURIComponent(name)}/values/${encodeURIComponent(valueId)}`
   );
 }
 

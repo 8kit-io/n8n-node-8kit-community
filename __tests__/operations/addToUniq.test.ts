@@ -18,7 +18,10 @@ describe('executeAddToUniq', () => {
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     // First GET to check uniq collection exists
-    fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({ success: true, data: { id: 'uniq-1' } });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({
+      success: true,
+      data: { id: 'uniq-1' },
+    });
     // Then POST to add value
     fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({
       success: true,

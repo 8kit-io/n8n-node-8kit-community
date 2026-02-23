@@ -20,7 +20,9 @@ export async function executeGetUniqs(this: IExecuteFunctions, itemIndex: number
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -39,7 +41,11 @@ export async function executeGetUniqs(this: IExecuteFunctions, itemIndex: number
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new NodeOperationError(this.getNode(), `Failed to get Uniq values: ${response.error || 'Unknown error'}`, { itemIndex });
+      throw new NodeOperationError(
+        this.getNode(),
+        `Failed to get Uniq values: ${response.error || 'Unknown error'}`,
+        { itemIndex }
+      );
     }
 
     return response.data;

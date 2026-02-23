@@ -71,7 +71,7 @@ export class EightKitHttpClient {
         const response = await this.executeFunctions.helpers.httpRequestWithAuthentication.call(
           this.executeFunctions,
           'eightKitApi',
-          requestOptions,
+          requestOptions
         );
 
         return response as ApiResponse<T>;
@@ -179,9 +179,18 @@ export class EightKitHttpClient {
 }
 
 // Utility functions for building endpoints
-export function buildUniqEndpoint(uniqName: string, operation?: string, node?: INode, itemIndex?: number): string {
+export function buildUniqEndpoint(
+  uniqName: string,
+  operation?: string,
+  node?: INode,
+  itemIndex?: number
+): string {
   if (!uniqName) {
-    throw new NodeOperationError(node as INode, 'Uniq collection name is required to build endpoint', { itemIndex });
+    throw new NodeOperationError(
+      node as INode,
+      'Uniq collection name is required to build endpoint',
+      { itemIndex }
+    );
   }
 
   const base = `/api/v1/uniqs/${encodeURIComponent(uniqName)}`;
@@ -224,43 +233,63 @@ export function buildMetadata(
 // Utility functions for validation
 export function validateUniqName(name: string, node?: INode, itemIndex?: number): void {
   if (!name || typeof name !== 'string') {
-    throw new NodeOperationError(node as INode, 'Uniq collection name is required and must be a string', { itemIndex });
+    throw new NodeOperationError(
+      node as INode,
+      'Uniq collection name is required and must be a string',
+      { itemIndex }
+    );
   }
 
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
     throw new NodeOperationError(
       node as INode,
       'Uniq collection name can only contain letters, numbers, hyphens, and underscores',
-      { itemIndex },
+      { itemIndex }
     );
   }
 
   if (name.length > 100) {
-    throw new NodeOperationError(node as INode, 'Uniq collection name cannot exceed 100 characters', { itemIndex });
+    throw new NodeOperationError(
+      node as INode,
+      'Uniq collection name cannot exceed 100 characters',
+      { itemIndex }
+    );
   }
 }
 
 export function validateLookupName(name: string, node?: INode, itemIndex?: number): void {
   if (!name || typeof name !== 'string') {
-    throw new NodeOperationError(node as INode, 'Lookup name is required and must be a string', { itemIndex });
+    throw new NodeOperationError(node as INode, 'Lookup name is required and must be a string', {
+      itemIndex,
+    });
   }
 
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-    throw new NodeOperationError(node as INode, 'Lookup name can only contain letters, numbers, hyphens, and underscores', { itemIndex });
+    throw new NodeOperationError(
+      node as INode,
+      'Lookup name can only contain letters, numbers, hyphens, and underscores',
+      { itemIndex }
+    );
   }
 
   if (name.length > 100) {
-    throw new NodeOperationError(node as INode, 'Lookup name cannot exceed 100 characters', { itemIndex });
+    throw new NodeOperationError(node as INode, 'Lookup name cannot exceed 100 characters', {
+      itemIndex,
+    });
   }
 }
 
 export function validateValue(value: string, node?: INode, itemIndex?: number): void {
   if (!value || typeof value !== 'string') {
-    throw new NodeOperationError(node as INode, 'Value is required and must be a string', { itemIndex });
+    throw new NodeOperationError(node as INode, 'Value is required and must be a string', {
+      itemIndex,
+    });
   }
 
   if (value.length > 255) {
-    throw new NodeOperationError(node as INode, 'Value cannot exceed 255 characters', { itemIndex });
+    throw new NodeOperationError(node as INode, 'Value cannot exceed 255 characters', {
+      itemIndex,
+    });
   }
 }
 

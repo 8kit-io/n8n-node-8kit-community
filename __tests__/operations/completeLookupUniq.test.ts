@@ -21,54 +21,56 @@ describe('executeCompleteLookupUniq', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequestWithAuthentication.mockImplementation(async (_credType: any, config: any) => {
-      const { method, url, body } = config;
+    fx.helpers.httpRequestWithAuthentication.mockImplementation(
+      async (_credType: any, config: any) => {
+        const { method, url, body } = config;
 
-      if (method === 'GET' && url === 'https://api.example.com/api/v1/lookups/user-mapping') {
-        return { success: true, data: { id: 'lookup-1' } };
+        if (method === 'GET' && url === 'https://api.example.com/api/v1/lookups/user-mapping') {
+          return { success: true, data: { id: 'lookup-1' } };
+        }
+
+        if (method === 'GET' && url === 'https://api.example.com/api/v1/uniqs/processed-users') {
+          return { success: true, data: { id: 'uniq-1' } };
+        }
+
+        if (
+          method === 'POST' &&
+          url === 'https://api.example.com/api/v1/lookups/user-mapping/values'
+        ) {
+          expect(body).toEqual({ left: 'internal-123', right: 'external-456' });
+          return {
+            success: true,
+            data: {
+              id: 'lookup-value-1',
+              lookupId: 'lookup-1',
+              left: 'internal-123',
+              right: 'external-456',
+              createdAt: '2024-03-01T12:00:00Z',
+              updatedAt: '2024-03-01T12:00:00Z',
+            },
+          };
+        }
+
+        if (
+          method === 'POST' &&
+          url === 'https://api.example.com/api/v1/uniqs/processed-users/values'
+        ) {
+          expect(body).toEqual({ value: 'external-456', metadata: { source: 'n8n' } });
+          return {
+            success: true,
+            data: {
+              id: 'uniq-value-1',
+              uniqId: 'uniq-1',
+              value: 'external-456',
+              createdAt: '2024-03-01T12:00:00Z',
+              updatedAt: '2024-03-01T12:00:00Z',
+            },
+          };
+        }
+
+        throw new Error(`Unexpected request: ${method} ${url}`);
       }
-
-      if (method === 'GET' && url === 'https://api.example.com/api/v1/uniqs/processed-users') {
-        return { success: true, data: { id: 'uniq-1' } };
-      }
-
-      if (
-        method === 'POST' &&
-        url === 'https://api.example.com/api/v1/lookups/user-mapping/values'
-      ) {
-        expect(body).toEqual({ left: 'internal-123', right: 'external-456' });
-        return {
-          success: true,
-          data: {
-            id: 'lookup-value-1',
-            lookupId: 'lookup-1',
-            left: 'internal-123',
-            right: 'external-456',
-            createdAt: '2024-03-01T12:00:00Z',
-            updatedAt: '2024-03-01T12:00:00Z',
-          },
-        };
-      }
-
-      if (
-        method === 'POST' &&
-        url === 'https://api.example.com/api/v1/uniqs/processed-users/values'
-      ) {
-        expect(body).toEqual({ value: 'external-456', metadata: { source: 'n8n' } });
-        return {
-          success: true,
-          data: {
-            id: 'uniq-value-1',
-            uniqId: 'uniq-1',
-            value: 'external-456',
-            createdAt: '2024-03-01T12:00:00Z',
-            updatedAt: '2024-03-01T12:00:00Z',
-          },
-        };
-      }
-
-      throw new Error(`Unexpected request: ${method} ${url}`);
-    });
+    );
 
     const result = await executeCompleteLookupUniq.call(fx, 0);
 
@@ -89,21 +91,23 @@ describe('executeCompleteLookupUniq', () => {
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequestWithAuthentication.mockImplementation(async (_credType: any, config: any) => {
-      const { method, url } = config;
+    fx.helpers.httpRequestWithAuthentication.mockImplementation(
+      async (_credType: any, config: any) => {
+        const { method, url } = config;
 
-      if (method === 'GET' && url === 'https://api.example.com/api/v1/lookups/user-mapping') {
-        return { success: true, data: { id: 'lookup-1' } };
+        if (method === 'GET' && url === 'https://api.example.com/api/v1/lookups/user-mapping') {
+          return { success: true, data: { id: 'lookup-1' } };
+        }
+
+        if (method === 'GET' && url === 'https://api.example.com/api/v1/uniqs/missing-uniq') {
+          throw {
+            response: { status: 404, data: { error: 'Uniq not found', code: 'UNIQ_NOT_FOUND' } },
+          };
+        }
+
+        throw new Error(`Unexpected request: ${method} ${url}`);
       }
-
-      if (method === 'GET' && url === 'https://api.example.com/api/v1/uniqs/missing-uniq') {
-        throw {
-          response: { status: 404, data: { error: 'Uniq not found', code: 'UNIQ_NOT_FOUND' } },
-        };
-      }
-
-      throw new Error(`Unexpected request: ${method} ${url}`);
-    });
+    );
 
     await expect(executeCompleteLookupUniq.call(fx, 0)).rejects.toThrow('Uniq not found');
   });

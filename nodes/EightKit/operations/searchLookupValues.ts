@@ -24,7 +24,9 @@ export async function executeSearchLookupValues(
     }
 
     if (!searchValue?.trim()) {
-      throw new NodeOperationError(this.getNode(), 'Search value is required', { itemIndex: index });
+      throw new NodeOperationError(this.getNode(), 'Search value is required', {
+        itemIndex: index,
+      });
     }
 
     const client = new EightKitHttpClient(this, index);
@@ -43,7 +45,9 @@ export async function executeSearchLookupValues(
         queryParams.append('search', searchValue);
         break;
       default:
-        throw new NodeOperationError(this.getNode(), `Invalid search type: ${searchType}`, { itemIndex: index });
+        throw new NodeOperationError(this.getNode(), `Invalid search type: ${searchType}`, {
+          itemIndex: index,
+        });
     }
 
     const url = `${baseUrl}/api/v1/lookups/${encodeURIComponent(
@@ -52,7 +56,11 @@ export async function executeSearchLookupValues(
     const response = await client.get<any>(url);
 
     if (!response?.success) {
-      throw new NodeOperationError(this.getNode(), response?.error || 'Failed to search lookup values', { itemIndex: index });
+      throw new NodeOperationError(
+        this.getNode(),
+        response?.error || 'Failed to search lookup values',
+        { itemIndex: index }
+      );
     }
 
     // Return the search results

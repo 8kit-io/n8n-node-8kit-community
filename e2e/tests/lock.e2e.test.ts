@@ -1,10 +1,9 @@
-import { afterAll, afterEach, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import {
   executeAcquireLock,
   executeCheckLock,
   executeReleaseLock,
 } from '../../nodes/EightKit/operations';
-import * as api from '../helpers/api-client';
 import { CleanupTracker } from '../helpers/cleanup';
 import { lockKey } from '../helpers/fixtures';
 import { createE2EExecuteFunctions } from '../helpers/test-harness';
@@ -12,7 +11,7 @@ import { createE2EExecuteFunctions } from '../helpers/test-harness';
 describe('Lock operations (E2E)', () => {
   const cleanup = new CleanupTracker();
   const key1 = lockKey('acquire');
-  const key2 = lockKey('check');
+  const _key2 = lockKey('check');
 
   afterAll(async () => {
     await cleanup.cleanAll();

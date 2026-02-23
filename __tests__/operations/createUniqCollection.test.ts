@@ -46,7 +46,10 @@ describe('executeCreateUniqCollection', () => {
       .mockReturnValueOnce({}); // additionalFields (empty)
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Uniq collection exists' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
+      success: false,
+      error: 'Uniq collection exists',
+    });
 
     await expect(executeCreateUniqCollection.call(fx, 0)).rejects.toThrow(
       'Failed to create Uniq collection: Uniq collection exists'

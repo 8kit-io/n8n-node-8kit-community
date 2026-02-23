@@ -10,7 +10,10 @@ export interface ReleaseLockParams {
 
 export async function executeReleaseLock(this: IExecuteFunctions, itemIndex: number): Promise<any> {
   const key = (this.getNodeParameter('key', itemIndex) as string).trim();
-  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<
+    string,
+    any
+  >;
   const includeLockData = (additionalFields.getLockData as boolean) || false;
   const lockDataFieldName = includeLockData
     ? (additionalFields.lockDataFieldName as string)?.trim() || undefined
@@ -36,7 +39,11 @@ export async function executeReleaseLock(this: IExecuteFunctions, itemIndex: num
     }>(`${baseUrl}/api/v1/locks/${encodeURIComponent(key)}`);
 
     if (!response.success) {
-      throw new NodeOperationError(this.getNode(), `Failed to release lock: ${response.error || 'Unknown error'}`, { itemIndex });
+      throw new NodeOperationError(
+        this.getNode(),
+        `Failed to release lock: ${response.error || 'Unknown error'}`,
+        { itemIndex }
+      );
     }
 
     const outputJson: Record<string, any> = {

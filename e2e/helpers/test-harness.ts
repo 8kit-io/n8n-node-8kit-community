@@ -57,7 +57,7 @@ export function createE2EExecuteFunctions(options: HarnessOptions): IExecuteFunc
       body?: any;
       headers?: Record<string, string>;
       timeout?: number;
-    },
+    }
   ): Promise<any> => {
     const { method, url, body, headers = {} } = requestOptions;
 

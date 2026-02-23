@@ -18,7 +18,10 @@ describe('executeAddToLookup', () => {
     fx.getInputData.mockReturnValue([{ json: {} }]);
 
     // checkLookupExists -> true
-    fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({ success: true, data: { id: 'lkp-1' } });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({
+      success: true,
+      data: { id: 'lkp-1' },
+    });
     // addValueToLookup -> success
     fx.helpers.httpRequestWithAuthentication.mockResolvedValueOnce({
       success: true,

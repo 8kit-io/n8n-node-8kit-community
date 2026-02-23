@@ -12,13 +12,14 @@ export async function executeGetLastUpdated(
   itemIndex: number
 ): Promise<any> {
   const key = (this.getNodeParameter('key', itemIndex) as string).trim();
-  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<
+    string,
+    any
+  >;
   const useUtcTimezone = (additionalFields.useUtcTimezone as boolean) || false;
   const outputFormat = (additionalFields.outputFormat as string) || 'iso8601-tz';
   const rawOutputCustomFormat =
-    outputFormat === 'custom'
-      ? ((additionalFields.outputCustomFormat as string) || '')
-      : undefined;
+    outputFormat === 'custom' ? (additionalFields.outputCustomFormat as string) || '' : undefined;
   const outputCustomFormat = rawOutputCustomFormat?.trim() || undefined;
 
   // Get default date parameter
@@ -46,7 +47,11 @@ export async function executeGetLastUpdated(
     }>(`${baseUrl}/api/v1/last-updated/key/${encodeURIComponent(key)}`);
 
     if (!response.success) {
-      throw new NodeOperationError(this.getNode(), `Failed to get last updated record: ${response.error || 'Unknown error'}`, { itemIndex });
+      throw new NodeOperationError(
+        this.getNode(),
+        `Failed to get last updated record: ${response.error || 'Unknown error'}`,
+        { itemIndex }
+      );
     }
 
     if (!response.data) {

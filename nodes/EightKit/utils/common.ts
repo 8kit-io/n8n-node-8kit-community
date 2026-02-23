@@ -31,7 +31,7 @@ async function createUniq(
   baseUrl: string,
   uniqName: string,
   node: INode,
-  itemIndex: number,
+  itemIndex: number
 ): Promise<CreateUniqResult> {
   const url = `${baseUrl}/api/v1/uniqs`;
 
@@ -44,11 +44,17 @@ async function createUniq(
   const response = await client.post<CreateUniqResult>(url, payload);
 
   if (!response.success) {
-    throw new NodeOperationError(node, `Failed to create Uniq collection: ${response.error || 'Unknown error'}`, { itemIndex });
+    throw new NodeOperationError(
+      node,
+      `Failed to create Uniq collection: ${response.error || 'Unknown error'}`,
+      { itemIndex }
+    );
   }
 
   if (!response.data) {
-    throw new NodeOperationError(node, 'Create Uniq collection response missing data field', { itemIndex });
+    throw new NodeOperationError(node, 'Create Uniq collection response missing data field', {
+      itemIndex,
+    });
   }
 
   return response.data;
@@ -103,7 +109,7 @@ async function createLookup(
   baseUrl: string,
   lookupName: string,
   node: INode,
-  itemIndex: number,
+  itemIndex: number
 ): Promise<CreateLookupResult> {
   const url = `${baseUrl}/api/v1/lookups`;
 
@@ -115,7 +121,11 @@ async function createLookup(
   const response = await client.post<CreateLookupResult>(url, payload);
 
   if (!response.success) {
-    throw new NodeOperationError(node, `Failed to create lookup collection: ${response.error || 'Unknown error'}`, { itemIndex });
+    throw new NodeOperationError(
+      node,
+      `Failed to create lookup collection: ${response.error || 'Unknown error'}`,
+      { itemIndex }
+    );
   }
 
   if (!response.data) {

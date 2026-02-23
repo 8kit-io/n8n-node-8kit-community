@@ -18,7 +18,9 @@ export async function executeListUniqCollections(
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -37,7 +39,11 @@ export async function executeListUniqCollections(
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new NodeOperationError(this.getNode(), `Failed to list Uniq collections: ${response.error || 'Unknown error'}`, { itemIndex });
+      throw new NodeOperationError(
+        this.getNode(),
+        `Failed to list Uniq collections: ${response.error || 'Unknown error'}`,
+        { itemIndex }
+      );
     }
 
     return response.data;

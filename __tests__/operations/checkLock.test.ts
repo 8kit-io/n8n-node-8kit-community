@@ -53,7 +53,10 @@ describe('executeCheckLock', () => {
       .mockReturnValueOnce({}); // additionalFields
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Lock not found' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
+      success: false,
+      error: 'Lock not found',
+    });
 
     await expect(executeCheckLock.call(fx, 0)).rejects.toThrow(
       'Failed to check lock: Lock not found'

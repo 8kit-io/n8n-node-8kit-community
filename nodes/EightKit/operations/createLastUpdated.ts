@@ -14,19 +14,16 @@ export async function executeCreateLastUpdated(
   itemIndex: number
 ): Promise<any> {
   const key = (this.getNodeParameter('key', itemIndex) as string).trim();
-  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<
+    string,
+    any
+  >;
   const description = ((additionalFields.description as string) || '').trim();
 
-  const rawDateInput = (additionalFields.dateString ?? '') as
-    | string
-    | number
-    | Date
-    | null;
+  const rawDateInput = (additionalFields.dateString ?? '') as string | number | Date | null;
   const inputFormat = (additionalFields.inputFormat as string) || 'iso8601-tz';
   const rawInputCustomFormat =
-    inputFormat === 'custom'
-      ? ((additionalFields.inputCustomFormat as string) || '')
-      : undefined;
+    inputFormat === 'custom' ? (additionalFields.inputCustomFormat as string) || '' : undefined;
   const inputCustomFormat = rawInputCustomFormat?.trim() || undefined;
 
   let parsedDate: Date;
@@ -88,7 +85,7 @@ export async function executeCreateLastUpdated(
       throw new NodeOperationError(
         this.getNode(),
         `Failed to create last updated record: ${(response as any).error || 'Unknown error'}`,
-        { itemIndex },
+        { itemIndex }
       );
     }
 
@@ -136,7 +133,7 @@ export async function executeCreateLastUpdated(
           throw new NodeOperationError(
             this.getNode(),
             `Failed to touch last updated record: ${(response as any).error || 'Unknown error'}`,
-            { itemIndex },
+            { itemIndex }
           );
         }
 

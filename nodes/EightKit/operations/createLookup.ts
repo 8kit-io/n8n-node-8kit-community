@@ -18,13 +18,25 @@ export async function executeCreateLookup(
   itemIndex: number
 ): Promise<any> {
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
-  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<
+    string,
+    any
+  >;
   const description = ((additionalFields.description as string) || '').trim();
   const leftSystem = ((additionalFields.leftSystem as string) || '').trim();
   const rightSystem = ((additionalFields.rightSystem as string) || '').trim();
-  const allowLeftDups = additionalFields.allowLeftDups !== undefined ? additionalFields.allowLeftDups as boolean : true;
-  const allowRightDups = additionalFields.allowRightDups !== undefined ? additionalFields.allowRightDups as boolean : true;
-  const allowLeftRightDups = additionalFields.allowLeftRightDups !== undefined ? additionalFields.allowLeftRightDups as boolean : true;
+  const allowLeftDups =
+    additionalFields.allowLeftDups !== undefined
+      ? (additionalFields.allowLeftDups as boolean)
+      : true;
+  const allowRightDups =
+    additionalFields.allowRightDups !== undefined
+      ? (additionalFields.allowRightDups as boolean)
+      : true;
+  const allowLeftRightDups =
+    additionalFields.allowLeftRightDups !== undefined
+      ? (additionalFields.allowLeftRightDups as boolean)
+      : true;
   const strictChecking = (additionalFields.strictChecking as boolean) || false;
 
   // Initialize HTTP client
@@ -32,7 +44,9 @@ export async function executeCreateLookup(
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -62,7 +76,11 @@ export async function executeCreateLookup(
     const response = await client.post(`${formattedBaseUrl}${endpoint}`, data);
 
     if (!response.success) {
-      throw new NodeOperationError(this.getNode(), `Failed to create lookup collection: ${response.error || 'Unknown error'}`, { itemIndex });
+      throw new NodeOperationError(
+        this.getNode(),
+        `Failed to create lookup collection: ${response.error || 'Unknown error'}`,
+        { itemIndex }
+      );
     }
 
     return response.data;

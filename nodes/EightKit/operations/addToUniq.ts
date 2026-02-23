@@ -38,15 +38,19 @@ export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: numbe
   // Validate inputs
   validateUniqName(name, this.getNode(), itemIndex);
 
-  const inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
+  const _inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
 
   if (!value) {
-    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', {
+      itemIndex,
+    });
   }
 
   // Validate the value
   if (typeof value !== 'string') {
-    throw new NodeOperationError(this.getNode(), `Value must be a string, got ${typeof value}`, { itemIndex });
+    throw new NodeOperationError(this.getNode(), `Value must be a string, got ${typeof value}`, {
+      itemIndex,
+    });
   }
   validateValue(value, this.getNode(), itemIndex);
 
@@ -55,7 +59,9 @@ export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: numbe
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
 
   // Ensure baseUrl is properly formatted
@@ -69,11 +75,21 @@ export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: numbe
 
     // If uniq collection doesn't exist, throw error
     if (!uniqExists) {
-      throw new NodeOperationError(this.getNode(), `Uniq collection "${name}" not found.`, { itemIndex });
+      throw new NodeOperationError(this.getNode(), `Uniq collection "${name}" not found.`, {
+        itemIndex,
+      });
     }
 
     // Add value to the Uniq collection
-    const result = await addValueToUniq(client, formattedBaseUrl, name, value, metadata, this.getNode(), itemIndex);
+    const result = await addValueToUniq(
+      client,
+      formattedBaseUrl,
+      name,
+      value,
+      metadata,
+      this.getNode(),
+      itemIndex
+    );
 
     // Return the enriched input data with operation result
     return result;
@@ -100,7 +116,7 @@ async function addValueToUniq(
   value: string,
   metadata: any,
   node: INode,
-  itemIndex: number,
+  itemIndex: number
 ): Promise<{ success: boolean; data: AddUniqValueResult }> {
   const endpoint = buildUniqEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
@@ -113,7 +129,7 @@ async function addValueToUniq(
     if (typeof metadata === 'string') {
       try {
         payload.metadata = JSON.parse(metadata);
-      } catch (error: any) {
+      } catch (_error: any) {
         payload.metadata = metadata;
       }
     } else {
@@ -127,7 +143,7 @@ async function addValueToUniq(
     throw new NodeOperationError(
       node,
       `Failed to add value to the Uniq collection: ${response.error || 'Unknown error'}`,
-      { itemIndex },
+      { itemIndex }
     );
   }
 

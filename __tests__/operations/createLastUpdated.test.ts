@@ -55,7 +55,10 @@ describe('executeCreateLastUpdated', () => {
       .mockReturnValueOnce({}); // additionalFields (empty = defaults)
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Duplicate key' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
+      success: false,
+      error: 'Duplicate key',
+    });
 
     await expect(executeCreateLastUpdated.call(fx, 0)).rejects.toThrow(
       'Failed to create last updated record: Duplicate key'

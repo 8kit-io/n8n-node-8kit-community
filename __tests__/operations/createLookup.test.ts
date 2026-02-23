@@ -50,7 +50,10 @@ describe('executeCreateLookup', () => {
       .mockReturnValueOnce({}); // additionalFields (empty)
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
-    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Already exists' });
+    fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
+      success: false,
+      error: 'Already exists',
+    });
 
     await expect(executeCreateLookup.call(fx, 0)).rejects.toThrow(
       'Failed to create lookup collection: Already exists'

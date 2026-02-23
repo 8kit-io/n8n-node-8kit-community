@@ -19,7 +19,10 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
   // Parameters (adapted to single-mode only)
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
-  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<
+    string,
+    any
+  >;
   const includeUniqValueData = (additionalFields.getUniqValueData as boolean) || false;
   const uniqValueDataFieldName = includeUniqValueData
     ? (additionalFields.uniqValueDataFieldName as string)?.trim() || undefined
@@ -34,7 +37,9 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string) || '';
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
 
@@ -53,7 +58,9 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
     });
 
     if (!response.success || !response.data) {
-      throw new NodeOperationError(this.getNode(), response.error || 'API Error: Unknown', { itemIndex });
+      throw new NodeOperationError(this.getNode(), response.error || 'API Error: Unknown', {
+        itemIndex,
+      });
     }
 
     const exists = response.data.exists;

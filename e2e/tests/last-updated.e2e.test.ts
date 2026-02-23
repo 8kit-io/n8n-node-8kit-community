@@ -1,8 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import {
-  executeCreateLastUpdated,
-  executeGetLastUpdated,
-} from '../../nodes/EightKit/operations';
+import { executeCreateLastUpdated, executeGetLastUpdated } from '../../nodes/EightKit/operations';
 import { CleanupTracker } from '../helpers/cleanup';
 import { lastUpdatedKey } from '../helpers/fixtures';
 import { createE2EExecuteFunctions } from '../helpers/test-harness';

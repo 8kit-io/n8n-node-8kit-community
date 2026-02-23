@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EightKitHttpClient } from '../nodes/EightKit/utils/httpClient';
 
 describe('EightKitHttpClient', () => {
@@ -36,7 +36,7 @@ describe('EightKitHttpClient', () => {
       await client.get('https://api.example.com/api/v1/test');
       expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication).toHaveBeenCalledWith(
         'eightKitApi',
-        expect.any(Object),
+        expect.any(Object)
       );
     });
   });

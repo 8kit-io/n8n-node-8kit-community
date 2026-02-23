@@ -338,7 +338,7 @@ export function formatDateWithFormat(
         ms = components.ms;
 
         tzOffset = getTimezoneOffset(date, timezone);
-      } catch (error: any) {
+      } catch (_error: any) {
         // Fallback to UTC if timezone is invalid
         tzOffset = 0;
         year = date.getUTCFullYear();
@@ -400,7 +400,7 @@ export function formatDateWithFormat(
       return Object.keys(replacements)
         .sort((a, b) => b.length - a.length)
         .reduce((acc, token) => acc.replace(new RegExp(token, 'g'), replacements[token]), pattern);
-    } catch (error: any) {
+    } catch (_error: any) {
       // Fallback to UTC if timezone is invalid
       return formatWithPattern(date, pattern);
     }

@@ -12,7 +12,10 @@ export async function executeCreateUniqCollection(
   itemIndex: number
 ): Promise<any> {
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
-  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<
+    string,
+    any
+  >;
   const description = ((additionalFields.description as string) || '').trim();
 
   // Initialize HTTP client
@@ -20,7 +23,9 @@ export async function executeCreateUniqCollection(
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+      itemIndex,
+    });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -36,7 +41,11 @@ export async function executeCreateUniqCollection(
     const response = await client.post(`${formattedBaseUrl}${endpoint}`, data);
 
     if (!response.success) {
-      throw new NodeOperationError(this.getNode(), `Failed to create Uniq collection: ${response.error || 'Unknown error'}`, { itemIndex });
+      throw new NodeOperationError(
+        this.getNode(),
+        `Failed to create Uniq collection: ${response.error || 'Unknown error'}`,
+        { itemIndex }
+      );
     }
 
     return response.data;
