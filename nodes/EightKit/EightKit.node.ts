@@ -42,6 +42,7 @@ export class EightKit implements INodeType {
     icon: 'file:8kit.svg',
     group: ['transform'],
     version: 2,
+    subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
     description: 'Integrate with 8kit Automation Tools for Uniq collections and lookup mapping',
     defaults: {
       name: '8kit',
@@ -1115,7 +1116,6 @@ export class EightKit implements INodeType {
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][] | null> {
     const items = this.getInputData();
-    const _resource = this.getNodeParameter('resource', 0) as string;
     const operation = this.getNodeParameter('operation', 0) as string;
 
     // For operations with dual outputs (yes/no branches)
@@ -1171,12 +1171,6 @@ export class EightKit implements INodeType {
           break;
         case 'getAppHealth':
           result = await executeGetAppHealth.call(this, i);
-          break;
-        case 'checkLock':
-          result = await executeCheckLock.call(this, i);
-          break;
-        case 'acquireLock':
-          result = await executeAcquireLock.call(this, i);
           break;
         case 'releaseLock':
           result = await executeReleaseLock.call(this, i);
