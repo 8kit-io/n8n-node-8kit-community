@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.18
+
+### 🏪 Marketplace Compliance
+
+Major quality and compliance update preparing for the n8n community marketplace.
+
+- Grouped optional fields into "Additional Fields" collections for cleaner UX
+- Switched HTTP client to n8n's built-in `httpRequestWithAuthentication` for secure credential handling
+- Replaced raw `throw new Error` with n8n `NodeOperationError` for better error reporting in the UI
+- Removed all console.log/error calls from production code
+- Added `peerDependencies` for `n8n-workflow`
+- Replaced `setTimeout` with n8n `sleep` utility
+
+### 🧪 Testing
+
+- 160 unit tests covering all 22 operations
+- 38 end-to-end tests against a real backend
+- 5 compliance tests for marketplace requirements
+
 ## 1.0.17
 
 ### 🕒 Last Update Date
