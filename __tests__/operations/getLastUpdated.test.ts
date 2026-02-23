@@ -18,14 +18,12 @@ describe('executeGetLastUpdated', () => {
   });
 
   test('retrieves record and formats date using default outputFormat (iso8601-tz)', async () => {
-    // getNodeParameter calls:
-    // 1) key
-    // 2) useUtcTimezone
-    // 3) outputFormat (default if not provided)
     fx.getNodeParameter
       .mockReturnValueOnce('sync-job') // key
-      .mockReturnValueOnce(false) // useUtcTimezone
-      .mockReturnValueOnce('iso8601-tz'); // outputFormat
+      .mockReturnValueOnce({
+        useUtcTimezone: false,
+        outputFormat: 'iso8601-tz',
+      }); // additionalFields
     fx.getCredentials.mockResolvedValue(mockCreds);
 
     const httpSpy = jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
@@ -67,8 +65,10 @@ describe('executeGetLastUpdated', () => {
   test('honors explicit outputFormat = iso8601-utc', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('sync-job') // key
-      .mockReturnValueOnce(false) // useUtcTimezone
-      .mockReturnValueOnce('iso8601-utc'); // outputFormat
+      .mockReturnValueOnce({
+        useUtcTimezone: false,
+        outputFormat: 'iso8601-utc',
+      }); // additionalFields
     fx.getCredentials.mockResolvedValue(mockCreds);
 
     jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
@@ -101,9 +101,11 @@ describe('executeGetLastUpdated', () => {
   test('supports custom format (outputFormat = custom + outputCustomFormat)', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('sync-job') // key
-      .mockReturnValueOnce(false) // useUtcTimezone
-      .mockReturnValueOnce('custom') // outputFormat
-      .mockReturnValueOnce('yyyy/MM/dd HH:mm:ss'); // outputCustomFormat
+      .mockReturnValueOnce({
+        useUtcTimezone: false,
+        outputFormat: 'custom',
+        outputCustomFormat: 'yyyy/MM/dd HH:mm:ss',
+      }); // additionalFields
     fx.getCredentials.mockResolvedValue(mockCreds);
 
     jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
@@ -136,9 +138,11 @@ describe('executeGetLastUpdated', () => {
   test('returns { date: null } when API returns data: null and no defaultDateString', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('sync-job') // key
-      .mockReturnValueOnce(false) // useUtcTimezone
-      .mockReturnValueOnce('iso8601-tz') // outputFormat
-      .mockReturnValueOnce(''); // defaultDateString (empty)
+      .mockReturnValueOnce({
+        useUtcTimezone: false,
+        outputFormat: 'iso8601-tz',
+        defaultDateString: '',
+      }); // additionalFields
     fx.getCredentials.mockResolvedValue(mockCreds);
 
     jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
@@ -153,9 +157,11 @@ describe('executeGetLastUpdated', () => {
   test('uses defaultDateString when API returns data: null (iso8601-tz format)', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('sync-job') // key
-      .mockReturnValueOnce(false) // useUtcTimezone
-      .mockReturnValueOnce('iso8601-tz') // outputFormat
-      .mockReturnValueOnce('2024-01-15T10:30:00Z'); // defaultDateString
+      .mockReturnValueOnce({
+        useUtcTimezone: false,
+        outputFormat: 'iso8601-tz',
+        defaultDateString: '2024-01-15T10:30:00Z',
+      }); // additionalFields
     fx.getCredentials.mockResolvedValue(mockCreds);
 
     jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
@@ -187,10 +193,12 @@ describe('executeGetLastUpdated', () => {
   test('uses defaultDateString with custom format when API returns data: null', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('sync-job') // key
-      .mockReturnValueOnce(true) // useUtcTimezone
-      .mockReturnValueOnce('custom') // outputFormat
-      .mockReturnValueOnce('yyyy-MM-dd HH:mm:ss') // outputCustomFormat
-      .mockReturnValueOnce('2024-03-20 14:45:30'); // defaultDateString
+      .mockReturnValueOnce({
+        useUtcTimezone: true,
+        outputFormat: 'custom',
+        outputCustomFormat: 'yyyy-MM-dd HH:mm:ss',
+        defaultDateString: '2024-03-20 14:45:30',
+      }); // additionalFields
     fx.getCredentials.mockResolvedValue(mockCreds);
 
     jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
@@ -222,9 +230,11 @@ describe('executeGetLastUpdated', () => {
   test('throws NodeOperationError when defaultDateString is invalid (continueOnFail=false)', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('sync-job') // key
-      .mockReturnValueOnce(false) // useUtcTimezone
-      .mockReturnValueOnce('iso8601-tz') // outputFormat (not custom, so no outputCustomFormat)
-      .mockReturnValueOnce('invalid-date-string'); // defaultDateString
+      .mockReturnValueOnce({
+        useUtcTimezone: false,
+        outputFormat: 'iso8601-tz',
+        defaultDateString: 'invalid-date-string',
+      }); // additionalFields
     fx.getCredentials.mockResolvedValue(mockCreds);
     fx.continueOnFail.mockReturnValue(false);
 
@@ -245,9 +255,11 @@ describe('executeGetLastUpdated', () => {
   test('returns error object when defaultDateString is invalid (continueOnFail=true)', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('sync-job') // key
-      .mockReturnValueOnce(false) // useUtcTimezone
-      .mockReturnValueOnce('iso8601-tz') // outputFormat (not custom, so no outputCustomFormat)
-      .mockReturnValueOnce('bad-date'); // defaultDateString
+      .mockReturnValueOnce({
+        useUtcTimezone: false,
+        outputFormat: 'iso8601-tz',
+        defaultDateString: 'bad-date',
+      }); // additionalFields
     fx.getCredentials.mockResolvedValue(mockCreds);
     fx.continueOnFail.mockReturnValue(true);
 
@@ -270,7 +282,9 @@ describe('executeGetLastUpdated', () => {
 
   test('URL-encodes key in request path', async () => {
     // key includes spaces and slashes
-    fx.getNodeParameter.mockReturnValueOnce('job/2025 run A'); // key
+    fx.getNodeParameter
+      .mockReturnValueOnce('job/2025 run A') // key
+      .mockReturnValueOnce({}); // additionalFields (defaults)
     fx.getCredentials.mockResolvedValue(mockCreds);
 
     const httpSpy = jest.spyOn(EightKitHttpClient.prototype, 'get').mockResolvedValue({
@@ -297,7 +311,9 @@ describe('executeGetLastUpdated', () => {
   });
 
   test('throws NodeOperationError when success=false (and continueOnFail is false)', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('sync-job'); // key
+    fx.getNodeParameter
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({}); // additionalFields (defaults)
     fx.getCredentials.mockResolvedValue(mockCreds);
     fx.continueOnFail.mockReturnValue(false);
 
@@ -310,7 +326,9 @@ describe('executeGetLastUpdated', () => {
   });
 
   test('returns error payload when success=false but continueOnFail=true', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('sync-job'); // key
+    fx.getNodeParameter
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({}); // additionalFields (defaults)
     fx.getCredentials.mockResolvedValue(mockCreds);
     fx.continueOnFail.mockReturnValue(true);
 

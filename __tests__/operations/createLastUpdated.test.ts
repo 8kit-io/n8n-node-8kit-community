@@ -10,10 +10,12 @@ describe('executeCreateLastUpdated', () => {
 
   it('creates a last updated record with trimmed metadata', async () => {
     fx.getNodeParameter
-      .mockReturnValueOnce('sync-job')
-      .mockReturnValueOnce('  Nightly sync run  ')
-      .mockReturnValueOnce(' 2024-03-02T05:00:00Z ')
-      .mockReturnValueOnce('iso8601-tz');
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({
+        description: '  Nightly sync run  ',
+        dateString: ' 2024-03-02T05:00:00Z ',
+        inputFormat: 'iso8601-tz',
+      }); // additionalFields
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
@@ -49,10 +51,8 @@ describe('executeCreateLastUpdated', () => {
 
   it('throws when the API reports failure', async () => {
     fx.getNodeParameter
-      .mockReturnValueOnce('sync-job')
-      .mockReturnValueOnce('')
-      .mockReturnValueOnce(null)
-      .mockReturnValueOnce('iso8601-tz');
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({}); // additionalFields (empty = defaults)
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Duplicate key' });
@@ -67,10 +67,12 @@ describe('executeCreateLastUpdated', () => {
     const expectedDate = new Date(testTimestamp).toISOString();
 
     fx.getNodeParameter
-      .mockReturnValueOnce('sync-job')
-      .mockReturnValueOnce('Test description')
-      .mockReturnValueOnce(testTimestamp)
-      .mockReturnValueOnce('unix-ms');
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({
+        description: 'Test description',
+        dateString: testTimestamp,
+        inputFormat: 'unix-ms',
+      }); // additionalFields
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
@@ -94,7 +96,7 @@ describe('executeCreateLastUpdated', () => {
       expect.objectContaining({
         body: expect.objectContaining({
           key: 'sync-job',
-          date: expectedDate, // Now includes milliseconds
+          date: expectedDate,
         }),
       })
     );
@@ -105,10 +107,12 @@ describe('executeCreateLastUpdated', () => {
     const expectedDate = new Date(Number.parseInt(testTimestamp, 10)).toISOString();
 
     fx.getNodeParameter
-      .mockReturnValueOnce('sync-job')
-      .mockReturnValueOnce('Test description')
-      .mockReturnValueOnce(testTimestamp)
-      .mockReturnValueOnce('unix-ms');
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({
+        description: 'Test description',
+        dateString: testTimestamp,
+        inputFormat: 'unix-ms',
+      }); // additionalFields
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
@@ -131,7 +135,7 @@ describe('executeCreateLastUpdated', () => {
       'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
-          date: expectedDate, // Now includes milliseconds
+          date: expectedDate,
         }),
       })
     );
@@ -139,10 +143,11 @@ describe('executeCreateLastUpdated', () => {
 
   it('handles ISO 8601 date string', async () => {
     fx.getNodeParameter
-      .mockReturnValueOnce('sync-job')
-      .mockReturnValueOnce('')
-      .mockReturnValueOnce('2024-03-15T14:30:00Z')
-      .mockReturnValueOnce('iso8601-tz');
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({
+        dateString: '2024-03-15T14:30:00Z',
+        inputFormat: 'iso8601-tz',
+      }); // additionalFields
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
@@ -164,7 +169,7 @@ describe('executeCreateLastUpdated', () => {
       'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
-          date: '2024-03-15T14:30:00.000Z', // Now includes milliseconds
+          date: '2024-03-15T14:30:00.000Z',
         }),
       })
     );
@@ -175,10 +180,11 @@ describe('executeCreateLastUpdated', () => {
     jest.spyOn(global, 'Date').mockImplementation(() => mockNow as any);
 
     fx.getNodeParameter
-      .mockReturnValueOnce('sync-job')
-      .mockReturnValueOnce('')
-      .mockReturnValueOnce('') // Empty string
-      .mockReturnValueOnce('iso8601-tz');
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({
+        dateString: '',
+        inputFormat: 'iso8601-tz',
+      }); // additionalFields
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
@@ -200,7 +206,7 @@ describe('executeCreateLastUpdated', () => {
       'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
-          date: '2024-04-20T12:00:00.000Z', // Now includes milliseconds
+          date: '2024-04-20T12:00:00.000Z',
         }),
       })
     );
@@ -213,10 +219,11 @@ describe('executeCreateLastUpdated', () => {
     jest.spyOn(global, 'Date').mockImplementation(() => mockNow as any);
 
     fx.getNodeParameter
-      .mockReturnValueOnce('sync-job')
-      .mockReturnValueOnce('')
-      .mockReturnValueOnce(null) // null value
-      .mockReturnValueOnce('iso8601-tz');
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({
+        dateString: null,
+        inputFormat: 'iso8601-tz',
+      }); // additionalFields
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
@@ -238,7 +245,7 @@ describe('executeCreateLastUpdated', () => {
       'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
-          date: '2024-04-20T12:00:00.000Z', // Now includes milliseconds
+          date: '2024-04-20T12:00:00.000Z',
         }),
       })
     );
@@ -248,10 +255,11 @@ describe('executeCreateLastUpdated', () => {
 
   it('handles various ISO 8601 formats', async () => {
     fx.getNodeParameter
-      .mockReturnValueOnce('sync-job')
-      .mockReturnValueOnce('')
-      .mockReturnValueOnce('2024-05-10T08:30:45.123Z')
-      .mockReturnValueOnce('iso8601-tz');
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({
+        dateString: '2024-05-10T08:30:45.123Z',
+        inputFormat: 'iso8601-tz',
+      }); // additionalFields
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
@@ -273,7 +281,7 @@ describe('executeCreateLastUpdated', () => {
       'eightKitApi',
       expect.objectContaining({
         body: expect.objectContaining({
-          date: '2024-05-10T08:30:45.123Z', // Now includes milliseconds
+          date: '2024-05-10T08:30:45.123Z',
         }),
       })
     );

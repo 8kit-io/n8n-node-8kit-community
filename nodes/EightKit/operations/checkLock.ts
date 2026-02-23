@@ -10,9 +10,10 @@ export interface CheckLockParams {
 
 export async function executeCheckLock(this: IExecuteFunctions, itemIndex: number): Promise<any> {
   const key = (this.getNodeParameter('key', itemIndex) as string).trim();
-  const includeLockData = this.getNodeParameter('getLockData', itemIndex, false) as boolean;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const includeLockData = (additionalFields.getLockData as boolean) || false;
   const lockDataFieldName = includeLockData
-    ? (this.getNodeParameter('lockDataFieldName', itemIndex) as string)?.trim() || undefined
+    ? (additionalFields.lockDataFieldName as string)?.trim() || undefined
     : undefined;
 
   const credentials = await this.getCredentials('eightKitApi');

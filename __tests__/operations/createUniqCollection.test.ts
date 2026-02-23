@@ -10,8 +10,8 @@ describe('executeCreateUniqCollection', () => {
 
   it('creates a uniq collection with metadata', async () => {
     fx.getNodeParameter
-      .mockReturnValueOnce('processed-users')
-      .mockReturnValueOnce('Users we have processed');
+      .mockReturnValueOnce('processed-users') // name
+      .mockReturnValueOnce({ description: 'Users we have processed' }); // additionalFields
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
@@ -41,7 +41,9 @@ describe('executeCreateUniqCollection', () => {
   });
 
   it('throws when the API returns an error', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('processed-users').mockReturnValueOnce('');
+    fx.getNodeParameter
+      .mockReturnValueOnce('processed-users') // name
+      .mockReturnValueOnce({}); // additionalFields (empty)
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Uniq collection exists' });

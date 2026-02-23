@@ -15,8 +15,7 @@ describe('locks operations', () => {
     fx.getNodeParameter
       .mockReturnValueOnce('job-1') // key
       .mockReturnValueOnce('test-workflow') // callingFn
-      .mockReturnValueOnce(5000) // timeout
-      .mockReturnValueOnce(false); // getLockData
+      .mockReturnValueOnce({ timeout: 5000 }); // additionalFields
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
     fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
@@ -37,7 +36,7 @@ describe('locks operations', () => {
   it('should release a lock', async () => {
     fx.getNodeParameter
       .mockReturnValueOnce('job-1') // key
-      .mockReturnValueOnce(false); // getLockData
+      .mockReturnValueOnce({}); // additionalFields (empty = defaults)
 
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
     fx.helpers.httpRequestWithAuthentication.mockResolvedValue({

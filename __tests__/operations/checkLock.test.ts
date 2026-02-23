@@ -11,7 +11,9 @@ describe('executeCheckLock', () => {
   });
 
   it('returns lock details when the lock exists', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('job-1');
+    fx.getNodeParameter
+      .mockReturnValueOnce('job-1') // key
+      .mockReturnValueOnce({}); // additionalFields (empty = defaults)
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
@@ -46,7 +48,9 @@ describe('executeCheckLock', () => {
   });
 
   it('throws when the API indicates failure', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('missing-lock');
+    fx.getNodeParameter
+      .mockReturnValueOnce('missing-lock') // key
+      .mockReturnValueOnce({}); // additionalFields
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Lock not found' });

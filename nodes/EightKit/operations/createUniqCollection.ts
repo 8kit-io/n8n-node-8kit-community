@@ -12,9 +12,8 @@ export async function executeCreateUniqCollection(
   itemIndex: number
 ): Promise<any> {
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
-  const description = (
-    (this.getNodeParameter('description', itemIndex, '') as string) || ''
-  ).trim();
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const description = ((additionalFields.description as string) || '').trim();
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');

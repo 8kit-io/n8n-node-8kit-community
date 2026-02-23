@@ -12,18 +12,17 @@ export async function executeGetLastUpdated(
   itemIndex: number
 ): Promise<any> {
   const key = (this.getNodeParameter('key', itemIndex) as string).trim();
-  const useUtcTimezone = this.getNodeParameter('useUtcTimezone', itemIndex, false) as boolean;
-  const outputFormat = this.getNodeParameter('outputFormat', itemIndex, 'iso8601-tz') as string;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const useUtcTimezone = (additionalFields.useUtcTimezone as boolean) || false;
+  const outputFormat = (additionalFields.outputFormat as string) || 'iso8601-tz';
   const rawOutputCustomFormat =
     outputFormat === 'custom'
-      ? (this.getNodeParameter('outputCustomFormat', itemIndex, '') as string)
+      ? ((additionalFields.outputCustomFormat as string) || '')
       : undefined;
   const outputCustomFormat = rawOutputCustomFormat?.trim() || undefined;
 
   // Get default date parameter
-  const rawDefaultDateString = this.getNodeParameter('defaultDateString', itemIndex, '') as
-    | string
-    | null;
+  const rawDefaultDateString = (additionalFields.defaultDateString as string) || '';
   const defaultDateString = rawDefaultDateString?.trim() || null;
 
   const credentials = await this.getCredentials('eightKitApi');

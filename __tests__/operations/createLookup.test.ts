@@ -10,8 +10,8 @@ describe('executeCreateLookup', () => {
 
   it('creates a lookup with optional description', async () => {
     fx.getNodeParameter
-      .mockReturnValueOnce('user-map')
-      .mockReturnValueOnce('Primary mapping table');
+      .mockReturnValueOnce('user-map') // name
+      .mockReturnValueOnce({ description: 'Primary mapping table' }); // additionalFields
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     fx.helpers.httpRequestWithAuthentication.mockResolvedValue({
@@ -35,13 +35,19 @@ describe('executeCreateLookup', () => {
         body: {
           name: 'user-map',
           description: 'Primary mapping table',
+          allowLeftDups: true,
+          allowRightDups: true,
+          allowLeftRightDups: true,
+          strictChecking: false,
         },
       })
     );
   });
 
   it('throws when the API returns an error', async () => {
-    fx.getNodeParameter.mockReturnValueOnce('user-map').mockReturnValueOnce('');
+    fx.getNodeParameter
+      .mockReturnValueOnce('user-map') // name
+      .mockReturnValueOnce({}); // additionalFields (empty)
     fx.getCredentials.mockResolvedValue(createMockCredentials({}));
 
     fx.helpers.httpRequestWithAuthentication.mockResolvedValue({ success: false, error: 'Already exists' });

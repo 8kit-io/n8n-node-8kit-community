@@ -18,21 +18,14 @@ export async function executeCreateLookup(
   itemIndex: number
 ): Promise<any> {
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
-  const description = (
-    (this.getNodeParameter('description', itemIndex, '') as string) || ''
-  ).trim();
-  const leftSystem = ((this.getNodeParameter('leftSystem', itemIndex, '') as string) || '').trim();
-  const rightSystem = (
-    (this.getNodeParameter('rightSystem', itemIndex, '') as string) || ''
-  ).trim();
-  const allowLeftDups = this.getNodeParameter('allowLeftDups', itemIndex, true) as boolean;
-  const allowRightDups = this.getNodeParameter('allowRightDups', itemIndex, true) as boolean;
-  const allowLeftRightDups = this.getNodeParameter(
-    'allowLeftRightDups',
-    itemIndex,
-    true
-  ) as boolean;
-  const strictChecking = this.getNodeParameter('strictChecking', itemIndex, false) as boolean;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const description = ((additionalFields.description as string) || '').trim();
+  const leftSystem = ((additionalFields.leftSystem as string) || '').trim();
+  const rightSystem = ((additionalFields.rightSystem as string) || '').trim();
+  const allowLeftDups = additionalFields.allowLeftDups !== undefined ? additionalFields.allowLeftDups as boolean : true;
+  const allowRightDups = additionalFields.allowRightDups !== undefined ? additionalFields.allowRightDups as boolean : true;
+  const allowLeftRightDups = additionalFields.allowLeftRightDups !== undefined ? additionalFields.allowLeftRightDups as boolean : true;
+  const strictChecking = (additionalFields.strictChecking as boolean) || false;
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');

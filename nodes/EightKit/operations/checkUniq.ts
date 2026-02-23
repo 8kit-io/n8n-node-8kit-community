@@ -19,13 +19,10 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
   // Parameters (adapted to single-mode only)
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
-  const includeUniqValueData = this.getNodeParameter(
-    'getUniqValueData',
-    itemIndex,
-    false
-  ) as boolean;
+  const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as Record<string, any>;
+  const includeUniqValueData = (additionalFields.getUniqValueData as boolean) || false;
   const uniqValueDataFieldName = includeUniqValueData
-    ? (this.getNodeParameter('uniqValueDataFieldName', itemIndex) as string)?.trim() || undefined
+    ? (additionalFields.uniqValueDataFieldName as string)?.trim() || undefined
     : undefined;
 
   // Validate inputs
