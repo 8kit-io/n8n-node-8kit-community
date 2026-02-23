@@ -6,6 +6,7 @@ import type {
   INodeType,
   INodeTypeDescription,
 } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 
 import {
   executeAcquireLock,
@@ -1540,7 +1541,7 @@ export class EightKit implements INodeType {
           result = await executeCompleteLookupUniq.call(this, i);
           break;
         default:
-          throw new Error(`Unknown operation: ${operation}`);
+          throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`);
       }
 
       // Handle different result types

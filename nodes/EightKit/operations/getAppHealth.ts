@@ -23,7 +23,7 @@ export async function executeGetAppHealth(
     }>(`${baseUrl}/api/v1/apps/health`);
 
     if (!response.success) {
-      throw new Error(`Failed to get app health: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to get app health: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     return response.data;

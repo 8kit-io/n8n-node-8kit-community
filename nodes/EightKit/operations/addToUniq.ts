@@ -1,4 +1,4 @@
-import type { IExecuteFunctions } from 'n8n-workflow';
+import type { IExecuteFunctions, INode } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { checkUniqExists } from '../utils/common';
 import {
@@ -36,26 +36,26 @@ export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: numbe
   const metadata = advancedSettings?.metadata;
 
   // Validate inputs
-  validateUniqName(name);
+  validateUniqName(name, this.getNode(), itemIndex);
 
   const inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
 
   if (!value) {
-    throw new Error(`Value is required and cannot be empty`);
+    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', { itemIndex });
   }
 
   // Validate the value
   if (typeof value !== 'string') {
-    throw new Error(`Value must be a string, got ${typeof value}`);
+    throw new NodeOperationError(this.getNode(), `Value must be a string, got ${typeof value}`, { itemIndex });
   }
-  validateValue(value);
+  validateValue(value, this.getNode(), itemIndex);
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
 
   // Ensure baseUrl is properly formatted
@@ -69,11 +69,11 @@ export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: numbe
 
     // If uniq collection doesn't exist, throw error
     if (!uniqExists) {
-      throw new Error(`Uniq collection "${name}" not found.`);
+      throw new NodeOperationError(this.getNode(), `Uniq collection "${name}" not found.`, { itemIndex });
     }
 
     // Add value to the Uniq collection
-    const result = await addValueToUniq(client, formattedBaseUrl, name, value, metadata);
+    const result = await addValueToUniq(client, formattedBaseUrl, name, value, metadata, this.getNode(), itemIndex);
 
     // Return the enriched input data with operation result
     return result;
@@ -98,7 +98,9 @@ async function addValueToUniq(
   baseUrl: string,
   name: string,
   value: string,
-  metadata?: any
+  metadata: any,
+  node: INode,
+  itemIndex: number,
 ): Promise<{ success: boolean; data: AddUniqValueResult }> {
   const endpoint = buildUniqEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
@@ -122,13 +124,15 @@ async function addValueToUniq(
   const response = await client.post<AddUniqValueResult>(url, payload);
 
   if (!response.success) {
-    throw new Error(
-      `Failed to add value to the Uniq collection: ${response.error || 'Unknown error'}`
+    throw new NodeOperationError(
+      node,
+      `Failed to add value to the Uniq collection: ${response.error || 'Unknown error'}`,
+      { itemIndex },
     );
   }
 
   if (!response.data) {
-    throw new Error('Add Uniq value response missing data field');
+    throw new NodeOperationError(node, 'Add Uniq value response missing data field', { itemIndex });
   }
 
   return { success: true, data: response.data };

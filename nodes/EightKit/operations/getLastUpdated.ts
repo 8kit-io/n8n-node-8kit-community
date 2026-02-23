@@ -47,7 +47,7 @@ export async function executeGetLastUpdated(
     }>(`${baseUrl}/api/v1/last-updated/key/${encodeURIComponent(key)}`);
 
     if (!response.success) {
-      throw new Error(`Failed to get last updated record: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to get last updated record: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     if (!response.data) {

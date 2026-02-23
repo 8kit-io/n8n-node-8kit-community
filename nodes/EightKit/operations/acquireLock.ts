@@ -50,7 +50,7 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
     }>(`${baseUrl}/api/v1/locks`, payload);
 
     if (!response.success) {
-      throw new Error(`Failed to acquire lock: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to acquire lock: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     const outputJson: Record<string, any> = {

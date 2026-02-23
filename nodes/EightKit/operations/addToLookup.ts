@@ -1,4 +1,4 @@
-import type { IExecuteFunctions } from 'n8n-workflow';
+import type { IExecuteFunctions, INode } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { checkLookupExists } from '../utils/common';
 import { buildLookupEndpoint, EightKitHttpClient, validateLookupName } from '../utils/httpClient';
@@ -25,24 +25,24 @@ export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: num
   const rightValue = (this.getNodeParameter('rightValue', itemIndex) as string).trim();
 
   // Validate inputs
-  validateLookupName(name);
+  validateLookupName(name, this.getNode(), itemIndex);
 
   const inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
 
   if (!leftValue) {
-    throw new Error(`Left value is required and cannot be empty`);
+    throw new NodeOperationError(this.getNode(), 'Left value is required and cannot be empty', { itemIndex });
   }
 
   if (!rightValue) {
-    throw new Error(`Right value is required and cannot be empty`);
+    throw new NodeOperationError(this.getNode(), 'Right value is required and cannot be empty', { itemIndex });
   }
 
   // Validate the values
   if (typeof leftValue !== 'string') {
-    throw new Error(`Left value must be a string, got ${typeof leftValue}`);
+    throw new NodeOperationError(this.getNode(), `Left value must be a string, got ${typeof leftValue}`, { itemIndex });
   }
   if (typeof rightValue !== 'string') {
-    throw new Error(`Right value must be a string, got ${typeof rightValue}`);
+    throw new NodeOperationError(this.getNode(), `Right value must be a string, got ${typeof rightValue}`, { itemIndex });
   }
 
   // Initialize HTTP client
@@ -50,7 +50,7 @@ export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: num
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
 
   // Ensure baseUrl is properly formatted
@@ -64,11 +64,11 @@ export async function executeAddToLookup(this: IExecuteFunctions, itemIndex: num
 
     // If lookup doesn't exist, throw error
     if (!lookupExists) {
-      throw new Error(`Lookup "${name}" not found.`);
+      throw new NodeOperationError(this.getNode(), `Lookup "${name}" not found.`, { itemIndex });
     }
 
     // Add value pair to the lookup
-    const result = await addValueToLookup(client, formattedBaseUrl, name, leftValue, rightValue);
+    const result = await addValueToLookup(client, formattedBaseUrl, name, leftValue, rightValue, this.getNode(), itemIndex);
 
     // Return the enriched input data with operation result
     return result;
@@ -93,7 +93,9 @@ async function addValueToLookup(
   baseUrl: string,
   name: string,
   left: string,
-  right: string
+  right: string,
+  node: INode,
+  itemIndex: number,
 ): Promise<{ success: boolean; data: AddLookupValueResult }> {
   const endpoint = buildLookupEndpoint(name, 'values');
   const url = `${baseUrl}${endpoint}`;
@@ -103,11 +105,11 @@ async function addValueToLookup(
   const response = await client.post<AddLookupValueResult>(url, payload);
 
   if (!response.success) {
-    throw new Error(`Failed to add value pair to lookup: ${response.error || 'Unknown error'}`);
+    throw new NodeOperationError(node, `Failed to add value pair to lookup: ${response.error || 'Unknown error'}`, { itemIndex });
   }
 
   if (!response.data) {
-    throw new Error('Add value pair response missing data field');
+    throw new NodeOperationError(node, 'Add value pair response missing data field', { itemIndex });
   }
 
   return { success: true, data: response.data };

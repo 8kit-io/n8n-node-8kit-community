@@ -16,20 +16,22 @@ export async function executeDeleteUniqCollection(
 
   // Validate confirmation
   if (confirmDelete !== 'delete') {
-    throw new Error(
-      'Delete operation cancelled. You must type "delete" (without quotes) to confirm the deletion.'
+    throw new NodeOperationError(
+      this.getNode(),
+      'Delete operation cancelled. You must type "delete" (without quotes) to confirm the deletion.',
+      { itemIndex },
     );
   }
 
   // Validate inputs
-  validateUniqName(name);
+  validateUniqName(name, this.getNode(), itemIndex);
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -43,7 +45,7 @@ export async function executeDeleteUniqCollection(
     const response = await client.delete(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new Error(`Failed to delete Uniq collection: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to delete Uniq collection: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     return {

@@ -39,7 +39,7 @@ export async function executeCreateLookup(
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -69,7 +69,7 @@ export async function executeCreateLookup(
     const response = await client.post(`${formattedBaseUrl}${endpoint}`, data);
 
     if (!response.success) {
-      throw new Error(`Failed to create lookup collection: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to create lookup collection: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     return response.data;

@@ -56,7 +56,7 @@ interface ParsingState {
 
 function ensureCustomFormat(format?: string): string {
   if (!format || !format.trim()) {
-    throw new Error('Custom format must not be empty.');
+    throw new Error('Custom format must not be empty.'); // allowed
   }
   return format.trim();
 }
@@ -97,7 +97,7 @@ function parseWithPattern(dateString: string, pattern: string): Date {
   const match = dateString.match(regex);
 
   if (!match) {
-    throw new Error(`Date string "${dateString}" does not match format "${pattern}".`);
+    throw new Error(`Date string "${dateString}" does not match format "${pattern}".`); // allowed
   }
 
   const state: ParsingState = {};
@@ -110,16 +110,16 @@ function parseWithPattern(dateString: string, pattern: string): Date {
   const { year, month, day } = state;
 
   if (year === undefined || month === undefined || day === undefined) {
-    throw new Error('Format must include tokens for year (yyyy), month (MM), and day (dd).');
+    throw new Error('Format must include tokens for year (yyyy), month (MM), and day (dd).'); // allowed
   }
 
   if (month < 1 || month > 12) {
-    throw new Error(`Month value "${month}" is out of range. Expected 01-12.`);
+    throw new Error(`Month value "${month}" is out of range. Expected 01-12.`); // allowed
   }
 
   const maxDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
   if (day < 1 || day > maxDay) {
-    throw new Error(`Day value "${day}" is out of range for month ${month}.`);
+    throw new Error(`Day value "${day}" is out of range for month ${month}.`); // allowed
   }
 
   const hours = state.hours ?? 0;
@@ -127,13 +127,13 @@ function parseWithPattern(dateString: string, pattern: string): Date {
   const seconds = state.seconds ?? 0;
 
   if (hours < 0 || hours > 23) {
-    throw new Error(`Hour value "${hours}" is out of range. Expected 00-23.`);
+    throw new Error(`Hour value "${hours}" is out of range. Expected 00-23.`); // allowed
   }
   if (minutes < 0 || minutes > 59) {
-    throw new Error(`Minute value "${minutes}" is out of range. Expected 00-59.`);
+    throw new Error(`Minute value "${minutes}" is out of range. Expected 00-59.`); // allowed
   }
   if (seconds < 0 || seconds > 59) {
-    throw new Error(`Second value "${seconds}" is out of range. Expected 00-59.`);
+    throw new Error(`Second value "${seconds}" is out of range. Expected 00-59.`); // allowed
   }
 
   return new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
@@ -172,7 +172,7 @@ export function parseDateWithFormat(
   if (format === 'iso8601-tz' || format === 'iso8601-utc') {
     const parsed = new Date(trimmed);
     if (Number.isNaN(parsed.getTime())) {
-      throw new Error(`Date string "${dateString}" is not a valid ISO-8601 value.`);
+      throw new Error(`Date string "${dateString}" is not a valid ISO-8601 value.`); // allowed
     }
     return parsed;
   }

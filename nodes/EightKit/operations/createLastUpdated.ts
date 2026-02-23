@@ -86,8 +86,10 @@ export async function executeCreateLastUpdated(
     }>(`${baseUrl}/api/v1/last-updated`, payload);
 
     if (!response.success || !response.data) {
-      throw new Error(
-        `Failed to create last updated record: ${(response as any).error || 'Unknown error'}`
+      throw new NodeOperationError(
+        this.getNode(),
+        `Failed to create last updated record: ${(response as any).error || 'Unknown error'}`,
+        { itemIndex },
       );
     }
 
@@ -132,8 +134,10 @@ export async function executeCreateLastUpdated(
           };
         }>(`${baseUrl}/api/v1/last-updated`, payload);
         if (!response.success || !response.data) {
-          throw new Error(
-            `Failed to touch last updated record: ${(response as any).error || 'Unknown error'}`
+          throw new NodeOperationError(
+            this.getNode(),
+            `Failed to touch last updated record: ${(response as any).error || 'Unknown error'}`,
+            { itemIndex },
           );
         }
 

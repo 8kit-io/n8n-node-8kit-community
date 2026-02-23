@@ -29,7 +29,7 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
     : undefined;
 
   // Validate inputs
-  validateUniqName(name);
+  validateUniqName(name, this.getNode(), itemIndex);
 
   const inputData = this.getInputData()[itemIndex].json as Record<string, any>;
 
@@ -37,7 +37,7 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
   const credentials = await this.getCredentials('eightKitApi');
   const baseUrl = (credentials.hostUrl as string) || '';
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
 
@@ -49,14 +49,14 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
 
   try {
     // Single mode only: validate value and perform check
-    validateValue(value);
+    validateValue(value, this.getNode(), itemIndex);
 
     const response = await client.post<{ exists: boolean; value?: any }>(url, {
       value,
     });
 
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'API Error: Unknown');
+      throw new NodeOperationError(this.getNode(), response.error || 'API Error: Unknown', { itemIndex });
     }
 
     const exists = response.data.exists;

@@ -38,7 +38,7 @@ export async function executeCheckLock(this: IExecuteFunctions, itemIndex: numbe
     }>(`${baseUrl}/api/v1/locks/${encodeURIComponent(key)}`);
 
     if (!response.success || !response.data) {
-      throw new Error(`Failed to check lock: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to check lock: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     const lockData = response.data;

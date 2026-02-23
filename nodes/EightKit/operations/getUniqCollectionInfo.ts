@@ -13,7 +13,7 @@ export async function executeGetUniqCollectionInfo(
   const baseUrl = credentials.hostUrl as string;
 
   if (!baseUrl) {
-    throw new Error('Host URL is not configured in credentials');
+    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', { itemIndex });
   }
 
   const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -24,7 +24,7 @@ export async function executeGetUniqCollectionInfo(
     const response = await client.get(`${formattedBaseUrl}${endpoint}`);
 
     if (!response.success) {
-      throw new Error(`Failed to get Uniq collection info: ${response.error || 'Unknown error'}`);
+      throw new NodeOperationError(this.getNode(), `Failed to get Uniq collection info: ${response.error || 'Unknown error'}`, { itemIndex });
     }
 
     return response.data;
