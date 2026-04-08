@@ -1,0 +1,88 @@
+# Local development environment for 8kit + n8n + PostgreSQL
+# Uses the published 8kit/8kit Docker image (no private repo needed)
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# Services:
+#   - 8kit API + Dashboard: http://localhost:3000
+#   - n8n:                  http://localhost:5678
+#   - PostgreSQL:           localhost:5433
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: eightkit
+      POSTGRES_PASSWORD: eightkit_dev
+      POSTGRES_DB: eightkit_dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eightkit -d eightkit_dev"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  eightkit:
+    image: 8kit/8kit:latest
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://eightkit:eightkit_dev@postgres:5432/eightkit_dev
+      JWT_SECRET: dev-jwt-secret-minimum-32-characters-long
+      RATE_LIMIT_POINTS: 1000
+      RATE_LIMIT_DURATION: 60
+      LOG_LEVEL: info
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 3s
+      timeout: 5s
+      start_period: 15s
+      retries: 20
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=password
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=UTC
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+    entrypoint: >
+      sh -c "
+        mkdir -p /home/node/.n8n/nodes &&
+        cd /home/node/.n8n/nodes &&
+        npm init -y > /dev/null 2>&1 &&
+        npm install --ignore-scripts n8n-nodes-8kit &&
+        cd / &&
+        exec n8n start
+      "
+    depends_on:
+      eightkit:
+        condition: service_healthy
+    networks:
+      default:
+        aliases:
+          - n8n
+
+volumes:
+  pgdata:
+    driver: local
+  n8n_data:
+    driver: local
