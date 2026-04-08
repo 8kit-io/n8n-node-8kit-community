@@ -1,13 +1,15 @@
 # 8kit Sandbox — Self-contained demo environment
-# Starts 8kit + n8n with pre-loaded sample workflows
+# Starts 8kit + n8n with pre-loaded sample workflows, auto-imported on first boot.
 #
 # Usage:
 #   docker compose -f demo/docker-compose.sandbox.yml up -d
 #
 # Services:
 #   - 8kit API + Dashboard: http://localhost:3000
-#   - n8n (with 8kit node):  http://localhost:5678
+#   - n8n (with 8kit node):  http://localhost:5678  (demo / demo8kit)
 #   - PostgreSQL:            internal
+#
+# First startup auto-imports all 4 demo workflows via the init container.
 
 services:
   postgres:
@@ -60,6 +62,8 @@ services:
       - WEBHOOK_URL=http://localhost:5678/
       - GENERIC_TIMEZONE=UTC
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+      # API key for init container to import workflows
+      - N8N_PUBLIC_API_DISABLED=false
     volumes:
       - sandbox_n8n:/home/node/.n8n
     entrypoint: >
@@ -74,6 +78,27 @@ services:
     depends_on:
       eightkit:
         condition: service_healthy
+
+  # Auto-import demo workflows on first startup
+  sandbox-init:
+    image: alpine:3.19
+    volumes:
+      - ./01-deduplication.json:/workflows/01-deduplication.json:ro
+      - ./02-data-mapping.json:/workflows/02-data-mapping.json:ro
+      - ./03-distributed-locking.json:/workflows/03-distributed-locking.json:ro
+      - ./04-temporal-tracking.json:/workflows/04-temporal-tracking.json:ro
+      - ./init-sandbox.sh:/init-sandbox.sh:ro
+    environment:
+      N8N_URL: http://n8n:5678
+      EIGHTKIT_URL: http://eightkit:3000
+      WORKFLOW_DIR: /workflows
+    entrypoint: ["sh", "/init-sandbox.sh"]
+    depends_on:
+      n8n:
+        condition: service_started
+      eightkit:
+        condition: service_healthy
+    restart: "no"
 
 volumes:
   sandbox_pgdata:
