@@ -1,0 +1,17 @@
+# n8n with 8kit community node pre-installed
+FROM n8nio/n8n:latest
+
+USER root
+
+# Install 8kit community node into n8n's custom nodes directory
+RUN mkdir -p /home/node/.n8n/nodes && \
+    cd /home/node/.n8n/nodes && \
+    npm init -y > /dev/null 2>&1 && \
+    npm install --ignore-scripts n8n-nodes-8kit && \
+    chown -R node:node /home/node/.n8n/nodes
+
+USER node
+
+EXPOSE 5678
+
+ENTRYPOINT ["n8n", "start"]

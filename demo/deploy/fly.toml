@@ -1,0 +1,44 @@
+# Fly.io deployment for 8kit demo sandbox
+# Deploys 8kit server with attached PostgreSQL via Fly Postgres
+#
+# Setup:
+#   fly apps create 8kit-demo
+#   fly postgres create --name 8kit-demo-db --region ord --initial-cluster-size 1 --vm-size shared-cpu-1x
+#   fly postgres attach 8kit-demo-db --app 8kit-demo
+#   fly secrets set JWT_SECRET="$(openssl rand -hex 32)" --app 8kit-demo
+#   fly deploy --config demo/deploy/fly.toml
+#
+# The n8n sandbox is deployed as a separate Fly app (see fly-n8n.toml)
+
+app = "8kit-demo"
+primary_region = "ord"
+
+[build]
+  image = "8kit/8kit:latest"
+
+[env]
+  PORT = "3000"
+  RATE_LIMIT_POINTS = "1000"
+  RATE_LIMIT_DURATION = "60"
+  LOG_LEVEL = "info"
+  TEST_DATA = "true"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.checks]
+    [http_service.checks.health]
+      interval = "15s"
+      timeout = "5s"
+      grace_period = "30s"
+      method = "GET"
+      path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

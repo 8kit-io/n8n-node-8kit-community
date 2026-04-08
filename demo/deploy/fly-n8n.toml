@@ -1,0 +1,51 @@
+# Fly.io deployment for n8n sandbox (companion to 8kit-demo)
+# Runs n8n with the 8kit community node pre-installed
+#
+# Setup:
+#   fly apps create 8kit-demo-n8n
+#   fly secrets set N8N_BASIC_AUTH_USER=demo N8N_BASIC_AUTH_PASSWORD=demo8kit --app 8kit-demo-n8n
+#   fly volumes create n8n_data --size 1 --region ord --app 8kit-demo-n8n
+#   fly deploy --config demo/deploy/fly-n8n.toml --dockerfile demo/deploy/Dockerfile.n8n
+
+app = "8kit-demo-n8n"
+primary_region = "ord"
+
+[build]
+  dockerfile = "demo/deploy/Dockerfile.n8n"
+
+[env]
+  N8N_HOST = "0.0.0.0"
+  N8N_PORT = "5678"
+  N8N_PROTOCOL = "https"
+  NODE_ENV = "production"
+  GENERIC_TIMEZONE = "UTC"
+  N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS = "false"
+  N8N_PUBLIC_API_DISABLED = "false"
+  # Points to the 8kit-demo Fly app (internal networking)
+  EIGHTKIT_INTERNAL_URL = "http://8kit-demo.internal:3000"
+  # Public URL for credentials config shown to users
+  EIGHTKIT_PUBLIC_URL = "https://8kit-demo.fly.dev"
+
+[http_service]
+  internal_port = 5678
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.checks]
+    [http_service.checks.health]
+      interval = "15s"
+      timeout = "5s"
+      grace_period = "60s"
+      method = "GET"
+      path = "/healthz"
+
+[mounts]
+  source = "n8n_data"
+  destination = "/home/node/.n8n"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
