@@ -1,0 +1,122 @@
+{
+  "name": "8kit Demo: Incremental Sync",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "resource": "lastUpdated",
+        "operation": "getLastUpdated",
+        "key": "crm-contacts-sync",
+        "additionalFields": {
+          "fallbackDate": "2026-01-01T00:00:00Z"
+        }
+      },
+      "id": "8kit-get",
+      "name": "Get Last Sync Time",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [400, 300],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "Fetching records modified since last sync..." },
+            { "name": "query", "value": "={{ 'modified_after=' + $json.date }}" },
+            { "name": "records_found", "value": "42" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch",
+      "name": "Fetch Changed Records",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "Processing 42 changed records..." }
+          ]
+        },
+        "options": {}
+      },
+      "id": "process",
+      "name": "Process Records",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "resource": "lastUpdated",
+        "operation": "addLastUpdated",
+        "key": "crm-contacts-sync",
+        "date": "={{ $now.toISO() }}",
+        "additionalFields": {
+          "description": "CRM contacts incremental sync"
+        }
+      },
+      "id": "8kit-set",
+      "name": "Update Sync Timestamp",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [1150, 300],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "result", "value": "Incremental sync complete. Timestamp updated for next run." }
+          ]
+        },
+        "options": {}
+      },
+      "id": "done",
+      "name": "Sync Complete",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1400, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Get Last Sync Time", "type": "main", "index": 0 }]]
+    },
+    "Get Last Sync Time": {
+      "main": [[{ "node": "Fetch Changed Records", "type": "main", "index": 0 }]]
+    },
+    "Fetch Changed Records": {
+      "main": [[{ "node": "Process Records", "type": "main", "index": 0 }]]
+    },
+    "Process Records": {
+      "main": [[{ "node": "Update Sync Timestamp", "type": "main", "index": 0 }]]
+    },
+    "Update Sync Timestamp": {
+      "main": [[{ "node": "Sync Complete", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "8kit-demo" }]
+}

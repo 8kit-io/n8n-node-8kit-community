@@ -1,0 +1,134 @@
+{
+  "name": "8kit Demo: Email Deduplication",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "email", "value": "alice@example.com" },
+            { "name": "name", "value": "Alice Johnson" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-1",
+      "name": "Sample Contact",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "resource": "uniqCollection",
+        "operation": "create",
+        "name": "processed-emails"
+      },
+      "id": "8kit-setup",
+      "name": "Setup: Create Collection",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [400, 100],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "uniq",
+        "operation": "checkUniqs",
+        "name": "processed-emails",
+        "value": "={{ $json.email }}"
+      },
+      "id": "8kit-check",
+      "name": "Check: Already Processed?",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [600, 300],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "SKIPPED - Already processed" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "skip",
+      "name": "Skip (Duplicate)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "resource": "uniq",
+        "operation": "addValue",
+        "name": "processed-emails",
+        "value": "={{ $json.email }}"
+      },
+      "id": "8kit-add",
+      "name": "Mark as Processed",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [900, 400],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "PROCESSED - New contact" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "process",
+      "name": "Process (New)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1100, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Sample Contact", "type": "main", "index": 0 }]]
+    },
+    "Sample Contact": {
+      "main": [[{ "node": "Check: Already Processed?", "type": "main", "index": 0 }]]
+    },
+    "Check: Already Processed?": {
+      "main": [
+        [{ "node": "Skip (Duplicate)", "type": "main", "index": 0 }],
+        [{ "node": "Mark as Processed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Mark as Processed": {
+      "main": [[{ "node": "Process (New)", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "8kit-demo" }]
+}

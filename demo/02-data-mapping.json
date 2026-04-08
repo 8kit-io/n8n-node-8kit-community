@@ -1,0 +1,124 @@
+{
+  "name": "8kit Demo: CRM ID Mapping",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "resource": "lookupCollection",
+        "operation": "create",
+        "name": "salesforce-hubspot",
+        "additionalFields": {
+          "description": "Map Salesforce Contact IDs to HubSpot Contact IDs",
+          "leftSystem": "salesforce",
+          "rightSystem": "hubspot"
+        }
+      },
+      "id": "8kit-setup",
+      "name": "Setup: Create Lookup",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [200, 100],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "salesforce_id", "value": "SF-001234" },
+            { "name": "hubspot_id", "value": "HS-567890" },
+            { "name": "contact_name", "value": "Alice Johnson" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-1",
+      "name": "Sample Sync Record",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "resource": "lookup",
+        "operation": "addMapping",
+        "name": "salesforce-hubspot",
+        "left": "={{ $json.salesforce_id }}",
+        "right": "={{ $json.hubspot_id }}"
+      },
+      "id": "8kit-add",
+      "name": "Store ID Mapping",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [600, 300],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "lookup",
+        "operation": "searchMappings",
+        "name": "salesforce-hubspot",
+        "searchType": "left",
+        "searchValue": "SF-001234"
+      },
+      "id": "8kit-search",
+      "name": "Lookup: Find HubSpot ID",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [800, 300],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "result", "value": "Found HubSpot ID for Salesforce contact" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "result",
+      "name": "Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Sample Sync Record", "type": "main", "index": 0 }]]
+    },
+    "Sample Sync Record": {
+      "main": [[{ "node": "Store ID Mapping", "type": "main", "index": 0 }]]
+    },
+    "Store ID Mapping": {
+      "main": [[{ "node": "Lookup: Find HubSpot ID", "type": "main", "index": 0 }]]
+    },
+    "Lookup: Find HubSpot ID": {
+      "main": [[{ "node": "Result", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "8kit-demo" }]
+}

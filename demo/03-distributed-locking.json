@@ -1,0 +1,118 @@
+{
+  "name": "8kit Demo: Distributed Locking",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "resource": "lock",
+        "operation": "acquireLock",
+        "key": "invoice-generation",
+        "callingFn": "monthly-invoice-workflow",
+        "additionalFields": {
+          "timeout": 300
+        }
+      },
+      "id": "8kit-acquire",
+      "name": "Acquire Lock",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [400, 300],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "Lock acquired! Running critical section..." },
+            { "name": "invoice_id", "value": "INV-2026-04-001" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "critical-section",
+      "name": "Critical Section (Work)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [700, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "BLOCKED - Another workflow holds the lock" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "blocked",
+      "name": "Blocked (Lock Conflict)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [700, 450]
+    },
+    {
+      "parameters": {
+        "resource": "lock",
+        "operation": "releaseLock",
+        "key": "invoice-generation"
+      },
+      "id": "8kit-release",
+      "name": "Release Lock",
+      "type": "n8n-nodes-8kit.eightKit",
+      "typeVersion": 2,
+      "position": [950, 200],
+      "credentials": {
+        "eightKitApi": {
+          "id": "",
+          "name": "8kit API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "result", "value": "Invoice generated and lock released successfully" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "done",
+      "name": "Done",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1150, 200]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Acquire Lock", "type": "main", "index": 0 }]]
+    },
+    "Acquire Lock": {
+      "main": [
+        [{ "node": "Critical Section (Work)", "type": "main", "index": 0 }],
+        [{ "node": "Blocked (Lock Conflict)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Critical Section (Work)": {
+      "main": [[{ "node": "Release Lock", "type": "main", "index": 0 }]]
+    },
+    "Release Lock": {
+      "main": [[{ "node": "Done", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "8kit-demo" }]
+}

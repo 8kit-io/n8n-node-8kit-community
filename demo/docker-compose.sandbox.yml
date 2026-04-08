@@ -1,0 +1,82 @@
+# 8kit Sandbox — Self-contained demo environment
+# Starts 8kit + n8n with pre-loaded sample workflows
+#
+# Usage:
+#   docker compose -f demo/docker-compose.sandbox.yml up -d
+#
+# Services:
+#   - 8kit API + Dashboard: http://localhost:3000
+#   - n8n (with 8kit node):  http://localhost:5678
+#   - PostgreSQL:            internal
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: eightkit
+      POSTGRES_PASSWORD: eightkit_sandbox
+      POSTGRES_DB: eightkit_sandbox
+    volumes:
+      - sandbox_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eightkit -d eightkit_sandbox"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  eightkit:
+    image: 8kit/8kit:latest
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://eightkit:eightkit_sandbox@postgres:5432/eightkit_sandbox
+      JWT_SECRET: sandbox-jwt-secret-minimum-32-characters-long
+      RATE_LIMIT_POINTS: 1000
+      RATE_LIMIT_DURATION: 60
+      LOG_LEVEL: info
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 3s
+      timeout: 5s
+      start_period: 15s
+      retries: 20
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=demo
+      - N8N_BASIC_AUTH_PASSWORD=demo8kit
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=UTC
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+    volumes:
+      - sandbox_n8n:/home/node/.n8n
+    entrypoint: >
+      sh -c "
+        mkdir -p /home/node/.n8n/nodes &&
+        cd /home/node/.n8n/nodes &&
+        npm init -y > /dev/null 2>&1 &&
+        npm install --ignore-scripts n8n-nodes-8kit &&
+        cd / &&
+        exec n8n start
+      "
+    depends_on:
+      eightkit:
+        condition: service_healthy
+
+volumes:
+  sandbox_pgdata:
+    driver: local
+  sandbox_n8n:
+    driver: local
