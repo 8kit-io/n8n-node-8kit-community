@@ -1,3 +1,6 @@
+# NOTE: The backend service requires the private 8kit-io/service-8kit-community
+# repo cloned alongside this repo at ../service-8kit-community.
+# Without it, only the postgres service will start. See README for setup.
 services:
   postgres:
     image: postgres:16-alpine
