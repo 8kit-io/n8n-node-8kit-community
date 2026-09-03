@@ -18,7 +18,7 @@ services:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./n8n-nodes-8kit-1.0.18.tgz:/tmp/n8n-nodes-8kit.tgz
+      - ./n8n-nodes-8kit-1.1.0.tgz:/tmp/n8n-nodes-8kit.tgz
     entrypoint: >
       sh -c "
         mkdir -p /home/node/.n8n/nodes &&
