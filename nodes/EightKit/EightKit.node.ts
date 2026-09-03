@@ -49,6 +49,8 @@ export class EightKit implements INodeType {
     },
     inputs: ['main'],
     outputs: `={{(
+      ($parameter["resource"] === "uniqs" && $parameter["operation"] === "addToUniq")
+    ) ? [{"type": "main", "displayName": "Added"}, {"type": "main", "displayName": "Duplicate"}] : (
       ($parameter["resource"] === "uniqs" && $parameter["operation"] === "checkUniqs") ||
       ($parameter["resource"] === "lock" && $parameter["operation"] === "checkLock") ||
       ($parameter["resource"] === "lock" && $parameter["operation"] === "acquireLock")
@@ -1307,7 +1309,12 @@ export class EightKit implements INodeType {
     const operation = this.getNodeParameter('operation', 0) as string;
 
     // For operations with dual outputs (yes/no branches)
-    if (operation === 'checkUniqs' || operation === 'checkLock' || operation === 'acquireLock') {
+    if (
+      operation === 'checkUniqs' ||
+      operation === 'addToUniq' ||
+      operation === 'checkLock' ||
+      operation === 'acquireLock'
+    ) {
       const yesData: INodeExecutionData[] = [];
       const noData: INodeExecutionData[] = [];
 
@@ -1316,6 +1323,8 @@ export class EightKit implements INodeType {
 
         if (operation === 'checkUniqs') {
           result = await executeCheckUniqs.call(this, i);
+        } else if (operation === 'addToUniq') {
+          result = await executeAddToUniq.call(this, i);
         } else if (operation === 'checkLock') {
           result = await executeCheckLock.call(this, i);
         } else if (operation === 'acquireLock') {
@@ -1380,9 +1389,6 @@ export class EightKit implements INodeType {
           break;
         case 'getUniqCollectionInfo':
           result = await executeGetUniqCollectionInfo.call(this, i);
-          break;
-        case 'addToUniq':
-          result = await executeAddToUniq.call(this, i);
           break;
         case 'removeFromUniq':
           result = await executeRemoveFromUniqs.call(this, i);

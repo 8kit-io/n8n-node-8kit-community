@@ -60,3 +60,12 @@ describe('node description marketplace compliance', () => {
     });
   });
 });
+
+describe('8kit node outputs', () => {
+  it('splits Add to Uniq into Added and Duplicate outputs', () => {
+    const outputs = new EightKit().description.outputs as string;
+    expect(outputs).toContain('"addToUniq"');
+    expect(outputs).toContain('Added');
+    expect(outputs).toContain('Duplicate');
+  });
+});

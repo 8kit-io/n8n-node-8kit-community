@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EightKitHttpClient } from '../nodes/EightKit/utils/httpClient';
+import { createMockExecuteFunctions } from './setup';
 
 describe('EightKitHttpClient', () => {
   let mockExecuteFunctions: any;
@@ -86,5 +87,34 @@ describe('EightKitHttpClient', () => {
       const elapsed = Date.now() - start;
       expect(elapsed).toBeGreaterThanOrEqual(40);
     });
+  });
+});
+
+describe('EightKitHttpClient with n8n-wrapped errors', () => {
+  // n8n's httpRequestWithAuthentication rejects with a NodeApiError: the status is on
+  // `httpCode` and the JSON body on `context.data`; the axios error is not kept.
+  const wrapped = (status: number, data: unknown) =>
+    Object.assign(new Error('Your request is invalid or could not be processed by the service'), {
+      httpCode: String(status),
+      context: { data },
+    });
+
+  it('surfaces the server error code and message for a wrapped 4xx', async () => {
+    const fx = createMockExecuteFunctions();
+    fx.helpers.httpRequestWithAuthentication.mockRejectedValue(
+      wrapped(409, {
+        success: false,
+        error: 'Value "ORD-1" already exists',
+        code: 'DUPLICATE_VALUE',
+      })
+    );
+    const client = new EightKitHttpClient(fx, 0, { retryDelay: 1 });
+
+    await expect(client.post('https://api.example.com/api/v1/x')).rejects.toMatchObject({
+      status: 409,
+      code: 'DUPLICATE_VALUE',
+      message: 'Value "ORD-1" already exists',
+    });
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(1);
   });
 });

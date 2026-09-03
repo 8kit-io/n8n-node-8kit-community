@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Add to Uniq branches instead of failing
+
+- "Add" on Uniq values now has two outputs, **Added** and **Duplicate**. A value that is
+  already in the collection goes to the Duplicate output with the existing record; the
+  workflow no longer stops with an error.
+- Server-side errors (4xx/5xx) are reported with the 8kit error code and message. They
+  used to surface as "Network error: Your request is invalid…" because n8n keeps the
+  response body on `error.context.data`, not on the axios error.
+
 ## 1.0.18
 
 ### 🏪 Marketplace Compliance

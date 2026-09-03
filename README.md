@@ -92,6 +92,8 @@ The credential is reused across every 8kit node in a workflow.
 
 When using 8kit nodes, each operation returns structured items on distinct outputs (for example existing vs non-existing Uniq values) so you can branch logic without manual parsing.
 
+For Uniq values, **Add** has two outputs: *Added* for values stored for the first time and *Duplicate* for values that were already there (the existing record is returned). **Check Exists**, **Check Lock** and **Acquire Lock** have *Yes* / *No* outputs.
+
 <img src="docs/images/setvalues-check.png" alt="Operation" height="300">
 
 Available operations include:

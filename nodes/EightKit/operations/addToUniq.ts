@@ -25,7 +25,15 @@ interface AddUniqValueResult {
   updatedAt: string;
 }
 
-export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: number): Promise<any> {
+/**
+ * Adds a value to a Uniq collection.
+ * Output 0 ("Added") receives newly stored values; output 1 ("Duplicate") receives the
+ * existing record when the value was already there, so workflows branch instead of failing.
+ */
+export async function executeAddToUniq(
+  this: IExecuteFunctions,
+  itemIndex: number
+): Promise<{ result: any; outputIndex: number }> {
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex) as {
@@ -91,20 +99,26 @@ export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: numbe
       itemIndex
     );
 
-    // Return the enriched input data with operation result
-    return result;
+    return { result: result.data, outputIndex: 0 };
   } catch (error: any) {
+    if (error?.code === 'DUPLICATE_VALUE') {
+      return { result: error.data?.existingValue ?? { value }, outputIndex: 1 };
+    }
+
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     return {
-      error: {
-        status: error.status,
-        message: error.message,
-        code: error.code,
-        details: error.details,
+      result: {
+        error: {
+          status: error.status,
+          message: error.message,
+          code: error.code,
+          details: error.details,
+        },
       },
+      outputIndex: 0,
     };
   }
 }

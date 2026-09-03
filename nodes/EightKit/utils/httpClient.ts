@@ -14,6 +14,7 @@ export interface EightKitErrorData {
   message: string;
   code: string;
   details?: any;
+  data?: any;
 }
 
 export class EightKitError extends Error {
@@ -21,11 +22,13 @@ export class EightKitError extends Error {
   public readonly code: string;
   public readonly message: string;
   public readonly details: any;
+  public readonly data: any;
   constructor(data: EightKitErrorData) {
     super(data.message);
     this.status = data.status;
     this.code = data.code;
     this.message = data.message;
+    this.data = data.data;
     this.details = data.details
       ? formatErrors({ details: data.details }, { includeFieldPrefix: 'never' })
       : undefined;
@@ -36,6 +39,21 @@ export interface HttpClientOptions {
   timeout?: number;
   retryOnFailure?: number;
   retryDelay?: number;
+}
+
+// n8n wraps request failures in a NodeApiError: the status is on `httpCode` and the
+// JSON body on `context.data` (the axios error itself is not kept). Plain axios errors
+// carry `response` directly.
+function responseOf(error: any): { status?: number; data?: any } | undefined {
+  if (error?.response) return error.response;
+  if (error?.context?.data && typeof error.context.data === 'object') {
+    return { status: Number(error.httpCode), data: error.context.data };
+  }
+  return undefined;
+}
+
+function responseStatus(error: any): number {
+  return Number(responseOf(error)?.status ?? error?.httpCode ?? 0);
 }
 
 export class EightKitHttpClient {
@@ -79,11 +97,8 @@ export class EightKitHttpClient {
         lastError = error;
 
         // Don't retry on client errors (4xx) except for rate limiting
-        if (
-          error.response?.status >= 400 &&
-          error.response?.status < 500 &&
-          error.response?.status !== 429
-        ) {
+        const status = responseStatus(error);
+        if (status >= 400 && status < 500 && status !== 429) {
           throw this.formatError(error);
         }
 
@@ -105,14 +120,16 @@ export class EightKitHttpClient {
   }
 
   private formatError(error: any): EightKitError {
-    if (error.response?.data) {
-      const apiError = error.response.data;
+    const response = responseOf(error);
+    if (response?.data) {
+      const apiError = response.data;
       const details = apiError.details;
       return new EightKitError({
-        status: error.response.status || 500,
+        status: responseStatus(error) || 500,
         message: apiError.error || 'Unknown error',
         code: apiError.code || 'UNKNOWN',
         details,
+        data: apiError.data,
       });
     }
 
