@@ -32,6 +32,9 @@ export async function executeGetAppHealth(
 
     return response.data;
   } catch (error: any) {
+    if (error?.status === 404 || error?.code === 'NETWORK_ERROR') {
+      error.message = `No 8kit server answered at ${baseUrl}. Check the Host URL in the credential (it should point at the 8kit service root, e.g. http://8kit:3000).`;
+    }
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }

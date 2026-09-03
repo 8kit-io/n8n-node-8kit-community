@@ -33,6 +33,7 @@ import {
   executeRemoveFromUniqs,
   executeSearchLookupValues,
 } from './operations';
+import { outputIndexFor } from './utils/common';
 import { EightKitHttpClient } from './utils/httpClient';
 
 export class EightKit implements INodeType {
@@ -41,7 +42,8 @@ export class EightKit implements INodeType {
     name: 'eightKit',
     icon: 'file:8kit.svg',
     group: ['transform'],
-    version: 2,
+    version: [2, 3],
+    defaultVersion: 3,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
     description: 'Integrate with 8kit Automation Tools for Uniq collections and lookup mapping',
     defaults: {
@@ -49,7 +51,7 @@ export class EightKit implements INodeType {
     },
     inputs: ['main'],
     outputs: `={{(
-      ($parameter["resource"] === "uniqs" && $parameter["operation"] === "addToUniq")
+      $nodeVersion >= 3 && $parameter["resource"] === "uniqs" && $parameter["operation"] === "addToUniq"
     ) ? [{"type": "main", "displayName": "Added"}, {"type": "main", "displayName": "Duplicate"}] : (
       ($parameter["resource"] === "uniqs" && $parameter["operation"] === "checkUniqs") ||
       ($parameter["resource"] === "lock" && $parameter["operation"] === "checkLock") ||
@@ -769,17 +771,30 @@ export class EightKit implements INodeType {
 
       // Value (for removeFromLookup)
       {
-        displayName: 'Lookup ID',
+        displayName: 'Value',
         name: 'value',
         type: 'string',
         default: '',
         placeholder: '',
         description:
-          'The specific lookup ID to remove from the lookup. This should match an existing entry exactly.',
+          'The lookup value id, or a left/right value depending on "Remove By". Left/right removes every matching row.',
         required: true,
         displayOptions: {
           show: { resource: ['lookupValues'], operation: ['removeFromLookup'] },
         },
+      },
+      {
+        displayName: 'Remove By',
+        name: 'removeBy',
+        type: 'options',
+        default: 'id',
+        options: [
+          { name: 'Lookup Value ID', value: 'id' },
+          { name: 'Left Value (all matching rows)', value: 'left' },
+          { name: 'Right Value (all matching rows)', value: 'right' },
+        ],
+        description: 'What the value above refers to',
+        displayOptions: { show: { resource: ['lookupValues'], operation: ['removeFromLookup'] } },
       },
 
       // Advanced Settings for Lookup Values (getLookupValues)
@@ -1309,9 +1324,11 @@ export class EightKit implements INodeType {
     const operation = this.getNodeParameter('operation', 0) as string;
 
     // For operations with dual outputs (yes/no branches)
+    // Version 2 workflows were saved with a single-output Add that failed on duplicates
+    const legacyAdd = operation === 'addToUniq' && this.getNode().typeVersion < 3;
     if (
       operation === 'checkUniqs' ||
-      operation === 'addToUniq' ||
+      (operation === 'addToUniq' && !legacyAdd) ||
       operation === 'checkLock' ||
       operation === 'acquireLock'
     ) {
@@ -1345,8 +1362,8 @@ export class EightKit implements INodeType {
           newItem.binary = inputItem.binary;
         }
 
-        // Route to appropriate output based on outputIndex
-        if (result.outputIndex === 0) {
+        // Route to appropriate output based on outputIndex (errors always go to the second)
+        if (outputIndexFor(result) === 0) {
           yesData.push(newItem);
         } else {
           noData.push(newItem);
@@ -1363,6 +1380,19 @@ export class EightKit implements INodeType {
       let result: any;
 
       switch (operation) {
+        case 'addToUniq': {
+          // typeVersion 2: single output, a duplicate is an error like before
+          const added = await executeAddToUniq.call(this, i);
+          if (added.outputIndex === 1 && !('error' in (added.result ?? {}))) {
+            throw new NodeOperationError(
+              this.getNode(),
+              `Value already exists in the Uniq collection (${JSON.stringify(added.result?.value ?? '')})`,
+              { itemIndex: i }
+            );
+          }
+          result = added.result;
+          break;
+        }
         case 'getAppInfo':
           result = await executeGetAppInfo.call(this, i);
           break;

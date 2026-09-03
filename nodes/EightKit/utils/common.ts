@@ -136,3 +136,14 @@ async function createLookup(
 }
 
 export { checkLookupExists, checkUniqExists, createLookup, createUniq };
+
+/**
+ * Which output an item goes to. Error items (Continue on fail) always take the second
+ * output so a branch built on "Added" / "Yes" never processes a failure as a success.
+ */
+export function outputIndexFor(result: { result?: any; outputIndex?: number }): number {
+  if (result?.result && typeof result.result === 'object' && 'error' in result.result) {
+    return 1;
+  }
+  return result?.outputIndex ?? 0;
+}

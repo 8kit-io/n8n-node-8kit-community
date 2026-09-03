@@ -111,3 +111,32 @@ describe('executeAddToUniq output routing', () => {
     });
   });
 });
+
+describe('executeAddToUniq with Continue on fail', () => {
+  const setup = (value: string, metadata?: string) => {
+    const fx = createMockExecuteFunctions({ getInputData: jest.fn(() => [{ json: {} }]) } as any);
+    fx.getNodeParameter
+      .mockReturnValueOnce('orders')
+      .mockReturnValueOnce(value)
+      .mockReturnValueOnce(metadata === undefined ? {} : { metadata });
+    fx.getCredentials.mockResolvedValue(createMockCredentials({}));
+    fx.continueOnFail.mockReturnValue(true);
+    return fx;
+  };
+
+  it('turns an empty value into an error item on the second output instead of stopping', async () => {
+    const fx = setup('   ');
+    const result = await executeAddToUniq.call(fx, 0);
+    expect(result.outputIndex).toBe(1);
+    expect(result.result.error.message).toMatch(/Value is required/);
+    expect(fx.helpers.httpRequestWithAuthentication).not.toHaveBeenCalled();
+  });
+
+  it('rejects metadata that is not a JSON object before calling the server', async () => {
+    const fx = setup('ORD-9', '{not json');
+    const result = await executeAddToUniq.call(fx, 0);
+    expect(result.outputIndex).toBe(1);
+    expect(result.result.error.message).toMatch(/Metadata must be a JSON object/);
+    expect(fx.helpers.httpRequestWithAuthentication).not.toHaveBeenCalled();
+  });
+});

@@ -13,6 +13,8 @@ export async function executeRemoveFromLookup(
 ): Promise<any> {
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
+  const removeBy =
+    (this.getNodeParameter('removeBy', itemIndex, 'id') as 'id' | 'left' | 'right') || 'id';
 
   // Validate inputs
   validateLookupName(name, this.getNode(), itemIndex);
@@ -45,6 +47,7 @@ export async function executeRemoveFromLookup(
       {
         name,
         value,
+        removeBy,
         client,
         baseUrl: formattedBaseUrl,
       },
@@ -72,14 +75,28 @@ async function executeSingleRemove(
   params: {
     name: string;
     value: any;
+    removeBy: 'id' | 'left' | 'right';
     client: EightKitHttpClient;
     baseUrl: string;
   },
   inputData: any
 ): Promise<any> {
-  const { name, value, client, baseUrl } = params;
-
+  const { name, value, removeBy, client, baseUrl } = params;
   validateValue(value, this.getNode(), _itemIndex);
+
+  if (removeBy !== 'id') {
+    // Resolve the rows first; a left/right value can match several pairs
+    const search = await client.get<any[]>(
+      `${baseUrl}${buildLookupEndpoint(name)}/search?${removeBy}=${encodeURIComponent(value)}`
+    );
+    const rows: Array<{ id: string }> = Array.isArray(search.data) ? search.data : [];
+    for (const row of rows) {
+      await client.delete(
+        `${baseUrl}${buildLookupEndpoint(name)}/values/${encodeURIComponent(row.id)}`
+      );
+    }
+    return { ...inputData, removed: rows.length > 0, removedCount: rows.length, [removeBy]: value };
+  }
 
   const endpoint = `${buildLookupEndpoint(name)}/values/${encodeURIComponent(value)}`;
   const response = await client.delete(`${baseUrl}${endpoint}`);
@@ -95,6 +112,7 @@ async function executeSingleRemove(
   return {
     ...inputData,
     removed: true,
+    removedCount: 1,
     value,
     result: response.data,
   };

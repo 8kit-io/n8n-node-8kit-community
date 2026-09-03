@@ -69,3 +69,12 @@ describe('8kit node outputs', () => {
     expect(outputs).toContain('Duplicate');
   });
 });
+
+describe('8kit node versions', () => {
+  it('offers version 3 (Added/Duplicate outputs) and keeps version 2 for saved workflows', () => {
+    const description = new EightKit().description;
+    expect(description.version).toEqual([2, 3]);
+    expect(description.defaultVersion).toBe(3);
+    expect(description.outputs as string).toContain('$nodeVersion');
+  });
+});

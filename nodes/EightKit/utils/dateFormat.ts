@@ -204,7 +204,7 @@ function getDateComponentsInTimezone(
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false,
+    hourCycle: 'h23', // never '24:xx' at midnight
     fractionalSecondDigits: 3,
   });
 
@@ -239,7 +239,7 @@ function getTimezoneOffset(date: Date, timezone: string): number {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false,
+    hourCycle: 'h23', // never '24:xx' at midnight
   });
 
   const utcFormatter = new Intl.DateTimeFormat('en-US', {
@@ -250,7 +250,7 @@ function getTimezoneOffset(date: Date, timezone: string): number {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false,
+    hourCycle: 'h23', // never '24:xx' at midnight
   });
 
   const tzParts = formatter.formatToParts(date);
