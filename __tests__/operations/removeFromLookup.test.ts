@@ -25,6 +25,7 @@ describe('executeRemoveFromLookup', () => {
     expect(result).toEqual({
       existing: true,
       removed: true,
+      removedCount: 1,
       value: 'external-456',
       result: { id: 'lookup-value-1', deleted: true },
     });
@@ -48,6 +49,38 @@ describe('executeRemoveFromLookup', () => {
 
     await expect(executeRemoveFromLookup.call(fx, 0)).rejects.toThrow(
       'Failed to remove value from lookup: Lookup value missing'
+    );
+  });
+});
+
+describe('executeRemoveFromLookup by left value', () => {
+  it('finds the rows by left value and deletes each by id', async () => {
+    const fx = createMockExecuteFunctions({ getInputData: jest.fn(() => [{ json: {} }]) } as any);
+    fx.getNodeParameter
+      .mockReturnValueOnce('user-map') // name
+      .mockReturnValueOnce('A1') // value
+      .mockReturnValueOnce('left'); // removeBy
+    fx.getCredentials.mockResolvedValue(createMockCredentials({}));
+    fx.helpers.httpRequestWithAuthentication
+      .mockResolvedValueOnce({ success: true, data: [{ id: 'row-1' }, { id: 'row-2' }] })
+      .mockResolvedValueOnce({ success: true, data: { id: 'row-1' } })
+      .mockResolvedValueOnce({ success: true, data: { id: 'row-2' } });
+
+    const result = await executeRemoveFromLookup.call(fx, 0);
+
+    expect(result.removedCount).toBe(2);
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenNthCalledWith(
+      1,
+      'eightKitApi',
+      expect.objectContaining({
+        method: 'GET',
+        url: expect.stringMatching(/\/lookups\/user-map\/search\?left=A1$/),
+      })
+    );
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenNthCalledWith(
+      2,
+      'eightKitApi',
+      expect.objectContaining({ method: 'DELETE', url: expect.stringMatching(/\/values\/row-1$/) })
     );
   });
 });

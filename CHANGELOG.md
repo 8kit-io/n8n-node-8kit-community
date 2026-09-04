@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.1.0
+
+### Add to Uniq branches instead of failing
+
+- "Add" on Uniq values now has two outputs, **Added** and **Duplicate**. A value that is
+  already in the collection goes to the Duplicate output with the existing record; the
+  workflow no longer stops with an error.
+- Server-side errors (4xx/5xx) are reported with the 8kit error code and message. They
+  used to surface as "Network error: Your request is invalid…" because n8n keeps the
+  response body on `error.context.data`, not on the axios error.
+- Node version 3. Workflows saved with the previous node (version 2) keep the old
+  single-output Add that fails on duplicates; new nodes get the two outputs.
+- "Continue on fail" now also covers the node's own validation (empty value, value too
+  long, invalid metadata); the failed item goes to the second output with an `error`
+  field. Error items never land on the Added / Yes output.
+- Metadata is checked locally: it must be a JSON object.
+- Lookup Values → Remove has a "Remove By" option: by value id (default), or by left or
+  right value, which removes every matching row.
+- App → Info / Health explain "check the Host URL" when the credential points at
+  something that is not an 8kit server.
+- Custom date formats no longer produce "24:30" at midnight (`hourCycle: h23`).
+
 ## 1.0.18
 
 ### 🏪 Marketplace Compliance

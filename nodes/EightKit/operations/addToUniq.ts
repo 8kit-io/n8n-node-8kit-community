@@ -25,7 +25,15 @@ interface AddUniqValueResult {
   updatedAt: string;
 }
 
-export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: number): Promise<any> {
+/**
+ * Adds a value to a Uniq collection.
+ * Output 0 ("Added") receives newly stored values; output 1 ("Duplicate") receives the
+ * existing record when the value was already there, so workflows branch instead of failing.
+ */
+export async function executeAddToUniq(
+  this: IExecuteFunctions,
+  itemIndex: number
+): Promise<{ result: any; outputIndex: number }> {
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex) as {
@@ -35,24 +43,43 @@ export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: numbe
   // Extract metadata from advanced settings
   const metadata = advancedSettings?.metadata;
 
-  // Validate inputs
-  validateUniqName(name, this.getNode(), itemIndex);
+  const fail = (message: string) => {
+    if (!this.continueOnFail()) {
+      throw new NodeOperationError(this.getNode(), message, { itemIndex });
+    }
+    return {
+      result: { error: { status: 400, message, code: 'VALIDATION_ERROR' } },
+      outputIndex: 1,
+    };
+  };
 
-  const _inputData: { [key: string]: any } = this.getInputData()[itemIndex].json;
-
+  // Validate inputs (with Continue on fail these become error items instead of stopping the run)
+  try {
+    validateUniqName(name, this.getNode(), itemIndex);
+  } catch (error: any) {
+    return fail(error.message);
+  }
   if (!value) {
-    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', {
-      itemIndex,
-    });
+    return fail('Value is required and cannot be empty');
   }
-
-  // Validate the value
   if (typeof value !== 'string') {
-    throw new NodeOperationError(this.getNode(), `Value must be a string, got ${typeof value}`, {
-      itemIndex,
-    });
+    return fail(`Value must be a string, got ${typeof value}`);
   }
-  validateValue(value, this.getNode(), itemIndex);
+  try {
+    validateValue(value, this.getNode(), itemIndex);
+  } catch (error: any) {
+    return fail(error.message);
+  }
+  if (typeof metadata === 'string' && metadata.trim() !== '') {
+    try {
+      const parsed = JSON.parse(metadata);
+      if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return fail('Metadata must be a JSON object, e.g. {"source":"shopify"}');
+      }
+    } catch {
+      return fail('Metadata must be a JSON object, e.g. {"source":"shopify"}');
+    }
+  }
 
   // Initialize HTTP client
   const credentials = await this.getCredentials('eightKitApi');
@@ -91,20 +118,26 @@ export async function executeAddToUniq(this: IExecuteFunctions, itemIndex: numbe
       itemIndex
     );
 
-    // Return the enriched input data with operation result
-    return result;
+    return { result: result.data, outputIndex: 0 };
   } catch (error: any) {
+    if (error?.code === 'DUPLICATE_VALUE') {
+      return { result: error.data?.existingValue ?? { value }, outputIndex: 1 };
+    }
+
     if (!this.continueOnFail()) {
       throw new NodeOperationError(this.getNode(), error, { itemIndex });
     }
 
     return {
-      error: {
-        status: error.status,
-        message: error.message,
-        code: error.code,
-        details: error.details,
+      result: {
+        error: {
+          status: error.status,
+          message: error.message,
+          code: error.code,
+          details: error.details,
+        },
       },
+      outputIndex: 0,
     };
   }
 }
