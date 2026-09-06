@@ -2,6 +2,19 @@
 
 ## 1.1.0
 
+### The node and credential use the 8 mark
+
+- Both icons were the full wordmark on a 2.12:1 canvas, in a red-pink colourway used
+  nowhere else in the brand. n8n renders icons in a square slot, so it squashed to an
+  unreadable smear. They are now the 8 on its own, square, in the brand accent, taken
+  from the mark the website uses.
+- Separate light and dark files, which n8n's icon rule requires. The light variant is
+  the design system's `--accent-ink` (#B16811) because the plain accent is too faint
+  on n8n's white canvas.
+- Also declares `usableAsTool`, uses `NodeConnectionTypes.Main` instead of the string
+  literal, and sets `peerDependencies.n8n-workflow` to `*` — three more rules the
+  verification lint enforces.
+
 ### Published with npm provenance
 
 - n8n rejected verification of 1.0.18 because it carried no npm provenance statement,
