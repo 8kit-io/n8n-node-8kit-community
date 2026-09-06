@@ -86,7 +86,10 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
     }
 
     return {
+      // The item's own data comes through, as it does on the success path; a failed
+      // item that arrives as a bare error cannot be identified or repaired downstream.
       result: {
+        ...inputData,
         error: {
           status: error.status,
           message: error.message,
