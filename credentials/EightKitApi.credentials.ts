@@ -11,10 +11,13 @@ export class EightKitApi implements ICredentialType {
   name = 'eightKitApi';
   displayName = '8kit API';
   documentationUrl = 'https://8kit.io/docs/intro/index.html';
-  iconUrl = 'file:icons/8kit.svg';
+  iconUrl = 'file:icons/8kit.light.svg';
+  // The 8 mark on its own, in a square. The wordmark this replaced was 2.12:1 and
+  // n8n renders credential icons in a square slot, so it squashed to an unreadable
+  // smear. Light and dark have to be different files or n8n's own lint rejects it.
   icon: Icon = {
-    light: 'file:icons/8kit.svg',
-    dark: 'file:icons/8kit.svg',
+    light: 'file:icons/8kit.light.svg',
+    dark: 'file:icons/8kit.dark.svg',
   };
   properties: INodeProperties[] = [
     {

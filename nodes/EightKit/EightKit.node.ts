@@ -6,7 +6,7 @@ import type {
   INodeType,
   INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 import {
   executeAcquireLock,
@@ -40,7 +40,10 @@ export class EightKit implements INodeType {
   description: INodeTypeDescription = {
     displayName: '8kit',
     name: 'eightKit',
-    icon: 'file:8kit.svg',
+    icon: {
+      light: 'file:8kit.light.svg',
+      dark: 'file:8kit.dark.svg',
+    },
     group: ['transform'],
     version: [2, 3],
     defaultVersion: 3,
@@ -49,7 +52,10 @@ export class EightKit implements INodeType {
     defaults: {
       name: '8kit',
     },
-    inputs: ['main'],
+    // n8n's verification lint requires this to be declared. The operations are
+    // plain request/response calls, so they are safe to expose to an agent.
+    usableAsTool: true,
+    inputs: [NodeConnectionTypes.Main],
     outputs: `={{(
       $nodeVersion >= 3 && $parameter["resource"] === "uniqs" && $parameter["operation"] === "addToUniq"
     ) ? [{"type": "main", "displayName": "Added"}, {"type": "main", "displayName": "Duplicate"}] : (

@@ -54,7 +54,7 @@
     ]
   },
   "peerDependencies": {
-    "n8n-workflow": ">=1.0.0"
+    "n8n-workflow": "*"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.1.4",
