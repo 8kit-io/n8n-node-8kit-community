@@ -1,0 +1,43 @@
+# n8n installs community nodes from npmjs, so whatever is published there is what
+# users actually run. It sat at 1.0.18 while main moved on, and nothing said so.
+name: Release drift
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare package.json with the version published on npm
+        run: |
+          NAME="$(node -p "require('./package.json').name")"
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "Repository: $NAME@$VERSION"
+
+          # Public registry read, so no NPM_TOKEN required.
+          PUBLISHED="$(curl -sf "https://registry.npmjs.org/$NAME" | node -e "
+            let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{
+              try { process.stdout.write(JSON.parse(s)['dist-tags'].latest) } catch { process.stdout.write('') }
+            });
+          ")" || {
+            echo "::warning::Could not reach the npm registry. Not treating that as drift."
+            exit 0
+          }
+
+          echo "Published latest: ${PUBLISHED:-none}"
+
+          if [ "$PUBLISHED" = "$VERSION" ]; then
+            echo "npm is current."
+          else
+            echo "::error::npm serves $NAME@${PUBLISHED:-nothing} but this repository is at $VERSION."
+            echo "::error::Anyone installing the node through n8n gets the older build."
+            echo "::error::Publish it by pushing the tag: git tag $VERSION && git push origin $VERSION"
+            exit 1
+          fi
