@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.1.4",
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.0",
     "@n8n/eslint-plugin-community-nodes": "^0.7.0",
     "@n8n/node-cli": "^0.46.4",
     "@types/express": "^5.0.3",
