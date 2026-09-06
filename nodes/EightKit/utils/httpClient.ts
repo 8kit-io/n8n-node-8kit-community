@@ -102,6 +102,10 @@ export class EightKitHttpClient {
           throw this.formatError(error);
         }
 
+        if (!this.safeToReplay(method, error, status)) {
+          throw this.formatError(error);
+        }
+
         // Don't retry on last attempt
         if (attempt === retryOnFailure) {
           throw this.formatError(error);
@@ -113,6 +117,22 @@ export class EightKitHttpClient {
     }
 
     throw this.formatError(lastError);
+  }
+
+  /**
+   * POST is the only verb here that is not idempotent, and a replay of one is worse
+   * than a failure. Adding a value that already landed comes back 409
+   * DUPLICATE_VALUE, which add-to-uniq routes to its "Duplicate" output and callers
+   * read as "already handled, skip". So a timeout or a 502 that hid a successful
+   * write would make a value nobody has processed look like one that was.
+   *
+   * Replay a POST only when the server plainly never applied it: it refused the
+   * request outright, or the connection never got there.
+   */
+  private safeToReplay(method: string, error: any, status: number): boolean {
+    if (method !== 'POST') return true;
+    if (status === 429) return true;
+    return ['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN'].includes(error?.code);
   }
 
   private delay(ms: number): Promise<void> {
