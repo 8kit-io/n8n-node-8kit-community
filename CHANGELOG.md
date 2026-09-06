@@ -2,6 +2,14 @@
 
 ## 1.1.0
 
+### Published with npm provenance
+
+- n8n rejected verification of 1.0.18 because it carried no npm provenance statement,
+  which every verified community node has had to have since 1 May 2026. The release
+  workflow now publishes with `--provenance` and the `id-token: write` permission the
+  attestation is signed with. The next published version carries it; 1.0.18 cannot be
+  fixed in place, only superseded.
+
 ### Writes are no longer replayed after an uncertain failure
 
 - A POST is only retried when the server plainly never applied it: it refused the

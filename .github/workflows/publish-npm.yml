@@ -13,12 +13,22 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Provenance is an attestation signed with the workflow's OIDC identity.
+      # Without this permission `npm publish --provenance` cannot mint one, and
+      # n8n rejects the package: verified community nodes have had to carry
+      # provenance since 1 May 2026.
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # 22 ships an npm new enough to publish with provenance, and to use npm
+          # trusted publishing (OIDC) if that is ever configured for this package,
+          # which would remove the need for NPM_TOKEN altogether.
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       # Fail here with a readable message rather than at publish time with a 401.
@@ -27,6 +37,7 @@ jobs:
           if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
             echo "::error::NPM_TOKEN is not set on this repository."
             echo "::error::Without it the community node cannot be published and n8n users keep installing the previous version."
+            echo "::error::Alternatively, configure npm trusted publishing for n8n-nodes-8kit and this workflow can publish over OIDC with no token at all."
             exit 1
           fi
 
@@ -49,6 +60,8 @@ jobs:
           fi
 
       - name: Publish
-        run: npm publish --access public
+        # --provenance is what n8n's scanner checks for. Publishing without it
+        # produces a package that installs fine but fails verification.
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
