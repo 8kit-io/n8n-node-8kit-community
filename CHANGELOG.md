@@ -11,6 +11,13 @@
   looked like one that already had, which is the exact mistake the Uniq collection is
   there to prevent. Reads and idempotent writes retry as before.
 
+### A failed item keeps its own data
+
+- With "continue on fail", Check Uniq, Check Lock and Release Lock replaced the item
+  with a bare `error` object, so the workflow could not tell which record had failed
+  or route it for repair. The item's input now comes through alongside the `error`
+  field, which is what the success paths in the same files already did.
+
 ### Add to Uniq branches instead of failing
 
 - "Add" on Uniq values now has two outputs, **Added** and **Duplicate**. A value that is

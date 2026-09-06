@@ -229,3 +229,29 @@ describe('executeCheckUniqs', () => {
     });
   });
 });
+
+describe('a failed item keeps its own data', () => {
+  // The success path returns { ...inputData }. On error the item was replaced by a
+  // bare { error }, so with "continue on fail" the workflow could not tell which
+  // record had failed or route it anywhere useful.
+  it('carries the input through when the call fails', async () => {
+    const fx = createMockExecuteFunctions();
+    fx.continueOnFail = jest.fn(() => true);
+    fx.getNodeParameter
+      .mockReturnValueOnce(testData.validUniqName)
+      .mockReturnValueOnce(testData.validValue)
+      .mockReturnValueOnce({});
+
+    const originalItem = createMockItem({ value: testData.validValue, orderId: 'ORD-9' });
+    fx.getInputData.mockReturnValue([originalItem]);
+    fx.getCredentials.mockResolvedValue(createMockCredentials({}));
+    fx.helpers.httpRequestWithAuthentication.mockRejectedValue(
+      Object.assign(new Error('boom'), { httpCode: '500', context: { data: { error: 'boom' } } })
+    );
+
+    const result = await executeCheckUniqs.call(fx, 0);
+
+    expect(result.result.orderId).toBe('ORD-9');
+    expect(result.result.error).toBeDefined();
+  });
+});

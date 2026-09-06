@@ -62,6 +62,9 @@ export async function executeReleaseLock(this: IExecuteFunctions, itemIndex: num
     }
 
     return {
+      // Same as the success path: the item's own data comes through, so a failed
+      // release can be identified and retried downstream.
+      ...inputData,
       error: {
         status: error.status,
         message: error.message,
