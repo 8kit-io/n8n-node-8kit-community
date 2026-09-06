@@ -2,6 +2,15 @@
 
 ## 1.1.0
 
+### Writes are no longer replayed after an uncertain failure
+
+- A POST is only retried when the server plainly never applied it: it refused the
+  request outright (429), or the connection never arrived. Before, a timeout or a 502
+  that hid a successful write was retried, the retry came back 409 `DUPLICATE_VALUE`,
+  and Add to Uniq routed it to the **Duplicate** output. A value nobody had processed
+  looked like one that already had, which is the exact mistake the Uniq collection is
+  there to prevent. Reads and idempotent writes retry as before.
+
 ### Add to Uniq branches instead of failing
 
 - "Add" on Uniq values now has two outputs, **Added** and **Duplicate**. A value that is

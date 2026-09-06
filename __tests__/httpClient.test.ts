@@ -79,6 +79,78 @@ describe('EightKitHttpClient', () => {
     });
   });
 
+  describe('writes are not replayed', () => {
+    // add-to-uniq routes DUPLICATE_VALUE to the "Duplicate" output, which workflows
+    // treat as "already handled, skip". If a POST is replayed after its response was
+    // lost, the retry sees the row the first attempt wrote and reports a duplicate,
+    // so a value that was never processed gets skipped.
+    it('does not replay a POST whose response was lost to a 5xx', async () => {
+      const error = new Error('Bad gateway');
+      (error as any).response = { status: 502 };
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockRejectedValue(error);
+
+      const client = new EightKitHttpClient(mockExecuteFunctions, 0, { retryDelay: 1 });
+      await expect(
+        client.post('https://api.example.com/api/v1/uniqs/orders/values', { value: 'o1' })
+      ).rejects.toThrow();
+      expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not replay a POST that timed out', async () => {
+      const error = Object.assign(new Error('timeout'), { code: 'ECONNABORTED' });
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication.mockRejectedValue(error);
+
+      const client = new EightKitHttpClient(mockExecuteFunctions, 0, { retryDelay: 1 });
+      await expect(
+        client.post('https://api.example.com/api/v1/uniqs/orders/values', { value: 'o1' })
+      ).rejects.toThrow();
+      expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(1);
+    });
+
+    it('still retries a POST the server refused outright', async () => {
+      // A 429 is rejected before anything is written, so replaying it is safe.
+      const error = new Error('Rate limited');
+      (error as any).response = { status: 429 };
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce({ success: true, data: {} });
+
+      const client = new EightKitHttpClient(mockExecuteFunctions, 0, { retryDelay: 1 });
+      const result = await client.post('https://api.example.com/api/v1/uniqs/orders/values', {
+        value: 'o1',
+      });
+      expect(result.success).toBe(true);
+      expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(2);
+    });
+
+    it('still retries a POST that never reached the server', async () => {
+      const error = Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' });
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce({ success: true, data: {} });
+
+      const client = new EightKitHttpClient(mockExecuteFunctions, 0, { retryDelay: 1 });
+      const result = await client.post('https://api.example.com/api/v1/uniqs/orders/values', {
+        value: 'o1',
+      });
+      expect(result.success).toBe(true);
+      expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(2);
+    });
+
+    it('still retries reads on a 5xx', async () => {
+      const error = new Error('Server error');
+      (error as any).response = { status: 503 };
+      mockExecuteFunctions.helpers.httpRequestWithAuthentication
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce({ success: true, data: {} });
+
+      const client = new EightKitHttpClient(mockExecuteFunctions, 0, { retryDelay: 1 });
+      const result = await client.get('https://api.example.com/api/v1/uniqs');
+      expect(result.success).toBe(true);
+      expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('delay uses setTimeout not busy-loop', () => {
     it('delay resolves after specified time', async () => {
       const client = new EightKitHttpClient(mockExecuteFunctions, 0);
