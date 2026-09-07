@@ -48,7 +48,7 @@ export class EightKit implements INodeType {
     version: [2, 3],
     defaultVersion: 3,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-    description: 'Integrate with 8kit Automation Tools for Uniq collections and lookup mapping',
+    description: 'Duplicate prevention, ID mapping, locks and timestamps for production n8n workflows',
     defaults: {
       name: '8kit',
     },
