@@ -76,11 +76,11 @@ You need access to a running 8kit service before the node can do useful work. Co
 
    | Field | Description |
    | --- | --- |
-   | `Host URL` | Base URL of the service API, such as `http:host.docker.internal:3000`. |
+   | `Host URL` | Base URL of the service API, such as `http://host.docker.internal:3000`. |
    | `Token Key` | Application key generated in the 8kit admin dashboard. (See more [8kit.io](https://8kit.io)⁠) |
 
    ![Create 8kit Credentials](docs/images/create-8kit-credentials.png)
-   (Example of an 8kit service running locally on port 4000) 
+   (Example of an 8kit service running locally on port 3000) 
 
 
 1. **Test the connection**
@@ -124,7 +124,7 @@ Available operations include:
 ## 📚 Resources
 
 - **📖 [Complete Documentation](https://8kit.io/docs)** – Learn everything about 8kit deployment and APIs
-- **💻 [GitHub Repository](https://github.com/8kit-io/8kit)** – Source code and community contributions
+- **💻 [GitHub Repository](https://8kit.io/docs/getting-started/host-8kit-server)** – Source code and community contributions
 - **💬 [Discord Community](https://8kit.io/community)** – Get help and share experiences
 
 ## n8n Community
@@ -137,8 +137,8 @@ This community node is built by n8n users, for n8n users. Whether you're just ge
 
 **Ready to supercharge your n8n workflows?**
 
-[Get Started with 8kit](https://8kit.io/docs) | [View on GitHub](https://github.com/8kit-io/8kit)
+[Get Started with 8kit](https://8kit.io/docs) | [View on GitHub](https://8kit.io/docs/getting-started/host-8kit-server)
 
 </div>
 
-Brought to you by [Stratagems](https://stratagens.com).
+Brought to you by [Stratagems](https://stratagems.com).
