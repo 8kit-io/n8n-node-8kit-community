@@ -142,9 +142,7 @@ export async function executeCreateLastUpdated(
         return { ...data };
       } catch (retryError: any) {
         if (!this.continueOnFail()) {
-          throw new NodeOperationError(this.getNode(), retryError, {
-            itemIndex,
-          });
+          throw toNodeError(this.getNode(), retryError, itemIndex);
         }
         return {
           error: {

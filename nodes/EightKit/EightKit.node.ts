@@ -179,7 +179,7 @@ export class EightKit implements INodeType {
         default: '',
         placeholder: '',
         description:
-          'Unique identifier for the Uniq or lookup collection. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+          'Name of the Uniq collection to create or read. Letters, numbers, hyphens and underscores only, maximum 100 characters.',
         required: true,
         displayOptions: {
           show: { resource: ['uniqCollection'] },
@@ -222,7 +222,7 @@ export class EightKit implements INodeType {
             type: 'string',
             default: '',
             description:
-              'Optional human-readable description explaining the purpose of this record.',
+              'Optional human-readable description explaining the purpose of this Uniq collection.',
           },
         ],
       },
@@ -234,7 +234,7 @@ export class EightKit implements INodeType {
         type: 'collection',
         placeholder: 'Add Advanced Settings',
         default: {},
-        description: 'Configure advanced options like pagination, filtering, and sorting',
+        description: 'Page through the list of Uniq collections',
         displayOptions: {
           show: {
             resource: ['uniqCollection'],
@@ -338,14 +338,14 @@ export class EightKit implements INodeType {
         default: '',
         placeholder: '',
         description:
-          'Unique identifier for the Uniq or lookup collection. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+          'Name of the Uniq collection holding the values. Letters, numbers, hyphens and underscores only, maximum 100 characters.',
         required: true,
         displayOptions: { show: { resource: ['uniqs'] } },
       },
 
       // Value (for add/check/remove in uniqs)
       {
-        displayName: 'Value',
+        displayName: 'Uniq Value',
         name: 'value',
         type: 'string',
         default: '',
@@ -396,7 +396,7 @@ export class EightKit implements INodeType {
         type: 'collection',
         placeholder: 'Add Advanced Settings',
         default: {},
-        description: 'Configure advanced options like pagination, filtering, and sorting',
+        description: 'Page through the values in the Uniq collection',
         displayOptions: {
           show: { resource: ['uniqs'], operation: ['getUniqs'] },
         },
@@ -495,7 +495,7 @@ export class EightKit implements INodeType {
         default: '',
         placeholder: '',
         description:
-          'Unique identifier for the Uniq or lookup collection. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+          'Name of the lookup collection to create or read. Letters, numbers, hyphens and underscores only, maximum 100 characters.',
         required: true,
         displayOptions: {
           show: { resource: ['lookup'] },
@@ -533,7 +533,7 @@ export class EightKit implements INodeType {
             type: 'string',
             default: '',
             description:
-              'Optional human-readable description explaining the purpose of this record.',
+              'Optional human-readable description explaining the purpose of this lookup collection.',
           },
           {
             displayName: 'Left System',
@@ -591,7 +591,7 @@ export class EightKit implements INodeType {
         type: 'collection',
         placeholder: 'Add Advanced Settings',
         default: {},
-        description: 'Configure advanced options like pagination, filtering, and sorting',
+        description: 'Page through the list of lookup collections',
         displayOptions: {
           show: { resource: ['lookup'], operation: ['listLookups'] },
         },
@@ -691,7 +691,7 @@ export class EightKit implements INodeType {
         default: '',
         placeholder: '',
         description:
-          'Unique identifier for the Uniq or lookup collection. Must contain only letters, numbers, hyphens, and underscores. Maximum 100 characters.',
+          'Name of the lookup collection holding the mappings. Letters, numbers, hyphens and underscores only, maximum 100 characters.',
         required: true,
         displayOptions: { show: { resource: ['lookupValues'] } },
       },
@@ -759,7 +759,7 @@ export class EightKit implements INodeType {
 
       // Search Value (for searchLookupValues)
       {
-        displayName: 'Value',
+        displayName: 'Search Value',
         name: 'searchValue',
         type: 'string',
         default: '',
@@ -777,13 +777,13 @@ export class EightKit implements INodeType {
 
       // Value (for removeFromLookup)
       {
-        displayName: 'Value',
+        displayName: 'Value to Remove',
         name: 'value',
         type: 'string',
         default: '',
         placeholder: '',
         description:
-          'The lookup value id, or a left/right value depending on "Remove By". Left/right removes every matching row.',
+          'The lookup value ID, or a left or right value, depending on what the Remove By field is set to. Removing by a left or right value removes every matching row.',
         required: true,
         displayOptions: {
           show: { resource: ['lookupValues'], operation: ['removeFromLookup'] },
@@ -799,7 +799,8 @@ export class EightKit implements INodeType {
           { name: 'Left Value (all matching rows)', value: 'left' },
           { name: 'Right Value (all matching rows)', value: 'right' },
         ],
-        description: 'What the value above refers to',
+        description:
+          'What the Value to Remove field contains: a lookup value ID, a left value, or a right value',
         displayOptions: { show: { resource: ['lookupValues'], operation: ['removeFromLookup'] } },
       },
 
@@ -810,7 +811,7 @@ export class EightKit implements INodeType {
         type: 'collection',
         placeholder: 'Add Advanced Settings',
         default: {},
-        description: 'Configure advanced options like pagination, filtering, and sorting',
+        description: 'Page through the mappings in the lookup collection',
         displayOptions: {
           show: { resource: ['lookupValues'], operation: ['getLookupValues'] },
         },
@@ -1020,7 +1021,7 @@ export class EightKit implements INodeType {
             type: 'string',
             default: '',
             description:
-              'Optional human-readable description explaining the purpose of this record.',
+              'Optional human-readable description explaining the purpose of this Last Updated record.',
           },
           {
             displayName: 'Date',
@@ -1028,7 +1029,8 @@ export class EightKit implements INodeType {
             type: 'string',
             default: '',
             placeholder: '',
-            description: 'The date in the format specified below. Leave empty to use current time.',
+            description:
+              'The date to record, written in the format chosen in the Date Format field. Leave empty to use the current time.',
           },
           {
             displayName: 'Date Format',
@@ -1153,7 +1155,7 @@ export class EightKit implements INodeType {
             type: 'string',
             default: '',
             description:
-              'The fallback date value to use when no last updated record exists. Must be in the same format as the Date Format setting above.',
+              'The fallback date value to use when no last updated record exists. Must be in the same format as the Date Format field.',
           },
         ],
       },
@@ -1262,7 +1264,7 @@ export class EightKit implements INodeType {
         },
       },
       {
-        displayName: 'Value',
+        displayName: 'Uniq Value',
         name: 'value',
         type: 'string',
         default: '',

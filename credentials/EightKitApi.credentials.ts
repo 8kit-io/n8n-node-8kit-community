@@ -10,7 +10,7 @@ import type {
 export class EightKitApi implements ICredentialType {
   name = 'eightKitApi';
   displayName = '8kit API';
-  documentationUrl = 'https://8kit.io/docs/intro/index.html';
+  documentationUrl = 'https://8kit.io/docs/intro';
   iconUrl = 'file:icons/8kit.light.svg';
   // The 8 mark on its own, in a square. The wordmark this replaced was 2.12:1 and
   // n8n renders credential icons in a square slot, so it squashed to an unreadable
@@ -24,22 +24,22 @@ export class EightKitApi implements ICredentialType {
       displayName: 'Host URL',
       name: 'hostUrl',
       type: 'string',
-      default: 'https://api.yourdomain.com',
+      default: '',
       placeholder: 'https://api.yourdomain.com',
       description: 'Base URL of your 8kit API instance',
       required: true,
     },
     {
-      displayName: 'Token Key',
+      displayName: 'API Key',
       name: 'apiKey',
       type: 'string',
       typeOptions: {
         password: true,
       },
-      default: 'st_XXXXXXXXXXXXXXXXXXXXX',
+      default: '',
       placeholder: 'st_XXXXXXXXXXXXXXXXXXXXX',
       description:
-        'Your application Token Key (starts with st_), generated in the 8kit admin dashboard.',
+        'Your 8kit API key (starts with st_), generated on the API Keys page of the 8kit admin dashboard.',
       required: true,
     },
   ];

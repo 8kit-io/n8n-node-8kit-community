@@ -135,7 +135,11 @@ async function addValueToLookup(
   }
 
   if (!response.data) {
-    throw new NodeOperationError(node, 'Add value pair response missing data field', { itemIndex });
+    throw new NodeOperationError(
+      node,
+      'The 8kit server accepted the lookup mapping but sent nothing back, so it may not have been saved - check the lookup in the 8kit dashboard before retrying.',
+      { itemIndex }
+    );
   }
 
   return { success: true, data: response.data };

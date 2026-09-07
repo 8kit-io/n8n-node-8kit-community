@@ -181,7 +181,11 @@ async function addValueToUniq(
   }
 
   if (!response.data) {
-    throw new NodeOperationError(node, 'Add Uniq value response missing data field', { itemIndex });
+    throw new NodeOperationError(
+      node,
+      'The 8kit server accepted the Uniq value but sent nothing back, so it may not have been saved - check the Uniq collection in the 8kit dashboard before retrying.',
+      { itemIndex }
+    );
   }
 
   return { success: true, data: response.data };

@@ -227,7 +227,7 @@ export function buildUniqEndpoint(
   if (!uniqName) {
     throw new NodeOperationError(
       node as INode,
-      'Uniq collection name is required to build endpoint',
+      'No Uniq collection name was given - set Collection Name on the 8kit node.',
       { itemIndex }
     );
   }
