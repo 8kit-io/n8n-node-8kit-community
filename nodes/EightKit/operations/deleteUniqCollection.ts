@@ -22,7 +22,7 @@ export async function executeDeleteUniqCollection(
     if (confirmDelete !== 'delete') {
       throw new NodeOperationError(
         this.getNode(),
-        'Delete operation cancelled. You must type "delete" (without quotes) to confirm the deletion.',
+        'Delete operation canceled. You must type "delete" (without quotes) to confirm the deletion.',
         { itemIndex }
       );
     }

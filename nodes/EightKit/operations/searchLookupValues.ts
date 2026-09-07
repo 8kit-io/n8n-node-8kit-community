@@ -77,7 +77,7 @@ export async function executeSearchLookupValues(
     const safeMessage = `Failed to search lookup values: ${message}`;
 
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), error, {
+      throw new NodeOperationError(this.getNode(), safeMessage, {
         itemIndex: index,
       });
     }

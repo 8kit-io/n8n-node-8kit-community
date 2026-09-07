@@ -52,9 +52,11 @@ async function createUniq(
   }
 
   if (!response.data) {
-    throw new NodeOperationError(node, 'Create Uniq collection response missing data field', {
-      itemIndex,
-    });
+    throw new NodeOperationError(
+      node,
+      `The 8kit server accepted the Uniq collection "${uniqName}" but sent nothing back, so it may not have been created - check the collection in the 8kit dashboard before retrying.`,
+      { itemIndex }
+    );
   }
 
   return response.data;
@@ -129,7 +131,11 @@ async function createLookup(
   }
 
   if (!response.data) {
-    throw new NodeOperationError(node, 'Create lookup response missing data field', { itemIndex });
+    throw new NodeOperationError(
+      node,
+      `The 8kit server accepted the lookup collection "${lookupName}" but sent nothing back, so it may not have been created - check the collection in the 8kit dashboard before retrying.`,
+      { itemIndex }
+    );
   }
 
   return response.data;

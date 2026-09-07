@@ -2,6 +2,51 @@
 
 ## 1.1.0
 
+### The credential asks for an API key, and starts empty
+
+- The second credential field was called "Token Key", while the header it sends is
+  `X-Api-Key`, the dashboard page is "API Keys" and the docs call it an API key. It is
+  "API Key" now. The stored property name is unchanged, so saved credentials keep
+  working.
+- Both fields arrived pre-filled with `https://api.yourdomain.com` and
+  `st_XXXXXXXXXXXXXXXXXXXXX`, so "Test" ran against a host that does not exist instead
+  of prompting for a real one. They start empty, with the examples as placeholders.
+- The "Docs" link in the credential dialog pointed at `/docs/intro/index.html`, which
+  is a 404. It points at `/docs/intro`.
+
+### Every field description describes its own field
+
+- One description was pasted onto all four "Collection Name" fields, so a Lookup user
+  read about "the Uniq or lookup collection". Same copy-paste on the "Description"
+  field of two collections and one record, and on four "Advanced Settings" collections
+  that promised "pagination, filtering, and sorting" while offering only pagination.
+- Four separate parameters all displayed as "Value". They are "Uniq Value", "Search
+  Value" and "Value to Remove" now. Only the labels changed; the stored parameter
+  names are the same, so saved workflows keep working.
+- "Remove By" and "Date" pointed at a sibling field by position ("the value above",
+  "the format specified below"). n8n orders collection fields by display name, so
+  neither position was reliable; both name the field they mean.
+
+### Errors a workflow author can act on
+
+- Seven messages described our own response handling, for example "Add Uniq value
+  response missing data field" and "Uniq collection name is required to build
+  endpoint". They now say what may not have been written and where to check it, in the
+  style of the existing "Connection refused - check if the server is running".
+- Lookup → Search built a readable message and then threw the raw error object, so the
+  readable one reached only the continue-on-fail branch. It throws the readable
+  message. Same for the retry path in Last Updated → Add, which now carries the
+  server's HTTP status like the rest of the operation.
+- "Delete operation cancelled" is spelled the American way, matching the rest of the
+  package.
+
+### README
+
+- The "GitHub Repository" and "View on GitHub" links pointed at a docs page with no
+  source code on it. They point at the repository.
+- Three invisible U+2060 word joiners sat mid-sentence, breaking search and
+  copy-paste. They are gone.
+
 ### The node and credential use the 8 mark
 
 - Both icons were the full wordmark on a 2.12:1 canvas, in a red-pink colourway used
