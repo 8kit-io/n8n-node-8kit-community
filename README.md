@@ -23,7 +23,7 @@ The 8kit n8n node brings 8kit capabilities directly into your n8n workflows. Eas
 
 ### What is 8kit?
 
-8kit is a comprehensive automation toolkit with three core components: an n8n node for workflow integration, a lightweight service for data synchronization, and an admin dashboard for management — making your automations faster, safer, and smarter.
+8kit is the reliability layer for production n8n workflows: duplicate prevention, ID mapping, locks and timestamps, from this n8n node, a self-hosted server and a dashboard.
 
 ### Common Automation Problems 8kit Solves
 
