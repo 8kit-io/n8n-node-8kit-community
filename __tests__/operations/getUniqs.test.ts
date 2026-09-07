@@ -29,7 +29,7 @@ describe('executeGetUniqs', () => {
       'eightKitApi',
       expect.objectContaining({
         method: 'GET',
-        url: 'https://api.example.com/api/v1/uniqs/processed-users/values?page=1&limit=10',
+        url: 'https://api.example.com/api/v1/uniqs/processed-users/values?page=1&limit=100',
       })
     );
   });
@@ -73,5 +73,36 @@ describe('executeGetUniqs', () => {
     await expect(executeGetUniqs.call(fx, 0)).rejects.toThrow(
       'Failed to get Uniq values: Uniq collection not found'
     );
+  });
+});
+
+describe('reading a whole collection', () => {
+  // "Get all" used to send limit=10 with no paging and no signal that rows were
+  // missing; a reconcile over a large collection processed ten rows and reported
+  // success. With no explicit limit the node now walks every page.
+  it('walks every page when the user set no limit', async () => {
+    const fx = createMockExecuteFunctions();
+    fx.getNodeParameter.mockReturnValueOnce('orders').mockReturnValueOnce({});
+    fx.getCredentials.mockResolvedValue(createMockCredentials({}));
+    fx.helpers.httpRequestWithAuthentication
+      .mockResolvedValueOnce({
+        success: true,
+        data: {
+          items: [{ id: 'a' }, { id: 'b' }],
+          pagination: { page: 1, limit: 2, totalCount: 3, totalPages: 2 },
+        },
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: {
+          items: [{ id: 'c' }],
+          pagination: { page: 2, limit: 2, totalCount: 3, totalPages: 2 },
+        },
+      });
+
+    const result = await executeGetUniqs.call(fx, 0);
+
+    expect(result.items.map((i: any) => i.id)).toEqual(['a', 'b', 'c']);
+    expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(2);
   });
 });

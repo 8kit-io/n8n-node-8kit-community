@@ -23,6 +23,19 @@
   attestation is signed with. The next published version carries it; 1.0.18 cannot be
   fixed in place, only superseded.
 
+### A watermark update can no longer lose the watermark
+
+- Updating an existing Last Updated key was DELETE then POST. If the POST failed the
+  key was gone, and the next incremental sync reprocessed everything, which is the
+  failure the pattern exists to prevent. It is one PUT in place now.
+
+### "Get all" reads the whole collection
+
+- With no page or limit set, the list operations (Uniq values, Lookup values, Uniq
+  collections, Lookups) walked a single page of ten rows and returned it as if it were
+  everything. They now follow the server's pagination to the end. Setting a page,
+  limit or offset still reads exactly that page.
+
 ### Writes are no longer replayed after an uncertain failure
 
 - A POST is only retried when the server plainly never applied it: it refused the
