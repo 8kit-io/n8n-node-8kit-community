@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://8kit.io/logo.svg" alt="8kit Logo" width="120" height="120">
+<img src="https://8kit.io/logo.webp" alt="8kit" width="220">
 
 **Essential n8n Node for Reliable Workflows**
 
