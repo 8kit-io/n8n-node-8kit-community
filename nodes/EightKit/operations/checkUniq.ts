@@ -1,5 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { toNodeError } from '../utils/common';
 import {
   buildUniqEndpoint,
   EightKitHttpClient,
@@ -23,33 +24,34 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
     string,
     any
   >;
-  const includeUniqValueData = (additionalFields.getUniqValueData as boolean) || false;
-  const uniqValueDataFieldName = includeUniqValueData
-    ? (additionalFields.uniqValueDataFieldName as string)?.trim() || undefined
-    : undefined;
-
-  // Validate inputs
-  validateUniqName(name, this.getNode(), itemIndex);
-
-  const inputData = this.getInputData()[itemIndex].json as Record<string, any>;
-
-  // Initialize HTTP client
-  const credentials = await this.getCredentials('eightKitApi');
-  const baseUrl = (credentials.hostUrl as string) || '';
-  if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
-      itemIndex,
-    });
-  }
-  const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
-
-  const client = new EightKitHttpClient(this, itemIndex);
-
-  // Build endpoint
-  const endpoint = buildUniqEndpoint(name, 'contains');
-  const url = `${formattedBaseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-
+  let inputData: Record<string, any> = {};
   try {
+    validateUniqName(name, this.getNode(), itemIndex);
+    const includeUniqValueData = (additionalFields.getUniqValueData as boolean) || false;
+    const uniqValueDataFieldName = includeUniqValueData
+      ? (additionalFields.uniqValueDataFieldName as string)?.trim() || undefined
+      : undefined;
+
+    // Validate inputs
+
+    inputData = this.getInputData()[itemIndex].json as Record<string, any>;
+
+    // Initialize HTTP client
+    const credentials = await this.getCredentials('eightKitApi');
+    const baseUrl = (credentials.hostUrl as string) || '';
+    if (!baseUrl) {
+      throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+        itemIndex,
+      });
+    }
+    const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
+
+    const client = new EightKitHttpClient(this, itemIndex);
+
+    // Build endpoint
+    const endpoint = buildUniqEndpoint(name, 'contains');
+    const url = `${formattedBaseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+
     // Single mode only: validate value and perform check
     validateValue(value, this.getNode(), itemIndex);
 
@@ -82,7 +84,7 @@ export async function executeCheckUniqs(this: IExecuteFunctions, itemIndex: numb
     };
   } catch (error: any) {
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), error, { itemIndex });
+      throw toNodeError(this.getNode(), error, itemIndex);
     }
 
     return {

@@ -1,5 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { toNodeError } from '../utils/common';
 import { buildUniqEndpoint, EightKitHttpClient } from '../utils/httpClient';
 
 export async function executeGetUniqCollectionInfo(
@@ -36,7 +37,7 @@ export async function executeGetUniqCollectionInfo(
     return response.data;
   } catch (error: any) {
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), error, { itemIndex });
+      throw toNodeError(this.getNode(), error, itemIndex);
     }
 
     return {

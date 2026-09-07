@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, INode } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { checkUniqExists } from '../utils/common';
+import { checkUniqExists, toNodeError } from '../utils/common';
 import {
   buildUniqEndpoint,
   EightKitHttpClient,
@@ -125,7 +125,7 @@ export async function executeAddToUniq(
     }
 
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), error, { itemIndex });
+      throw toNodeError(this.getNode(), error, itemIndex);
     }
 
     return {
