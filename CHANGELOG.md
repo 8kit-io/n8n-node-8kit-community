@@ -23,6 +23,15 @@
   attestation is signed with. The next published version carries it; 1.0.18 cannot be
   fixed in place, only superseded.
 
+### Errors say what the server said
+
+- Server answers surface as `NodeApiError` with the HTTP status, so 401, 402, 404 and
+  500 no longer look identical in n8n. A 402 keeps the renewal link in its message.
+- "Continue on fail" now also covers validation and setup in eight more operations;
+  a bad collection name lands on the error output instead of stopping the run.
+- `docker compose up` installs the node from the checkout instead of a gitignored,
+  version-named tarball, so a fresh clone works after `./start-n8n.sh`.
+
 ### A watermark update can no longer lose the watermark
 
 - Updating an existing Last Updated key was DELETE then POST. If the POST failed the

@@ -1,5 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { toNodeError } from '../utils/common';
 import {
   buildUniqEndpoint,
   EightKitHttpClient,
@@ -13,32 +14,33 @@ export async function executeRemoveFromUniqs(
 ): Promise<any> {
   const name = (this.getNodeParameter('name', itemIndex) as string).trim();
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
-
-  // Validate inputs
-  validateUniqName(name, this.getNode(), itemIndex);
-
-  const inputData = this.getInputData()[itemIndex].json;
-
-  if (!value) {
-    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', {
-      itemIndex,
-    });
-  }
-
-  // Initialize HTTP client
-  const credentials = await this.getCredentials('eightKitApi');
-  const baseUrl = credentials.hostUrl as string;
-
-  if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
-      itemIndex,
-    });
-  }
-
-  const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
-  const client = new EightKitHttpClient(this, itemIndex);
-
+  let inputData: Record<string, any> = {};
   try {
+    validateUniqName(name, this.getNode(), itemIndex);
+
+    // Validate inputs
+
+    inputData = this.getInputData()[itemIndex].json;
+
+    if (!value) {
+      throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', {
+        itemIndex,
+      });
+    }
+
+    // Initialize HTTP client
+    const credentials = await this.getCredentials('eightKitApi');
+    const baseUrl = credentials.hostUrl as string;
+
+    if (!baseUrl) {
+      throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+        itemIndex,
+      });
+    }
+
+    const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
+    const client = new EightKitHttpClient(this, itemIndex);
+
     return await executeSingleRemove.call(
       this,
       itemIndex,
@@ -52,7 +54,7 @@ export async function executeRemoveFromUniqs(
     );
   } catch (error: any) {
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), error, { itemIndex });
+      throw toNodeError(this.getNode(), error, itemIndex);
     }
 
     return {

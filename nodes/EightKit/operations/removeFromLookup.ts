@@ -1,5 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { toNodeError } from '../utils/common';
 import {
   buildLookupEndpoint,
   EightKitHttpClient,
@@ -15,32 +16,33 @@ export async function executeRemoveFromLookup(
   const value = (this.getNodeParameter('value', itemIndex) as string).trim();
   const removeBy =
     (this.getNodeParameter('removeBy', itemIndex, 'id') as 'id' | 'left' | 'right') || 'id';
-
-  // Validate inputs
-  validateLookupName(name, this.getNode(), itemIndex);
-
-  const inputData = this.getInputData()[itemIndex].json;
-
-  if (!value) {
-    throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', {
-      itemIndex,
-    });
-  }
-
-  // Initialize HTTP client
-  const credentials = await this.getCredentials('eightKitApi');
-  const baseUrl = credentials.hostUrl as string;
-
-  if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
-      itemIndex,
-    });
-  }
-
-  const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
-  const client = new EightKitHttpClient(this, itemIndex);
-
+  let inputData: Record<string, any> = {};
   try {
+    validateLookupName(name, this.getNode(), itemIndex);
+
+    // Validate inputs
+
+    inputData = this.getInputData()[itemIndex].json;
+
+    if (!value) {
+      throw new NodeOperationError(this.getNode(), 'Value is required and cannot be empty', {
+        itemIndex,
+      });
+    }
+
+    // Initialize HTTP client
+    const credentials = await this.getCredentials('eightKitApi');
+    const baseUrl = credentials.hostUrl as string;
+
+    if (!baseUrl) {
+      throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+        itemIndex,
+      });
+    }
+
+    const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
+    const client = new EightKitHttpClient(this, itemIndex);
+
     return await executeSingleRemove.call(
       this,
       itemIndex,
@@ -55,7 +57,7 @@ export async function executeRemoveFromLookup(
     );
   } catch (error: any) {
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), error, { itemIndex });
+      throw toNodeError(this.getNode(), error, itemIndex);
     }
 
     return {

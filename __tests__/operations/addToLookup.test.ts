@@ -48,3 +48,21 @@ describe('executeAddToLookup', () => {
     await expect(executeAddToLookup.call(fx, 0)).rejects.toThrow('Lookup not found');
   });
 });
+
+describe('continue on fail covers validation', () => {
+  // Validation ran before the try block, so with "continue on fail" a bad name still
+  // stopped the whole run instead of landing on the error output.
+  it('returns an error item instead of throwing', async () => {
+    const fx = createMockExecuteFunctions();
+    fx.continueOnFail = jest.fn(() => true);
+    fx.getNodeParameter
+      .mockReturnValueOnce('') // invalid lookup name
+      .mockReturnValueOnce('L')
+      .mockReturnValueOnce('R')
+      .mockReturnValueOnce({})
+      .mockReturnValueOnce(false);
+    fx.getCredentials.mockResolvedValue(createMockCredentials({}));
+    const result = await executeAddToLookup.call(fx, 0);
+    expect(result.error).toBeDefined();
+  });
+});

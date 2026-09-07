@@ -1,5 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { toNodeError } from '../utils/common';
 import { EightKitHttpClient } from '../utils/httpClient';
 
 export interface AcquireLockParams {
@@ -83,7 +84,7 @@ export async function executeAcquireLock(this: IExecuteFunctions, itemIndex: num
 
     // If continueOnFail is false and not a LOCK_CONFLICT, throw error
     if (!this.continueOnFail() && !isLockConflict) {
-      throw new NodeOperationError(this.getNode(), error, { itemIndex });
+      throw toNodeError(this.getNode(), error, itemIndex);
     }
 
     const outputJson: Record<string, any> = {

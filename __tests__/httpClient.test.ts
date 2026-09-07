@@ -190,3 +190,29 @@ describe('EightKitHttpClient with n8n-wrapped errors', () => {
     expect(fx.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('a paywall answer keeps its way out', () => {
+  // A 402 carries renewal_url. formatError dropped it, so the workflow author saw
+  // "licence limit exceeded" with no idea where to go.
+  it('puts the renewal URL in the message', async () => {
+    const fx = createMockExecuteFunctions();
+    fx.helpers.httpRequestWithAuthentication.mockRejectedValue(
+      Object.assign(new Error('x'), {
+        httpCode: '402',
+        context: {
+          data: {
+            success: false,
+            error: 'Licence limit exceeded',
+            code: 'LICENSE_LIMIT_EXCEEDED',
+            renewal_url: 'https://8kit.io/pricing',
+          },
+        },
+      })
+    );
+    const client = new EightKitHttpClient(fx, 0, { retryDelay: 1 });
+    await expect(client.get('https://api.example.com/api/v1/uniqs')).rejects.toMatchObject({
+      status: 402,
+      message: expect.stringContaining('https://8kit.io/pricing'),
+    });
+  });
+});

@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, INode } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { checkLookupExists, checkUniqExists } from '../utils/common';
+import { checkLookupExists, checkUniqExists, toNodeError } from '../utils/common';
 import {
   buildLookupEndpoint,
   buildUniqEndpoint,
@@ -173,7 +173,7 @@ export async function executeCompleteLookupUniq(
     return result;
   } catch (error: any) {
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), error, { itemIndex });
+      throw toNodeError(this.getNode(), error, itemIndex);
     }
 
     return {

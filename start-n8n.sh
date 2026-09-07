@@ -8,8 +8,7 @@ docker-compose up -d
 
 echo "✅ n8n is starting up!"
 echo "📱 Access n8n at: http://localhost:5678"
-echo "👤 Username: admin"
-echo "🔑 Password: password"
+echo "👤 First run: n8n asks you to create the owner account"
 echo ""
 echo "🔍 To view logs: docker-compose logs -f"
 echo "🛑 To stop: docker-compose down" 

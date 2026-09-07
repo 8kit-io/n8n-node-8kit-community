@@ -1,6 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { fetchAllPages } from '../utils/common';
+import { fetchAllPages, toNodeError } from '../utils/common';
 import { buildUniqEndpoint, EightKitHttpClient, validateUniqName } from '../utils/httpClient';
 
 export async function executeGetUniqs(this: IExecuteFunctions, itemIndex: number): Promise<any> {
@@ -8,28 +8,28 @@ export async function executeGetUniqs(this: IExecuteFunctions, itemIndex: number
 
   // Get pagination parameters from advanced settings
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex, {}) as any;
-  const paginationSettings = advancedSettings.pagination?.pagination || {};
-  const page = paginationSettings.page || 1;
-  const limit: number | undefined = paginationSettings.limit; // undefined = read every page
-  const offset = paginationSettings.offset || 0;
-
-  // Validate inputs
-  validateUniqName(name, this.getNode(), itemIndex);
-
-  // Initialize HTTP client
-  const credentials = await this.getCredentials('eightKitApi');
-  const baseUrl = credentials.hostUrl as string;
-
-  if (!baseUrl) {
-    throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
-      itemIndex,
-    });
-  }
-
-  const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
-  const client = new EightKitHttpClient(this, itemIndex);
-
   try {
+    validateUniqName(name, this.getNode(), itemIndex);
+    const paginationSettings = advancedSettings.pagination?.pagination || {};
+    const page = paginationSettings.page || 1;
+    const limit: number | undefined = paginationSettings.limit; // undefined = read every page
+    const offset = paginationSettings.offset || 0;
+
+    // Validate inputs
+
+    // Initialize HTTP client
+    const credentials = await this.getCredentials('eightKitApi');
+    const baseUrl = credentials.hostUrl as string;
+
+    if (!baseUrl) {
+      throw new NodeOperationError(this.getNode(), 'Host URL is not configured in credentials', {
+        itemIndex,
+      });
+    }
+
+    const formattedBaseUrl = baseUrl.trim().replace(/\/$/, '');
+    const client = new EightKitHttpClient(this, itemIndex);
+
     // Build query parameters for pagination
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
@@ -58,7 +58,7 @@ export async function executeGetUniqs(this: IExecuteFunctions, itemIndex: number
     return response.data;
   } catch (error: any) {
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), error, { itemIndex });
+      throw toNodeError(this.getNode(), error, itemIndex);
     }
 
     return {

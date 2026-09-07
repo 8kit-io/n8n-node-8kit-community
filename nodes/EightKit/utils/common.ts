@@ -1,5 +1,5 @@
 import type { INode } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import { buildLookupEndpoint, buildUniqEndpoint, type EightKitHttpClient } from './httpClient';
 
 interface CreateLookupResult {
@@ -183,4 +183,25 @@ export async function fetchAllPages<T = any>(
     success: true,
     data: { items, pagination: { page: 1, limit: items.length, totalCount, totalPages } },
   };
+}
+
+/**
+ * The error n8n should show. Server answers become NodeApiError so the HTTP status
+ * survives (401, 402, 404 and 500 used to look identical); anything local stays a
+ * NodeOperationError.
+ */
+export function toNodeError(node: INode, error: any, itemIndex: number) {
+  if (error && typeof error.status === 'number' && error.status >= 400) {
+    return new NodeApiError(
+      node,
+      { message: error.message, code: error.code, details: error.details },
+      {
+        httpCode: String(error.status),
+        message: error.message,
+        description: error.details ? JSON.stringify(error.details) : undefined,
+        itemIndex,
+      }
+    );
+  }
+  return new NodeOperationError(node, error, { itemIndex });
 }

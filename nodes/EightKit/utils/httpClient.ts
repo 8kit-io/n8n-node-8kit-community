@@ -144,9 +144,11 @@ export class EightKitHttpClient {
     if (response?.data) {
       const apiError = response.data;
       const details = apiError.details;
+      // A 402 carries renewal_url; keep it where the author will see it.
+      const renewal = apiError.renewal_url ? ` (renew at ${apiError.renewal_url})` : '';
       return new EightKitError({
         status: responseStatus(error) || 500,
-        message: apiError.error || 'Unknown error',
+        message: `${apiError.error || 'Unknown error'}${renewal}`,
         code: apiError.code || 'UNKNOWN',
         details,
         data: apiError.data,

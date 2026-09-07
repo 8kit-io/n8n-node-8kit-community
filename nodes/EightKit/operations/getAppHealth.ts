@@ -1,5 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { toNodeError } from '../utils/common';
 import { EightKitHttpClient } from '../utils/httpClient';
 
 export async function executeGetAppHealth(
@@ -36,7 +37,7 @@ export async function executeGetAppHealth(
       error.message = `No 8kit server answered at ${baseUrl}. Check the Host URL in the credential (it should point at the 8kit service root, e.g. http://8kit:3000).`;
     }
     if (!this.continueOnFail()) {
-      throw new NodeOperationError(this.getNode(), error, { itemIndex });
+      throw toNodeError(this.getNode(), error, itemIndex);
     }
 
     return {
