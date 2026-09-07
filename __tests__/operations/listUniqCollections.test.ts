@@ -31,7 +31,7 @@ describe('executeListUniqCollections', () => {
       'eightKitApi',
       expect.objectContaining({
         method: 'GET',
-        url: expect.stringMatching(/\/api\/v1\/uniqs\?page=1&limit=10$/),
+        url: expect.stringMatching(/\/api\/v1\/uniqs\?page=1&limit=100$/),
       })
     );
   });

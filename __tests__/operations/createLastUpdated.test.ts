@@ -290,3 +290,46 @@ describe('executeCreateLastUpdated', () => {
     );
   });
 });
+
+describe('updating an existing watermark', () => {
+  // The old path was DELETE then POST. If the POST failed, the watermark was gone for
+  // good and the next incremental sync reprocessed everything — the exact failure the
+  // product exists to prevent. One PUT replaces both calls.
+  it('updates in place with a single PUT and never deletes', async () => {
+    const fx = createMockExecuteFunctions();
+    fx.getNodeParameter
+      .mockReturnValueOnce('sync-job') // key
+      .mockReturnValueOnce({ description: '', date: '2026-09-07T10:00:00.000Z' });
+    fx.getCredentials.mockResolvedValue(createMockCredentials({}));
+    const dup = Object.assign(new Error('DUPLICATE_KEY'), {
+      httpCode: '409',
+      context: { data: { success: false, error: 'exists', code: 'DUPLICATE_KEY' } },
+    });
+    fx.helpers.httpRequestWithAuthentication
+      .mockRejectedValueOnce(dup) // POST → already exists
+      .mockResolvedValueOnce({
+        success: true,
+        data: {
+          id: 'w1',
+          key: 'sync-job',
+          description: null,
+          date: '2026-09-07T10:00:00.000Z',
+          createdAt: 'x',
+          updatedAt: 'y',
+        },
+      });
+
+    const result = await executeCreateLastUpdated.call(fx, 0);
+
+    const calls = fx.helpers.httpRequestWithAuthentication.mock.calls.map(
+      (c: any) => `${c[1].method} ${c[1].url}`
+    );
+    expect(calls.some((c: string) => c.startsWith('DELETE'))).toBe(false);
+    expect(
+      calls.some(
+        (c: string) => c === 'PUT https://api.example.com/api/v1/last-updated/key/sync-job'
+      )
+    ).toBe(true);
+    expect(result.key).toBe('sync-job');
+  });
+});

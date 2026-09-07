@@ -147,3 +147,40 @@ export function outputIndexFor(result: { result?: any; outputIndex?: number }): 
   }
   return result?.outputIndex ?? 0;
 }
+
+/**
+ * Reads a whole paginated listing. Used when the workflow did not ask for a specific
+ * page: "get all" used to mean ten rows and no warning. Follows the server's
+ * pagination.totalPages; if a response carries none, a short page ends the walk.
+ */
+export async function fetchAllPages<T = any>(
+  client: { get: (url: string) => Promise<any> },
+  urlWithoutPaging: string,
+  pageSize = 100
+): Promise<any> {
+  const sep = urlWithoutPaging.includes('?') ? '&' : '?';
+  const items: T[] = [];
+  let page = 1;
+  let totalPages = 1;
+  let totalCount = 0;
+  for (;;) {
+    const response = await client.get(`${urlWithoutPaging}${sep}page=${page}&limit=${pageSize}`);
+    if (!response?.success) {
+      // Hand the failed response back unchanged so each operation composes its own
+      // message, exactly as it does for a single-page request.
+      return response;
+    }
+    const data = response.data ?? {};
+    const chunk: T[] = data.items ?? data.values ?? [];
+    items.push(...chunk);
+    const meta = data.pagination;
+    totalPages = meta?.totalPages ?? (chunk.length < pageSize ? page : page + 1);
+    totalCount = meta?.totalCount ?? items.length;
+    if (page >= totalPages || chunk.length === 0) break;
+    page += 1;
+  }
+  return {
+    success: true,
+    data: { items, pagination: { page: 1, limit: items.length, totalCount, totalPages } },
+  };
+}

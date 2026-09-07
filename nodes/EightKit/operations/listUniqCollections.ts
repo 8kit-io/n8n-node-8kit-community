@@ -1,5 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { fetchAllPages } from '../utils/common';
 import { EightKitHttpClient } from '../utils/httpClient';
 
 export async function executeListUniqCollections(
@@ -10,7 +11,7 @@ export async function executeListUniqCollections(
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex, {}) as any;
   const paginationSettings = advancedSettings.pagination?.pagination || {};
   const page = paginationSettings.page || 1;
-  const limit = paginationSettings.limit || 10;
+  const limit: number | undefined = paginationSettings.limit; // undefined = read every page
   const offset = paginationSettings.offset || 0;
 
   // Initialize HTTP client
@@ -30,13 +31,19 @@ export async function executeListUniqCollections(
     // Build query parameters for pagination
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
-    queryParams.append('limit', limit.toString());
+    queryParams.append('limit', String(limit ?? 10));
     if (offset > 0) {
       queryParams.append('offset', offset.toString());
     }
 
     const endpoint = `/api/v1/uniqs?${queryParams.toString()}`;
-    const response = await client.get(`${formattedBaseUrl}${endpoint}`);
+    const askedForAPage =
+      paginationSettings.limit !== undefined ||
+      paginationSettings.page !== undefined ||
+      paginationSettings.offset !== undefined;
+    const response = askedForAPage
+      ? await client.get(`${formattedBaseUrl}${endpoint}`)
+      : await fetchAllPages(client, `${formattedBaseUrl}/api/v1/uniqs`);
 
     if (!response.success) {
       throw new NodeOperationError(

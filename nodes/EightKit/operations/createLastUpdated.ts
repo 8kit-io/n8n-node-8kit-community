@@ -106,7 +106,10 @@ export async function executeCreateLastUpdated(
 
     if (code === 'DUPLICATE_KEY' || message.includes('DUPLICATE_KEY')) {
       try {
-        await client.delete<{
+        // One PUT, in place. This used to be DELETE then POST; a failed POST left no
+        // watermark at all and the next incremental sync reprocessed everything.
+        const { key: _sameKey, ...update } = payload;
+        const response = await client.put<{
           success: boolean;
           data: {
             id: string;
@@ -116,19 +119,7 @@ export async function executeCreateLastUpdated(
             createdAt: string;
             updatedAt: string;
           };
-        }>(`${baseUrl}/api/v1/last-updated/key/${encodeURIComponent(key)}`);
-
-        const response = await client.post<{
-          success: boolean;
-          data: {
-            id: string;
-            key: string;
-            description: string | null;
-            date: string;
-            createdAt: string;
-            updatedAt: string;
-          };
-        }>(`${baseUrl}/api/v1/last-updated`, payload);
+        }>(`${baseUrl}/api/v1/last-updated/key/${encodeURIComponent(key)}`, update);
         if (!response.success || !response.data) {
           throw new NodeOperationError(
             this.getNode(),

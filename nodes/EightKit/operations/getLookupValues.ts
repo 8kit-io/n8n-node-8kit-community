@@ -1,5 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { fetchAllPages } from '../utils/common';
 import { buildLookupEndpoint, EightKitHttpClient, validateLookupName } from '../utils/httpClient';
 
 export async function executeGetLookupValues(
@@ -12,7 +13,7 @@ export async function executeGetLookupValues(
   const advancedSettings = this.getNodeParameter('advancedSettings', itemIndex, {}) as any;
   const paginationSettings = advancedSettings.pagination?.pagination || {};
   const page = paginationSettings.page || 1;
-  const limit = paginationSettings.limit || 10;
+  const limit: number | undefined = paginationSettings.limit; // undefined = read every page
   const offset = paginationSettings.offset || 0;
 
   // Validate inputs
@@ -35,13 +36,19 @@ export async function executeGetLookupValues(
     // Build query parameters for pagination
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
-    queryParams.append('limit', limit.toString());
+    queryParams.append('limit', String(limit ?? 10));
     if (offset > 0) {
       queryParams.append('offset', offset.toString());
     }
 
     const endpoint = `${buildLookupEndpoint(name)}/values?${queryParams.toString()}`;
-    const response = await client.get(`${formattedBaseUrl}${endpoint}`);
+    const askedForAPage =
+      paginationSettings.limit !== undefined ||
+      paginationSettings.page !== undefined ||
+      paginationSettings.offset !== undefined;
+    const response = askedForAPage
+      ? await client.get(`${formattedBaseUrl}${endpoint}`)
+      : await fetchAllPages(client, `${formattedBaseUrl}${buildLookupEndpoint(name)}/values`);
 
     if (!response.success) {
       throw new NodeOperationError(
